@@ -1,11 +1,14 @@
 # dependencies
 /node_modules
 
-# production
-/build
+# distribution
+/dist
 
 # webstorm
 /.idea
+
+# parcel
+/.parcel-cache
 
 # misc
 .env.local

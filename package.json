@@ -1,6 +1,6 @@
 {
-  "name": "hello-goodbye2",
-  "organization": "svg-viewer",
+  "name": "diagram-viewer",
+  "organization": "powsybl",
   "version": "0.1.6",
   "description": "This is an example project for the &lt;URL> article to set up Visual Studio code with TypeScript.",
   "types": "dist/types.d.ts",
