@@ -8,7 +8,6 @@ export class NetworkAreaDiagram {
     height: number;
 
     constructor(container: HTMLElement, svgContent: string) {
-        console.info('container', container)
         this.container = container;
         this.svgContent = svgContent;
         this.init();
@@ -32,12 +31,12 @@ export class NetworkAreaDiagram {
 
     public init(): void {
         this.container.innerHTML = ''; // clear the previous svg in div element before replacing
-        let tmp: HTMLElement = document.createElement('div');
-        tmp.innerHTML = this.svgContent;
-        const svgEl = tmp.getElementsByTagName('svg')[0];
-        const {x, y, width, height} = svgEl.viewBox.baseVal;
+        let svgAsHtmlElement: HTMLElement = document.createElement('div');
+        svgAsHtmlElement.innerHTML = this.svgContent;
+        const svgEl = svgAsHtmlElement.getElementsByTagName('svg')[0];
         const svgWidth = svgEl.getAttribute('width');
         const svgHeight = svgEl.getAttribute('height');
+        const {x, y, width, height} = svgEl.viewBox.baseVal;
 
         this.setWidth(+svgWidth);
         this.setHeight(+svgHeight);
@@ -53,31 +52,11 @@ export class NetworkAreaDiagram {
                 margins: { top: 0, left: 0, right: 0, bottom: 0 },
             });
 
-        tmp = <HTMLElement> draw.svg(this.svgContent).node.firstElementChild;
-        tmp.style.overflow = 'visible';
-
+        let drawnSvg: HTMLElement = <HTMLElement> draw.svg(this.svgContent).node.firstElementChild;
+        drawnSvg.style.overflow = 'visible';
         // PowSyBl NAD introduced server side calculated SVG viewbox
         // waiting for deeper adaptation, remove it and still rely on client side computed viewbox
-        tmp = <HTMLElement> draw.node.firstChild;
-        tmp.removeAttribute('viewBox');
-
-        // draw.on('panStart', function (evt) {
-        //     this.nadContainer.style.cursor = 'move';
-        // });
-        // draw.on('panEnd', function (evt) {
-        //     this.nadContainer.style.cursor = 'default';
-        // });
-
-        // this.container.appendChild(this.container);
-        // this.container.style.svgWidth = svgWidth + 'px';
-        // this.container.style.svgHeight = svgHeight + 'px';
-        // this.container.appendChild(this.nadContainer);
-        // this.container.insertAdjacentElement('afterend', this.nadContainer);
-
-        // if (draw && svgUrlRef.current === svg.svgUrl) {
-        //     draw.viewbox(draw.viewbox());
-        // }
-        // svgUrlRef.current = svg.svgUrl;
+        (<HTMLElement> draw.node.firstChild).removeAttribute('viewBox');
     }
 }
 
