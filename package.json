@@ -1,6 +1,5 @@
 {
-  "name": "diagram-viewer",
-  "organization": "powsybl",
+  "name": "@powsybl/diagram-viewer",
   "version": "0.0.1",
   "description": "Typescript library to integrate a powsybl svg diagram in a javascript project.",
   "types": "dist/types.d.ts",

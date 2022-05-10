@@ -7,10 +7,10 @@ export class NetworkAreaDiagram {
     width: number;
     height: number;
 
-    constructor(container: HTMLElement, svgContent: string) {
+    constructor(container: HTMLElement, svgContent: string, maxWidth: number, maxHeight: number) {
         this.container = container;
         this.svgContent = svgContent;
-        this.init();
+        this.init(maxWidth, maxHeight);
     }
 
     public setWidth(width: number): void {
@@ -29,7 +29,7 @@ export class NetworkAreaDiagram {
         return this.height
     }
 
-    public init(): void {
+    public init(maxWidth: number, maxHeight: number): void {
         this.container.innerHTML = ''; // clear the previous svg in div element before replacing
         let svgAsHtmlElement: HTMLElement = document.createElement('div');
         svgAsHtmlElement.innerHTML = this.svgContent;
@@ -38,11 +38,11 @@ export class NetworkAreaDiagram {
         const svgHeight = svgEl.getAttribute('height');
         const {x, y, width, height} = svgEl.viewBox.baseVal;
 
-        this.setWidth(+svgWidth);
-        this.setHeight(+svgHeight);
+        this.setWidth(Math.min(+svgWidth, maxWidth));
+        this.setHeight(Math.min(+svgHeight, maxHeight));
         const draw = SVG()
             .addTo(this.container)
-            .size(svgWidth, svgHeight)
+            .size(this.width, this.height)
             .viewbox(x, y, width, height)
             .panZoom({
                 panning: true,
@@ -54,8 +54,7 @@ export class NetworkAreaDiagram {
 
         let drawnSvg: HTMLElement = <HTMLElement> draw.svg(this.svgContent).node.firstElementChild;
         drawnSvg.style.overflow = 'visible';
-        // PowSyBl NAD introduced server side calculated SVG viewbox
-        // waiting for deeper adaptation, remove it and still rely on client side computed viewbox
+        // PowSyBl NAD introduced server side calculated SVG viewbox. This viewBox attribute can be removed as it is copied in the panzoom svg tag.
         (<HTMLElement> draw.node.firstChild).removeAttribute('viewBox');
     }
 }
