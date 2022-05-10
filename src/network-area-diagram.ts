@@ -1,7 +1,7 @@
 import { SVG } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 
-export class NetworkAreaDiagram {
+export class NetworkAreaDiagramViewer {
     container: HTMLElement;
     svgContent: string;
     width: number;

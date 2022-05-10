@@ -1,1 +1,1 @@
-export {NetworkAreaDiagram} from './network-area-diagram'
+export {NetworkAreaDiagramViewer} from './network-area-diagram'
