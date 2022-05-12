@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2022, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 import { SVG } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 
@@ -14,6 +21,9 @@ export class NetworkAreaDiagramViewer {
     }
 
     public setWidth(width: number): void {
+
+
+
         this.width = width;
     }
 
@@ -29,10 +39,14 @@ export class NetworkAreaDiagramViewer {
         return this.height
     }
 
-    public init(maxWidth: number, maxHeight: number): void {
+    public init(maxWidth: number, maxHeight:                 number): void {
         this.container.innerHTML = ''; // clear the previous svg in div element before replacing
         let svgAsHtmlElement: HTMLElement = document.createElement('div');
         svgAsHtmlElement.innerHTML = this.svgContent;
+
+
+
+
         const svgEl = svgAsHtmlElement.getElementsByTagName('svg')[0];
         const svgWidth = svgEl.getAttribute('width');
         const svgHeight = svgEl.getAttribute('height');
@@ -58,4 +72,3 @@ export class NetworkAreaDiagramViewer {
         (<HTMLElement> draw.node.firstChild).removeAttribute('viewBox');
     }
 }
-

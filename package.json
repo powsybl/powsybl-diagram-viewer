@@ -2,6 +2,10 @@
   "name": "@powsybl/diagram-viewer",
   "version": "0.0.1",
   "description": "Typescript library to integrate a powsybl svg diagram in a javascript project.",
+  "author": "powsybl team",
+  "homepage": "https://github.com/powsybl",
+  "license": "MPL",
+  "repository": "git://github.com/powsybl/powsybl-diagram-viewer.git",
   "types": "dist/types.d.ts",
   "source": "src/index.ts",
   "main": "dist/main.js",
@@ -12,7 +16,8 @@
   "scripts": {
     "watch": "parcel watch",
     "build": "parcel build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "parcel demo/src/index.html --open"
   },
   "devDependencies": {
     "@parcel/packager-ts": "^2.5.0",
