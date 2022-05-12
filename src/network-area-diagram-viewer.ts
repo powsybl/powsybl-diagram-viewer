@@ -29,11 +29,11 @@ export class NetworkAreaDiagramViewer {
     }
 
     public getWidth(): number {
-        return this.width
+        return this.width;
     }
 
     public getHeight(): number {
-        return this.height
+        return this.height;
     }
 
     public init(maxWidth: number, maxHeight:                 number): void {
