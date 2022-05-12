@@ -21,9 +21,6 @@ export class NetworkAreaDiagramViewer {
     }
 
     public setWidth(width: number): void {
-
-
-
         this.width = width;
     }
 
@@ -43,10 +40,6 @@ export class NetworkAreaDiagramViewer {
         this.container.innerHTML = ''; // clear the previous svg in div element before replacing
         let svgAsHtmlElement: HTMLElement = document.createElement('div');
         svgAsHtmlElement.innerHTML = this.svgContent;
-
-
-
-
         const svgEl = svgAsHtmlElement.getElementsByTagName('svg')[0];
         const svgWidth = svgEl.getAttribute('width');
         const svgHeight = svgEl.getAttribute('height');
