@@ -43,17 +43,14 @@ export class NetworkAreaDiagramViewer {
     public init(minWidth: number, minHeight: number, maxWidth: number, maxHeight: number): void {
         this.container.innerHTML = ''; // clear the previous svg in div element before replacing
 
-        const dim = this.getDimensionsFromSvg();
-        const svgWidth = dim.width;
-        const svgHeight = dim.height;
-        const {x, y, width, height} = dim.viewbox;
+        const dim: DIMENSION = this.getDimensionsFromSvg();
 
-        this.setWidth(+svgWidth < minWidth ? minWidth : Math.min(+svgWidth, maxWidth));
-        this.setHeight(+svgHeight < minHeight ? minHeight : Math.min(+svgHeight, maxHeight));
+        this.setWidth(dim.width < minWidth ? minWidth : Math.min(dim.width, maxWidth));
+        this.setHeight(dim.height < minHeight ? minHeight : Math.min(dim.height, maxHeight));
         const draw = SVG()
             .addTo(this.container)
             .size(this.width, this.height)
-            .viewbox(x, y, width, height)
+            .viewbox(dim.viewbox.x, dim.viewbox.y, dim.viewbox.width, dim.viewbox.height)
             .panZoom({
                 panning: true,
                 zoomMin: 0.5,
