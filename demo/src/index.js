@@ -11,7 +11,7 @@ import NadSvgExample from '../data/nad-example.svg'
 fetch(NadSvgExample)
     .then(response => response.text())
     .then((svgContent) => {
-        const nad = new NetworkAreaDiagramViewer(
+        new NetworkAreaDiagramViewer(
             document.getElementById('svg-container'),
             svgContent,
             500,

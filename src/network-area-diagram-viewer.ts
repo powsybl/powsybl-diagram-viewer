@@ -8,16 +8,20 @@
 import { SVG } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 
+type DIMENSION = { width: number, height: number, viewbox: VIEWBOX };
+type VIEWBOX = { x: number, y: number, width: number, height: number };
+
 export class NetworkAreaDiagramViewer {
     container: HTMLElement;
     svgContent: string;
     width: number;
     height: number;
 
-    constructor(container: HTMLElement, svgContent: string, maxWidth: number, maxHeight: number) {
+
+    constructor(container: HTMLElement, svgContent: string, minWidth: number, minHeight: number, maxWidth: number, maxHeight: number) {
         this.container = container;
         this.svgContent = svgContent;
-        this.init(maxWidth, maxHeight);
+        this.init(minWidth, minHeight, maxWidth, maxHeight);
     }
 
     public setWidth(width: number): void {
@@ -36,17 +40,16 @@ export class NetworkAreaDiagramViewer {
         return this.height;
     }
 
-    public init(maxWidth: number, maxHeight:                 number): void {
+    public init(minWidth: number, minHeight: number, maxWidth: number, maxHeight: number): void {
         this.container.innerHTML = ''; // clear the previous svg in div element before replacing
-        let svgAsHtmlElement: HTMLElement = document.createElement('div');
-        svgAsHtmlElement.innerHTML = this.svgContent;
-        const svgEl = svgAsHtmlElement.getElementsByTagName('svg')[0];
-        const svgWidth = svgEl.getAttribute('width');
-        const svgHeight = svgEl.getAttribute('height');
-        const {x, y, width, height} = svgEl.viewBox.baseVal;
 
-        this.setWidth(Math.min(+svgWidth, maxWidth));
-        this.setHeight(Math.min(+svgHeight, maxHeight));
+        const dim = this.getDimensionsFromSvg();
+        const svgWidth = dim.width;
+        const svgHeight = dim.height;
+        const {x, y, width, height} = dim.viewbox;
+
+        this.setWidth(+svgWidth < minWidth ? minWidth : Math.min(+svgWidth, maxWidth));
+        this.setHeight(+svgHeight < minHeight ? minHeight : Math.min(+svgHeight, maxHeight));
         const draw = SVG()
             .addTo(this.container)
             .size(this.width, this.height)
@@ -59,9 +62,19 @@ export class NetworkAreaDiagramViewer {
                 margins: { top: 0, left: 0, right: 0, bottom: 0 },
             });
 
-        let drawnSvg: HTMLElement = <HTMLElement> draw.svg(this.svgContent).node.firstElementChild;
+        const drawnSvg: HTMLElement = <HTMLElement> draw.svg(this.svgContent).node.firstElementChild;
         drawnSvg.style.overflow = 'visible';
         // PowSyBl NAD introduced server side calculated SVG viewbox. This viewBox attribute can be removed as it is copied in the panzoom svg tag.
         (<HTMLElement> draw.node.firstChild).removeAttribute('viewBox');
+        (<HTMLElement> draw.node.firstChild).removeAttribute('width');
+        (<HTMLElement> draw.node.firstChild).removeAttribute('height');
+    }
+
+    public getDimensionsFromSvg(): DIMENSION {
+        const svg : SVGSVGElement = new DOMParser().parseFromString(this.svgContent, "image/svg+xml").getElementsByTagName('svg')[0];
+        const width : number = +svg.getAttribute('width');
+        const height : number = +svg.getAttribute('height');
+        const viewbox: VIEWBOX = svg.viewBox.baseVal;
+        return {width: width, height: height, viewbox: viewbox};
     }
 }
