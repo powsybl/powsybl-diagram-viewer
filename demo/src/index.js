@@ -16,7 +16,7 @@ fetch(NadSvgExample)
             svgContent,
             500,
             600,
-            100,
+            1000,
             1200
         );
 
