@@ -15,7 +15,9 @@ fetch(NadSvgExample)
             document.getElementById('svg-container'),
             svgContent,
             500,
-            600
+            600,
+            100,
+            1200
         );
 
         document.getElementsByTagName('svg')[0].setAttribute("style","border:2px; border-style:solid;");
