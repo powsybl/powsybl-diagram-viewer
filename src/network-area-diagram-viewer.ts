@@ -8,8 +8,8 @@
 import { SVG } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 
-type DIMENSION = { width: number, height: number, viewbox: VIEWBOX };
-type VIEWBOX = { x: number, y: number, width: number, height: number };
+type DIMENSION = { width: number; height: number; viewbox: VIEWBOX };
+type VIEWBOX = { x: number; y: number; width: number; height: number };
 
 export class NetworkAreaDiagramViewer {
     container: HTMLElement;
@@ -17,8 +17,14 @@ export class NetworkAreaDiagramViewer {
     width: number;
     height: number;
 
-
-    constructor(container: HTMLElement, svgContent: string, minWidth: number, minHeight: number, maxWidth: number, maxHeight: number) {
+    constructor(
+        container: HTMLElement,
+        svgContent: string,
+        minWidth: number,
+        minHeight: number,
+        maxWidth: number,
+        maxHeight: number
+    ) {
         this.container = container;
         this.svgContent = svgContent;
         this.init(minWidth, minHeight, maxWidth, maxHeight);
@@ -40,17 +46,34 @@ export class NetworkAreaDiagramViewer {
         return this.height;
     }
 
-    public init(minWidth: number, minHeight: number, maxWidth: number, maxHeight: number): void {
+    public init(
+        minWidth: number,
+        minHeight: number,
+        maxWidth: number,
+        maxHeight: number
+    ): void {
+        if (this.container === null || this.container === undefined) {
+            return;
+        }
         this.container.innerHTML = ''; // clear the previous svg in div element before replacing
 
         const dim: DIMENSION = this.getDimensionsFromSvg();
 
-        this.setWidth(dim.width < minWidth ? minWidth : Math.min(dim.width, maxWidth));
-        this.setHeight(dim.height < minHeight ? minHeight : Math.min(dim.height, maxHeight));
+        this.setWidth(
+            dim.width < minWidth ? minWidth : Math.min(dim.width, maxWidth)
+        );
+        this.setHeight(
+            dim.height < minHeight ? minHeight : Math.min(dim.height, maxHeight)
+        );
         const draw = SVG()
             .addTo(this.container)
             .size(this.width, this.height)
-            .viewbox(dim.viewbox.x, dim.viewbox.y, dim.viewbox.width, dim.viewbox.height)
+            .viewbox(
+                dim.viewbox.x,
+                dim.viewbox.y,
+                dim.viewbox.width,
+                dim.viewbox.height
+            )
             .panZoom({
                 panning: true,
                 zoomMin: 0.5,
@@ -59,19 +82,23 @@ export class NetworkAreaDiagramViewer {
                 margins: { top: 0, left: 0, right: 0, bottom: 0 },
             });
 
-        const drawnSvg: HTMLElement = <HTMLElement> draw.svg(this.svgContent).node.firstElementChild;
+        const drawnSvg: HTMLElement = <HTMLElement>(
+            draw.svg(this.svgContent).node.firstElementChild
+        );
         drawnSvg.style.overflow = 'visible';
         // PowSyBl NAD introduced server side calculated SVG viewbox. This viewBox attribute can be removed as it is copied in the panzoom svg tag.
-        (<HTMLElement> draw.node.firstChild).removeAttribute('viewBox');
-        (<HTMLElement> draw.node.firstChild).removeAttribute('width');
-        (<HTMLElement> draw.node.firstChild).removeAttribute('height');
+        (<HTMLElement>draw.node.firstChild).removeAttribute('viewBox');
+        (<HTMLElement>draw.node.firstChild).removeAttribute('width');
+        (<HTMLElement>draw.node.firstChild).removeAttribute('height');
     }
 
     public getDimensionsFromSvg(): DIMENSION {
-        const svg : SVGSVGElement = new DOMParser().parseFromString(this.svgContent, "image/svg+xml").getElementsByTagName('svg')[0];
-        const width : number = +svg.getAttribute('width');
-        const height : number = +svg.getAttribute('height');
+        const svg: SVGSVGElement = new DOMParser()
+            .parseFromString(this.svgContent, 'image/svg+xml')
+            .getElementsByTagName('svg')[0];
+        const width: number = +svg.getAttribute('width');
+        const height: number = +svg.getAttribute('height');
         const viewbox: VIEWBOX = svg.viewBox.baseVal;
-        return {width: width, height: height, viewbox: viewbox};
+        return { width: width, height: height, viewbox: viewbox };
     }
 }

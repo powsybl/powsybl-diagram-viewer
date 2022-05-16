@@ -6,10 +6,10 @@
  */
 
 import { NetworkAreaDiagramViewer } from '../../dist/module.js';
-import NadSvgExample from '../data/nad-example.svg'
+import NadSvgExample from '../data/nad-example.svg';
 
 fetch(NadSvgExample)
-    .then(response => response.text())
+    .then((response) => response.text())
     .then((svgContent) => {
         new NetworkAreaDiagramViewer(
             document.getElementById('svg-container'),
@@ -20,6 +20,7 @@ fetch(NadSvgExample)
             1200
         );
 
-        document.getElementsByTagName('svg')[0].setAttribute("style","border:2px; border-style:solid;");
+        document
+            .getElementsByTagName('svg')[0]
+            .setAttribute('style', 'border:2px; border-style:solid;');
     });
-

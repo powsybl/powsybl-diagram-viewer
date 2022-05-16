@@ -5,4 +5,4 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-export {NetworkAreaDiagramViewer} from './network-area-diagram-viewer'
+export { NetworkAreaDiagramViewer } from './network-area-diagram-viewer';
