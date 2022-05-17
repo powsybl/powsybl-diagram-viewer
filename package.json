@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Typescript library to integrate a powsybl svg diagram in a javascript project.",
   "author": "powsybl team",
-  "homepage": "https://github.com/powsybl",
+  "homepage": "https://www.powsybl.org/",
   "license": "MPL",
   "repository": "git://github.com/powsybl/powsybl-diagram-viewer.git",
   "types": "dist/types.d.ts",
