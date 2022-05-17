@@ -94,7 +94,8 @@ export class NetworkAreaDiagramViewer {
 
     public getDimensionsFromSvg(): DIMENSION {
         // Dimensions are set in the main svg tag attributes. We want to parse those data without loading the whole svg in the DOM.
-        const emptiedSvgContent: string = this.svgContent.match('(<svg)(.*)(>)')[0];
+        const emptiedSvgContent: string =
+            this.svgContent.match('(<svg)(.*)(>)')[0];
         const svg: SVGSVGElement = new DOMParser()
             .parseFromString(emptiedSvgContent, 'image/svg+xml')
             .getElementsByTagName('svg')[0];

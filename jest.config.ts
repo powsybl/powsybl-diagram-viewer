@@ -4,13 +4,11 @@
  */
 
 export default {
-  // A preset that is used as a base for Jest's configuration
-  preset: 'ts-jest/presets/js-with-ts',
+    // A preset that is used as a base for Jest's configuration
+    preset: 'ts-jest/presets/js-with-ts',
 
-  // The test environment that will be used for testing
-  testEnvironment: "jsdom",
+    // The test environment that will be used for testing
+    testEnvironment: 'jsdom',
 
-  setupFiles: [
-    "<rootDir>/src/setupTests.ts"
-  ]
+    setupFiles: ['<rootDir>/src/setupTests.ts'],
 };
