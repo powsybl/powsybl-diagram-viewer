@@ -38,6 +38,14 @@ export class NetworkAreaDiagramViewer {
         this.height = height;
     }
 
+    public setContainer(container: HTMLElement): void {
+        this.container = container;
+    }
+
+    public setSvgContent(svgContent: string): void {
+        this.svgContent = svgContent;
+    }
+
     public getWidth(): number {
         return this.width;
     }
@@ -46,15 +54,28 @@ export class NetworkAreaDiagramViewer {
         return this.height;
     }
 
+    public getContainer(): HTMLElement {
+        return this.container;
+    }
+
+    public getSvgContent(): string {
+        return this.svgContent;
+    }
+
     public init(
         minWidth: number,
         minHeight: number,
         maxWidth: number,
         maxHeight: number
     ): void {
-        if (this.container === null || this.container === undefined) {
+        if (
+            this.container === null ||
+            this.container === undefined ||
+            this.isSvgContentValid()
+        ) {
             return;
         }
+
         this.container.innerHTML = ''; // clear the previous svg in div element before replacing
 
         const dim: DIMENSION = this.getDimensionsFromSvg();
@@ -103,5 +124,13 @@ export class NetworkAreaDiagramViewer {
         const height: number = +svg.getAttribute('height');
         const viewbox: VIEWBOX = svg.viewBox.baseVal;
         return { width: width, height: height, viewbox: viewbox };
+    }
+
+    public isSvgContentValid(): boolean {
+        return (
+            this.svgContent === null ||
+            this.svgContent === undefined ||
+            this.svgContent === ''
+        );
     }
 }
