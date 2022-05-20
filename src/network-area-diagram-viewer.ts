@@ -8,7 +8,7 @@
 import { SVG } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 
-type DIMENSION = { width: number; height: number; viewbox: VIEWBOX };
+type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
 
 export class NetworkAreaDiagramViewer {
@@ -76,24 +76,33 @@ export class NetworkAreaDiagramViewer {
             return;
         }
 
-        this.container.innerHTML = ''; // clear the previous svg in div element before replacing
+        const dimensions: DIMENSIONS = this.getDimensionsFromSvg();
 
-        const dim: DIMENSION = this.getDimensionsFromSvg();
+        if (dimensions === null) {
+            return;
+        }
+
+        // clear the previous svg in div element before replacing
+        this.container.innerHTML = '';
 
         this.setWidth(
-            dim.width < minWidth ? minWidth : Math.min(dim.width, maxWidth)
+            dimensions.width < minWidth
+                ? minWidth
+                : Math.min(dimensions.width, maxWidth)
         );
         this.setHeight(
-            dim.height < minHeight ? minHeight : Math.min(dim.height, maxHeight)
+            dimensions.height < minHeight
+                ? minHeight
+                : Math.min(dimensions.height, maxHeight)
         );
         const draw = SVG()
             .addTo(this.container)
             .size(this.width, this.height)
             .viewbox(
-                dim.viewbox.x,
-                dim.viewbox.y,
-                dim.viewbox.width,
-                dim.viewbox.height
+                dimensions.viewbox.x,
+                dimensions.viewbox.y,
+                dimensions.viewbox.width,
+                dimensions.viewbox.height
             )
             .panZoom({
                 panning: true,
@@ -113,9 +122,13 @@ export class NetworkAreaDiagramViewer {
         (<HTMLElement>draw.node.firstChild).removeAttribute('height');
     }
 
-    public getDimensionsFromSvg(): DIMENSION {
+    public getDimensionsFromSvg(): DIMENSIONS {
         // Dimensions are set in the main svg tag attributes. We want to parse those data without loading the whole svg in the DOM.
-        const emptiedSvgContent = this.svgContent.match('(<svg)(.*)(>)')[0];
+        const result = this.svgContent.match('(<svg)(.*)(>)');
+        if (result === null || result.length === 0) {
+            return null;
+        }
+        const emptiedSvgContent = result[0];
         const svg: SVGSVGElement = new DOMParser()
             .parseFromString(emptiedSvgContent, 'image/svg+xml')
             .getElementsByTagName('svg')[0];
