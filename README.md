@@ -1,7 +1,12 @@
 # powsybl-diagram-viewer
 
-Typescript library to integrate a powsybl svg diagram in a javascript project. The library is built with the Parcel bundler.
-Use: 'npm run build'
+Typescript library to integrate a powsybl svg diagram in a javascript project. The library is built with the Parcel bundler.  
+Node from v16.15.0 is required to build with Parcel.
+
+Use:  
+'npm install'  
+'npm run build'
+
 
 #### For developers
 
