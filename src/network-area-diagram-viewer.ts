@@ -68,17 +68,13 @@ export class NetworkAreaDiagramViewer {
         maxWidth: number,
         maxHeight: number
     ): void {
-        if (
-            this.container === null ||
-            this.container === undefined ||
-            this.isSvgContentValid()
-        ) {
+        if (!this.container || !this.svgContent) {
             return;
         }
 
         const dimensions: DIMENSIONS = this.getDimensionsFromSvg();
 
-        if (dimensions === null) {
+        if (!dimensions) {
             return;
         }
 
@@ -117,9 +113,10 @@ export class NetworkAreaDiagramViewer {
         );
         drawnSvg.style.overflow = 'visible';
         // PowSyBl NAD introduced server side calculated SVG viewbox. This viewBox attribute can be removed as it is copied in the panzoom svg tag.
-        (<HTMLElement>draw.node.firstChild).removeAttribute('viewBox');
-        (<HTMLElement>draw.node.firstChild).removeAttribute('width');
-        (<HTMLElement>draw.node.firstChild).removeAttribute('height');
+        const firstChild: HTMLElement = <HTMLElement>draw.node.firstChild;
+        firstChild.removeAttribute('viewBox');
+        firstChild.removeAttribute('width');
+        firstChild.removeAttribute('height');
     }
 
     public getDimensionsFromSvg(): DIMENSIONS {
@@ -136,13 +133,5 @@ export class NetworkAreaDiagramViewer {
         const height: number = +svg.getAttribute('height');
         const viewbox: VIEWBOX = svg.viewBox.baseVal;
         return { width: width, height: height, viewbox: viewbox };
-    }
-
-    public isSvgContentValid(): boolean {
-        return (
-            this.svgContent === null ||
-            this.svgContent === undefined ||
-            this.svgContent === ''
-        );
     }
 }
