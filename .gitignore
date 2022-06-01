@@ -4,6 +4,9 @@
 # distribution
 /dist
 
+# distrib for demo
+/output
+
 # webstorm
 /.idea
 

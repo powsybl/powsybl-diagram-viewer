@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { NetworkAreaDiagramViewer } from '../../dist/module.js';
 import NadSvgExample from '../data/nad-example.svg';
+import { NetworkAreaDiagramViewer } from '../../src/network-area-diagram-viewer';
 
 fetch(NadSvgExample)
     .then((response) => response.text())
