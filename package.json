@@ -17,8 +17,7 @@
     "watch": "parcel watch",
     "build": "parcel build",
     "test": "jest",
-    "start": "parcel demo/src/index.html --open",
-    "start-demo": "parcel demo/src/index.html --dist-dir ./output --open",
+    "start": "parcel demo/src/index.html --dist-dir ./output --open",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "devDependencies": {
