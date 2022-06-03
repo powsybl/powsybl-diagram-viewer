@@ -1,0 +1,6 @@
+#svg-container {
+    position: relative;
+    width: 0;
+    height: 0;
+    background-color: black;
+}

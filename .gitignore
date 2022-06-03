@@ -1,0 +1,16 @@
+# dependencies
+/node_modules
+
+# distribution
+/dist
+
+# distrib for demo
+/output
+
+# webstorm
+/.idea
+
+# parcel
+/.parcel-cache
+
+
