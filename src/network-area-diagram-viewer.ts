@@ -125,7 +125,7 @@ export class NetworkAreaDiagramViewer {
         if (result === null || result.length === 0) {
             return null;
         }
-        const emptiedSvgContent = result[0]  + '</svg>';
+        const emptiedSvgContent = result[0] + '</svg>';
         const svg: SVGSVGElement = new DOMParser()
             .parseFromString(emptiedSvgContent, 'image/svg+xml')
             .getElementsByTagName('svg')[0];
