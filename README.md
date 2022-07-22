@@ -23,10 +23,10 @@ you need to follow the steps below:
 -   Pull and checkout main on your last commit.
 -   [Tag your last commit](https://semver.org/) : `git tag <tag>` (example: `git tag v0.6.0`)
 -   Push tag : `git push origin <tag>`  
-<br/>
+---
 -   (Optional) Checkout the tag in a fresh repo copy : `cd $(mktemp -d) && git clone https://github.com/powsybl/powsybl-diagram-viewer.git` then `cd powsybl-diagram-viewer && git checkout <tag>`
 -   (Optional) [Test your package](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages#testing-your-package): `npm install`  
-<br/>
+---
 -   Build the package - npm will publish the README.md, the package.json and the dist directory you just generate : `npm run build`
 -   [Login on the command line to the npm registry](https://docs.npmjs.com/logging-in-to-an-npm-enterprise-registry-from-the-command-line): `npm login`
 -   [Publish the package](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages#publishing-scoped-public-packages): `npm publish`
