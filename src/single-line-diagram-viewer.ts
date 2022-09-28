@@ -8,8 +8,8 @@
 import { SVG } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 
-const Arrow = require("./images/arrow.svg") as string;
-const ArrowHover = require("./images/arrow_hover.svg") as string;
+const Arrow = require('./images/arrow.svg') as string;
+const ArrowHover = require('./images/arrow_hover.svg') as string;
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
@@ -84,7 +84,7 @@ export type OnBreakerCallbackType = (
     switchElement: EventTarget | null
 ) => void;
 
-export type OnShowEquipmentCallbackType = (
+export type OnFeederCallbackType = (
     equipmentId: string,
     equipmentType: string | null,
     svgId: string,
@@ -98,9 +98,9 @@ export class SingleLineDiagramViewer {
     svgMetadata: SLDMetadata;
     width: number;
     height: number;
-    onNextVoltageLevelClick: OnNextVoltageCallbackType;
-    onBreakerClick: OnBreakerCallbackType;
-    onFeederClick: OnShowEquipmentCallbackType;
+    onNextVoltageCallback: OnNextVoltageCallbackType;
+    onBreakerCallback: OnBreakerCallbackType;
+    onFeederCallback: OnFeederCallbackType;
     selectionBackColor: string;
     svgType: string;
     arrowSvg: string;
@@ -115,18 +115,18 @@ export class SingleLineDiagramViewer {
         minHeight: number,
         maxWidth: number,
         maxHeight: number,
-        onNextVoltageLevelClick: OnNextVoltageCallbackType,
-        onBreakerClick: OnBreakerCallbackType,
-        onFeederClick: OnShowEquipmentCallbackType,
+        onNextVoltageCallback: OnNextVoltageCallbackType,
+        onBreakerCallback: OnBreakerCallbackType,
+        onFeederCallback: OnFeederCallbackType,
         selectionBackColor: string
     ) {
         this.container = container;
         this.svgType = svgType;
         this.svgContent = svgContent;
         this.svgMetadata = svgMetadata;
-        this.onNextVoltageLevelClick = onNextVoltageLevelClick;
-        this.onBreakerClick = onBreakerClick;
-        this.onFeederClick = onFeederClick;
+        this.onNextVoltageCallback = onNextVoltageCallback;
+        this.onBreakerCallback = onBreakerCallback;
+        this.onFeederCallback = onFeederCallback;
         this.selectionBackColor = selectionBackColor;
         this.width = 0;
         this.height = 0;
@@ -233,10 +233,10 @@ export class SingleLineDiagramViewer {
         firstChild.removeAttribute('width');
         firstChild.removeAttribute('height');
 
-        draw.on('panStart', function (evt) {
+        draw.on('panStart', function () {
             drawnSvg.style.cursor = 'move';
         });
-        draw.on('panEnd', function (evt) {
+        draw.on('panEnd', function () {
             drawnSvg.style.cursor = 'default';
         });
 
@@ -258,8 +258,7 @@ export class SingleLineDiagramViewer {
     }
 
     private addNavigationArrow() {
-        if (this.onNextVoltageLevelClick !== null) {
-            let self = this;
+        if (this.onNextVoltageCallback !== null) {
             let navigable = this.svgMetadata.nodes.filter((el) => el.nextVId);
             let vlList = this.svgMetadata.nodes.map((element) => element.vid);
             vlList = vlList.filter(
@@ -272,19 +271,19 @@ export class SingleLineDiagramViewer {
                 return vlList.indexOf(element.nextVId) === -1;
             });
 
-            let highestY = new Map();
-            let lowestY = new Map();
+            const highestY = new Map();
+            const lowestY = new Map();
             let y;
 
             navigable.forEach((element) => {
-                let elementById: HTMLElement | null =
-                    self.container.querySelector('#' + element.id);
+                const elementById: HTMLElement | null =
+                    this.container.querySelector('#' + element.id);
                 if (elementById != null) {
-                    let transform: string[] | undefined = elementById
+                    const transform: string[] | undefined = elementById
                         ?.getAttribute('transform')
                         ?.split(',');
 
-                    let ys = transform?.[1]?.match(/\d+/)?.[0];
+                    const ys = transform?.[1]?.match(/\d+/)?.[0];
                     if (ys !== undefined) {
                         y = parseInt(ys, 10);
                         if (
@@ -304,15 +303,15 @@ export class SingleLineDiagramViewer {
             });
 
             navigable.forEach((element) => {
-                let elementById: HTMLElement | null =
+                const elementById: HTMLElement | null =
                     this.container.querySelector('#' + element.id);
                 if (elementById != null) {
-                    let transform: string[] | undefined = elementById
+                    const transform: string[] | undefined = elementById
                         ?.getAttribute('transform')
                         ?.split(',');
-                    let xs = transform?.[0]?.match(/\d+/)?.[0];
+                    const xs = transform?.[0]?.match(/\d+/)?.[0];
                     if (xs !== undefined) {
-                        let x = parseInt(xs, 10);
+                        const x = parseInt(xs, 10);
                         this.createSvgArrow(
                             elementById,
                             element.direction,
@@ -348,11 +347,10 @@ export class SingleLineDiagramViewer {
         highestY: number,
         lowestY: number
     ) {
-        let self = this;
-        let svgInsert: HTMLElement | null = element?.parentElement;
+        const svgInsert: HTMLElement | null = element?.parentElement;
         if (svgInsert !== undefined && svgInsert !== null) {
-            let group = document.createElementNS(SVG_NS, 'g');
-            let svgMetadata = self.svgMetadata;
+            const group = document.createElementNS(SVG_NS, 'g');
+            const svgMetadata = this.svgMetadata;
             let y;
 
             if (position === 'TOP') {
@@ -375,20 +373,20 @@ export class SingleLineDiagramViewer {
                 );
             }
 
-            group.innerHTML = self.arrowSvg + self.arrowHoverSvg;
+            group.innerHTML = this.arrowSvg + this.arrowHoverSvg;
             svgInsert.appendChild(group);
 
             // handling the navigation between voltage levels
             group.style.cursor = 'pointer';
-            self.setArrowsStyle(group, 'currentColor', self.selectionBackColor);
+            this.setArrowsStyle(group, 'currentColor', this.selectionBackColor);
             let dragged = false;
-            group.addEventListener('mousedown', function (event) {
+            group.addEventListener('mousedown',  () => {
                 dragged = false;
             });
-            group.addEventListener('mousemove', function (event) {
+            group.addEventListener('mousemove', () => {
                 dragged = true;
             });
-            group.addEventListener('mouseup', function (event) {
+            group.addEventListener('mouseup', (event) => {
                 if (dragged || event.button !== 0) {
                     return;
                 }
@@ -396,24 +394,24 @@ export class SingleLineDiagramViewer {
                     (other) => other.id === element.id
                 );
                 if (meta !== undefined && meta !== null) {
-                    self.onNextVoltageLevelClick(meta.nextVId);
+                    this.onNextVoltageCallback(meta.nextVId);
                 }
             });
 
             //handling the color changes when hovering
-            group.addEventListener('mouseenter', function (e: Event) {
-                self.setArrowsStyle(
+            group.addEventListener('mouseenter', (e: Event) => {
+                this.setArrowsStyle(
                     e.target as SVGElement,
-                    self.selectionBackColor,
+                    this.selectionBackColor,
                     'currentColor'
                 );
             });
 
-            group.addEventListener('mouseleave', function (e: Event) {
-                self.setArrowsStyle(
+            group.addEventListener('mouseleave', (e: Event) => {
+                this.setArrowsStyle(
                     e.target as SVGElement,
                     'currentColor',
-                    self.selectionBackColor
+                    this.selectionBackColor
                 );
             });
         }
@@ -421,11 +419,10 @@ export class SingleLineDiagramViewer {
 
     private addSwitchesHandler() {
         // handling the click on a switch
-        if (this.onBreakerClick != null) {
+        if (this.onBreakerCallback != null) {
             const switches = this.svgMetadata.nodes.filter((element) =>
                 SWITCH_COMPONENT_TYPES.has(element.componentType)
             );
-            const self = this;
             switches.forEach((aSwitch) => {
                 const domEl: HTMLElement | null = this.container.querySelector(
                     '#' + aSwitch.id
@@ -433,19 +430,19 @@ export class SingleLineDiagramViewer {
                 if (domEl !== null) {
                     domEl.style.cursor = 'pointer';
                     let dragged = false;
-                    domEl.addEventListener('mousedown', function (event) {
+                    domEl.addEventListener('mousedown', () => {
                         dragged = false;
                     });
-                    domEl.addEventListener('mousemove', function (event) {
+                    domEl.addEventListener('mousemove', () => {
                         dragged = true;
                     });
-                    domEl.addEventListener('mouseup', function (event) {
+                    domEl.addEventListener('mouseup', (event) => {
                         if (dragged || event.button !== 0) {
                             return;
                         }
                         const switchId = aSwitch.equipmentId;
                         const open = aSwitch.open;
-                        self.onBreakerClick(
+                        this.onBreakerCallback(
                             switchId,
                             !open,
                             event.currentTarget
@@ -511,9 +508,7 @@ export class SingleLineDiagramViewer {
 
     private addFeedersHandler() {
         // handling the right click on a feeder (menu)
-        if (this.onFeederClick != null) {
-            let self = this;
-
+        if (this.onFeederCallback != null) {
             const showFeederSelection = (
                 svgText: SVGTextElement,
                 colorSelected: string
@@ -558,14 +553,14 @@ export class SingleLineDiagramViewer {
                         ?.querySelector('text[class="sld-label"]');
                 if (svgText !== undefined && svgText !== null) {
                     svgText['style'].cursor = 'pointer';
-                    svgText.addEventListener('mouseenter', function (event) {
-                        showFeederSelection(svgText, self.selectionBackColor);
+                    svgText.addEventListener('mouseenter', () => {
+                        showFeederSelection(svgText, this.selectionBackColor);
                     });
-                    svgText.addEventListener('mouseleave', function (event) {
+                    svgText.addEventListener('mouseleave', () => {
                         hideFeederSelection(svgText);
                     });
-                    svgText.addEventListener('contextmenu', function (event) {
-                        self.onFeederClick(
+                    svgText.addEventListener('contextmenu', (event) => {
+                        this.onFeederCallback(
                             feeder.equipmentId,
                             feeder.componentType,
                             feeder.id,
