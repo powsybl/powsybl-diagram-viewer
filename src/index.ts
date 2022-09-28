@@ -6,3 +6,4 @@
  */
 
 export { NetworkAreaDiagramViewer } from './network-area-diagram-viewer';
+export { SingleLineDiagramViewer } from './single-line-diagram-viewer';
