@@ -560,6 +560,7 @@ export class SingleLineDiagramViewer {
                         hideFeederSelection(svgText);
                     });
                     svgText.addEventListener('contextmenu', (event) => {
+                        event.preventDefault();
                         this.onFeederCallback(
                             feeder.equipmentId,
                             feeder.componentType,
