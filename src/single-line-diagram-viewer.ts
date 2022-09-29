@@ -8,9 +8,6 @@
 import { SVG } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 
-const Arrow = require('./images/arrow.svg') as string;
-const ArrowHover = require('./images/arrow_hover.svg') as string;
-
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
 
@@ -41,18 +38,10 @@ const FEEDER_COMPONENT_TYPES = new Set([
     'PHASE_SHIFT_TRANSFORMER',
 ]);
 
-async function fetchArrowsSvg(
-    arrow1: string,
-    arrowHover1: string
-): Promise<string[]> {
-    const [arrowSvgResponse, arrowHoverSvgResponse] = await Promise.all([
-        fetch(arrow1),
-        fetch(arrowHover1),
-    ]);
-    const arrowSvg = await arrowSvgResponse.text();
-    const arrowHoverSvg = await arrowHoverSvgResponse.text();
-    return [arrowSvg, arrowHoverSvg];
-}
+const ARROW_SVG =
+    '<svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg"><path class="arrow" fill-rule="evenodd" clip-rule="evenodd" d="M16 24.0163L17.2358 25.3171L21.9837 20.5691L26.7317 25.3171L28 24.0163L21.9837 18L16 24.0163Z"/></svg>';
+const ARROW_HOVER_SVG =
+    '<svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg"><path class="arrow-hover" fill-rule="evenodd" clip-rule="evenodd" d="M22 35C29.1797 35 35 29.1797 35 22C35 14.8203 29.1797 9 22 9C14.8203 9 9 14.8203 9 22C9 29.1797 14.8203 35 22 35ZM17.2358 25.3171L16 24.0163L21.9837 18L28 24.0163L26.7317 25.3171L21.9837 20.5691L17.2358 25.3171Z"/>';
 
 export interface SLDMetadataNode {
     id: string;
@@ -131,18 +120,9 @@ export class SingleLineDiagramViewer {
         this.width = 0;
         this.height = 0;
         this.init(minWidth, minHeight, maxWidth, maxHeight);
-        this.arrowSvg = '';
-        this.arrowHoverSvg = '';
+        this.arrowSvg = ARROW_SVG;
+        this.arrowHoverSvg = ARROW_HOVER_SVG;
         this.addNavigationArrow();
-        fetchArrowsSvg(Arrow, ArrowHover)
-            .then(([arrowSvg1, arrowHoverSvg1], this1 = this) => {
-                this1.arrowSvg = arrowSvg1;
-                this1.arrowHoverSvg = arrowHoverSvg1;
-                this.addNavigationArrow();
-            })
-            .catch((error) => {
-                console.log('could not fetch arrows SVGs' + error);
-            });
     }
 
     public setWidth(width: number): void {
@@ -552,7 +532,7 @@ export class SingleLineDiagramViewer {
                         ?.querySelector('#' + feeder.id)
                         ?.querySelector('text[class="sld-label"]');
                 if (svgText !== undefined && svgText !== null) {
-                    svgText['style'].cursor = 'pointer';
+                    svgText.style.cursor = 'pointer';
                     svgText.addEventListener('mouseenter', () => {
                         showFeederSelection(svgText, this.selectionBackColor);
                     });
@@ -565,8 +545,8 @@ export class SingleLineDiagramViewer {
                             feeder.equipmentId,
                             feeder.componentType,
                             feeder.id,
-                            event['x'],
-                            event['y']
+                            event.x,
+                            event.y
                         );
                     });
                 }
