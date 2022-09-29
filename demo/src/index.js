@@ -24,14 +24,16 @@ fetch(NadSvgExample)
             1200
         );
 
-        document.getElementById('svg-container').getElementsByTagName('svg')[0]
+        document
+            .getElementById('svg-container')
+            .getElementsByTagName('svg')[0]
             .setAttribute('style', 'border:2px; border-style:solid;');
-});
+    });
 
 fetch(SldSvgExample)
-.then((response) => response.text())
-.then((svgContent) => {
-    new SingleLineDiagramViewer(
+    .then((response) => response.text())
+    .then((svgContent) => {
+        new SingleLineDiagramViewer(
             document.getElementById('svg-container-sld'),
             svgContent, //svg content
             null, //svg metadata
@@ -43,37 +45,41 @@ fetch(SldSvgExample)
             null, //callback on the next voltage arrows
             null, //callback on the breakers
             null, //callback on the feeders
-            null, //arrows color
+            null //arrows color
         );
 
-        document.getElementById('svg-container-sld').getElementsByTagName('svg')[0]
-        .setAttribute('style', 'border:2px; border-style:solid;');
-});
-
+        document
+            .getElementById('svg-container-sld')
+            .getElementsByTagName('svg')[0]
+            .setAttribute('style', 'border:2px; border-style:solid;');
+    });
 
 const handleNextVL = (id) => {
     const msg = 'Clicked on navigation arrow, dest VL is ' + id;
     console.log(msg);
     //alert(msg);
-}
+};
 
 const handleSwitch = (id, switch_status, element) => {
-    const msg = 'Clicked on switch: ' + id + ', switch_status: ' + (switch_status ? 'close' : 'open');
+    const msg =
+        'Clicked on switch: ' +
+        id +
+        ', switch_status: ' +
+        (switch_status ? 'close' : 'open');
     console.log(msg);
     //alert(msg);
-    
-}
+};
 
 const handleFeeder = (id, feederType, svgId, x, y) => {
     const msg = 'Clicked on feeder: ' + id + ', feeder type: ' + feederType;
     console.log(msg);
     //alert(msg);
-}
+};
 
 fetch(SldSvgExample)
-.then((response) => response.text())
-.then((svgContent) => {
-    new SingleLineDiagramViewer(
+    .then((response) => response.text())
+    .then((svgContent) => {
+        new SingleLineDiagramViewer(
             document.getElementById('svg-container-sld-with-callbacks'),
             svgContent, //svg content
             SldSvgExampleMeta, //svg metadata
@@ -88,7 +94,8 @@ fetch(SldSvgExample)
             'lightblue' //arrows color
         );
 
-        document.getElementById('svg-container-sld-with-callbacks').getElementsByTagName('svg')[0]
-        .setAttribute('style', 'border:2px; border-style:solid;');
-});
-
+        document
+            .getElementById('svg-container-sld-with-callbacks')
+            .getElementsByTagName('svg')[0]
+            .setAttribute('style', 'border:2px; border-style:solid;');
+    });

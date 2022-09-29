@@ -68,12 +68,12 @@ export interface SLDMetadataNode {
 
 //models just the metadata subelements that are actually used(nodes)
 export interface SLDMetadata {
-    components: any[];
+    components: unknown[];
     nodes: SLDMetadataNode[];
-    wires: any[];
-    lines: any[];
-    arrows: any[];
-    layoutParams: any;
+    wires: unknown[];
+    lines: unknown[];
+    arrows: unknown[];
+    layoutParams: unknown;
 }
 
 export type OnNextVoltageCallbackType = (nextVId: string) => void;
@@ -380,7 +380,7 @@ export class SingleLineDiagramViewer {
             group.style.cursor = 'pointer';
             this.setArrowsStyle(group, 'currentColor', this.selectionBackColor);
             let dragged = false;
-            group.addEventListener('mousedown',  () => {
+            group.addEventListener('mousedown', () => {
                 dragged = false;
             });
             group.addEventListener('mousemove', () => {
