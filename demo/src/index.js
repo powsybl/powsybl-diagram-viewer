@@ -65,13 +65,25 @@ const handleSwitch = (id, switch_status, element) => {
         'Clicked on switch: ' +
         id +
         ', switch_status: ' +
-        (switch_status ? 'close' : 'open');
+        (switch_status ? 'close' : 'open') +
+        '. elementId: ' +
+        element.id;
     console.log(msg);
     //alert(msg);
 };
 
 const handleFeeder = (id, feederType, svgId, x, y) => {
-    const msg = 'Clicked on feeder: ' + id + ', feeder type: ' + feederType;
+    const msg =
+        'Clicked on feeder: ' +
+        id +
+        ', feeder type: ' +
+        feederType +
+        ', svgId: ' +
+        svgId +
+        'x: ' +
+        x +
+        ', y: ' +
+        y;
     console.log(msg);
     //alert(msg);
 };
