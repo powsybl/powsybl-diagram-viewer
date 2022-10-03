@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { SVG } from '@svgdotjs/svg.js';
+import { Point, SVG, Svg, ViewBoxLike } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
@@ -94,6 +94,7 @@ export class SingleLineDiagramViewer {
     svgType: string;
     arrowSvg: string;
     arrowHoverSvg: string;
+    svgDraw: Svg | undefined;
 
     constructor(
         container: HTMLElement,
@@ -157,6 +158,16 @@ export class SingleLineDiagramViewer {
         return this.svgContent;
     }
 
+    public getViewBox(): ViewBoxLike | undefined {
+        return this.svgDraw?.viewbox();
+    }
+
+    public setViewBox(viewBox: ViewBoxLike): void {
+        if (viewBox !== undefined && viewBox !== null) {
+            this.svgDraw?.viewbox(viewBox);
+        }
+    }
+
     public init(
         minWidth: number,
         minHeight: number,
@@ -213,6 +224,35 @@ export class SingleLineDiagramViewer {
         firstChild.removeAttribute('width');
         firstChild.removeAttribute('height');
 
+        const svgWidth = dimensions.width;
+        const svgHeight = dimensions.height;
+        if (svgWidth > maxWidth || svgHeight > maxHeight) {
+            //The svg is too big, display only the top left corner because that's
+            //better for users than zooming out. Keep the same aspect ratio
+            //so that panzoom's margins still work correctly.
+            //I am not sure the offsetX and offsetY thing is correct. It seems
+            //to help. When someone finds a big problem, then we can fix it.
+            const newLvlX = svgWidth / maxWidth / 2;
+            const newLvlY = svgHeight / maxHeight / 2;
+
+            const xOrigin = dimensions.viewbox.x - 20;
+            const yOrigin = dimensions.viewbox.y - 20;
+
+            if (newLvlX > newLvlY) {
+                const offsetY = (maxHeight - svgHeight) / newLvlX;
+                draw.zoom(
+                    newLvlX,
+                    new Point(xOrigin, (yOrigin + maxHeight - offsetY) / 2)
+                );
+            } else {
+                const offsetX = (maxWidth - svgWidth) / newLvlY;
+                draw.zoom(
+                    newLvlY,
+                    new Point((xOrigin + maxWidth - offsetX) / 2, yOrigin)
+                );
+            }
+        }
+
         draw.on('panStart', function () {
             drawnSvg.style.cursor = 'move';
         });
@@ -222,6 +262,7 @@ export class SingleLineDiagramViewer {
 
         this.addSwitchesHandler();
         this.addFeedersHandler();
+        this.svgDraw = draw;
     }
 
     private getDimensionsFromSvg(): DIMENSIONS | null {
@@ -231,6 +272,7 @@ export class SingleLineDiagramViewer {
         if (svgEl === null) {
             return null;
         }
+        this.addNavigationArrow();
         const bbox = svgEl.getBBox();
         const svgWidth = Math.ceil(bbox.width + 40);
         const svgHeight = Math.ceil(bbox.height + 40);
