@@ -84,12 +84,12 @@ export type OnFeederCallbackType = (
 export class SingleLineDiagramViewer {
     container: HTMLElement;
     svgContent: string;
-    svgMetadata: SLDMetadata;
+    svgMetadata: SLDMetadata | null;
     width: number;
     height: number;
-    onNextVoltageCallback: OnNextVoltageCallbackType;
-    onBreakerCallback: OnBreakerCallbackType;
-    onFeederCallback: OnFeederCallbackType;
+    onNextVoltageCallback: OnNextVoltageCallbackType | null;
+    onBreakerCallback: OnBreakerCallbackType | null;
+    onFeederCallback: OnFeederCallbackType | null;
     selectionBackColor: string;
     svgType: string;
     arrowSvg: string;
@@ -99,15 +99,15 @@ export class SingleLineDiagramViewer {
     constructor(
         container: HTMLElement,
         svgContent: string,
-        svgMetadata: SLDMetadata,
+        svgMetadata: SLDMetadata | null,
         svgType: string,
         minWidth: number,
         minHeight: number,
         maxWidth: number,
         maxHeight: number,
-        onNextVoltageCallback: OnNextVoltageCallbackType,
-        onBreakerCallback: OnBreakerCallbackType,
-        onFeederCallback: OnFeederCallbackType,
+        onNextVoltageCallback: OnNextVoltageCallbackType | null,
+        onBreakerCallback: OnBreakerCallbackType | null,
+        onFeederCallback: OnFeederCallbackType | null,
         selectionBackColor: string
     ) {
         this.container = container;
@@ -181,6 +181,7 @@ export class SingleLineDiagramViewer {
         const dimensions: DIMENSIONS | null = this.getDimensionsFromSvg();
 
         if (!dimensions) {
+            console.warn('cannot display the svg: couldn\'t get its size' );
             return;
         }
 
@@ -265,18 +266,26 @@ export class SingleLineDiagramViewer {
         this.svgDraw = draw;
     }
 
-    private getDimensionsFromSvg(): DIMENSIONS | null {
-        const divElt = this.container;
-        divElt.innerHTML = this.svgContent;
-        const svgEl = divElt.getElementsByTagName('svg')[0];
-        if (svgEl === null) {
+    public getDimensionsFromSvg(): DIMENSIONS | null{
+        // Dimensions are set in the main svg tag attributes. We want to parse those data without loading the whole svg in the DOM.
+        const result = this.svgContent.match('<svg[^>]*>');
+        if (result === null || result.length === 0) {
             return null;
         }
-        this.addNavigationArrow();
-        const bbox = svgEl.getBBox();
-        const svgWidth = Math.ceil(bbox.width + 40);
-        const svgHeight = Math.ceil(bbox.height + 40);
-        return { width: svgWidth, height: svgHeight, viewbox: bbox };
+        const emptiedSvgContent = result[0] + '</svg>';
+        const svg: SVGSVGElement = new DOMParser()
+            .parseFromString(emptiedSvgContent, 'image/svg+xml')
+            .getElementsByTagName('svg')[0];
+        const viewbox: VIEWBOX = svg.viewBox.baseVal;
+        viewbox.x -= 20;
+        viewbox.y -= 20;
+        viewbox.width += 40;
+        viewbox.height += 40;
+        let width: number = +svg.getAttribute('width');
+        let height: number = +svg.getAttribute('height');
+        width = width == 0 ? viewbox.width : width + 40;
+        height = height == 0 ? viewbox.height : height + 40;
+        return { width: width, height: height, viewbox: viewbox };
     }
 
     private addNavigationArrow() {
@@ -583,6 +592,7 @@ export class SingleLineDiagramViewer {
                     });
                     svgText.addEventListener('contextmenu', (event) => {
                         event.preventDefault();
+                        event.stopPropagation();
                         this.onFeederCallback(
                             feeder.equipmentId,
                             feeder.componentType,
