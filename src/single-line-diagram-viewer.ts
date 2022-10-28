@@ -181,7 +181,7 @@ export class SingleLineDiagramViewer {
         const dimensions: DIMENSIONS | null = this.getDimensionsFromSvg();
 
         if (!dimensions) {
-            console.warn('cannot display the svg: couldn\'t get its size' );
+            console.warn("cannot·display·the·svg:·couldn't·get·its·size");
             return;
         }
 
@@ -266,7 +266,7 @@ export class SingleLineDiagramViewer {
         this.svgDraw = draw;
     }
 
-    public getDimensionsFromSvg(): DIMENSIONS | null{
+    public getDimensionsFromSvg(): DIMENSIONS | null {
         // Dimensions are set in the main svg tag attributes. We want to parse those data without loading the whole svg in the DOM.
         const result = this.svgContent.match('<svg[^>]*>');
         if (result === null || result.length === 0) {
