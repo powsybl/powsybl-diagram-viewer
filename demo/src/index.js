@@ -57,7 +57,6 @@ fetch(SldSvgExample)
 const handleNextVL = (id) => {
     const msg = 'Clicked on navigation arrow, dest VL is ' + id;
     console.log(msg);
-    //alert(msg);
 };
 
 const handleSwitch = (id, switch_status, element) => {
@@ -69,7 +68,6 @@ const handleSwitch = (id, switch_status, element) => {
         '. elementId: ' +
         element.id;
     console.log(msg);
-    //alert(msg);
 };
 
 const handleFeeder = (id, feederType, svgId, x, y) => {
@@ -85,7 +83,6 @@ const handleFeeder = (id, feederType, svgId, x, y) => {
         ', y: ' +
         y;
     console.log(msg);
-    //alert(msg);
 };
 
 fetch(SldSvgExample)
