@@ -6,7 +6,11 @@
  */
 
 import NadSvgExample from '../data/nad-example.svg';
+import SldSvgExample from '../data/sld-example.svg';
+import SldSvgExampleMeta from '../data/sld-example-meta.json';
+
 import { NetworkAreaDiagramViewer } from '../../src/network-area-diagram-viewer';
+import { SingleLineDiagramViewer } from '../../src/single-line-diagram-viewer';
 
 fetch(NadSvgExample)
     .then((response) => response.text())
@@ -21,6 +25,86 @@ fetch(NadSvgExample)
         );
 
         document
+            .getElementById('svg-container')
+            .getElementsByTagName('svg')[0]
+            .setAttribute('style', 'border:2px; border-style:solid;');
+    });
+
+fetch(SldSvgExample)
+    .then((response) => response.text())
+    .then((svgContent) => {
+        new SingleLineDiagramViewer(
+            document.getElementById('svg-container-sld'),
+            svgContent, //svg content
+            null, //svg metadata
+            'voltage-level',
+            500,
+            600,
+            1000,
+            1200,
+            null, //callback on the next voltage arrows
+            null, //callback on the breakers
+            null, //callback on the feeders
+            null //arrows color
+        );
+
+        document
+            .getElementById('svg-container-sld')
+            .getElementsByTagName('svg')[0]
+            .setAttribute('style', 'border:2px; border-style:solid;');
+    });
+
+const handleNextVL = (id) => {
+    const msg = 'Clicked on navigation arrow, dest VL is ' + id;
+    console.log(msg);
+};
+
+const handleSwitch = (id, switch_status, element) => {
+    const msg =
+        'Clicked on switch: ' +
+        id +
+        ', switch_status: ' +
+        (switch_status ? 'close' : 'open') +
+        '. elementId: ' +
+        element.id;
+    console.log(msg);
+};
+
+const handleFeeder = (id, feederType, svgId, x, y) => {
+    const msg =
+        'Clicked on feeder: ' +
+        id +
+        ', feeder type: ' +
+        feederType +
+        ', svgId: ' +
+        svgId +
+        'x: ' +
+        x +
+        ', y: ' +
+        y;
+    console.log(msg);
+};
+
+fetch(SldSvgExample)
+    .then((response) => response.text())
+    .then((svgContent) => {
+        new SingleLineDiagramViewer(
+            document.getElementById('svg-container-sld-with-callbacks'),
+            svgContent, //svg content
+            SldSvgExampleMeta, //svg metadata
+            'voltage-level',
+            500,
+            600,
+            1000,
+            1200,
+            handleNextVL, //callback on the next voltage arrows
+            handleSwitch, //callback on the breakers
+            handleFeeder, //callback on the feeders
+            'lightblue' //arrows color
+        );
+
+        document
+            .getElementById('svg-container-sld-with-callbacks')
             .getElementsByTagName('svg')[0]
             .setAttribute('style', 'border:2px; border-style:solid;');
     });
