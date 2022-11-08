@@ -111,7 +111,6 @@ fetch(SldSvgExample)
             .setAttribute('style', 'border:2px; border-style:solid;');
     });
 
-
 fetch(SldSvgSubExample)
     .then((response) => response.text())
     .then((svgContent) => {
