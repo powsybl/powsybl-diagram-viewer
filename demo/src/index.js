@@ -8,6 +8,8 @@
 import NadSvgExample from '../data/nad-example.svg';
 import SldSvgExample from '../data/sld-example.svg';
 import SldSvgExampleMeta from '../data/sld-example-meta.json';
+import SldSvgSubExample from '../data/sld-sub-example.svg';
+import SldSvgSubExampleMeta from '../data/sld-sub-example-meta.json';
 
 import { NetworkAreaDiagramViewer } from '../../src/network-area-diagram-viewer';
 import { SingleLineDiagramViewer } from '../../src/single-line-diagram-viewer';
@@ -105,6 +107,30 @@ fetch(SldSvgExample)
 
         document
             .getElementById('svg-container-sld-with-callbacks')
+            .getElementsByTagName('svg')[0]
+            .setAttribute('style', 'border:2px; border-style:solid;');
+    });
+
+fetch(SldSvgSubExample)
+    .then((response) => response.text())
+    .then((svgContent) => {
+        new SingleLineDiagramViewer(
+            document.getElementById('svg-container-sldsub-with-callbacks'),
+            svgContent, //svg content
+            SldSvgSubExampleMeta, //svg metadata
+            'substation',
+            500,
+            600,
+            1200,
+            1200,
+            handleNextVL, //callback on the next voltage arrows
+            handleSwitch, //callback on the breakers
+            handleFeeder, //callback on the feeders
+            'lightblue' //arrows color
+        );
+
+        document
+            .getElementById('svg-container-sldsub-with-callbacks')
             .getElementsByTagName('svg')[0]
             .setAttribute('style', 'border:2px; border-style:solid;');
     });

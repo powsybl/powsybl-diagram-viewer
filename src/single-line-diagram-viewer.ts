@@ -233,22 +233,22 @@ export class SingleLineDiagramViewer {
             //so that panzoom's margins still work correctly.
             //I am not sure the offsetX and offsetY thing is correct. It seems
             //to help. When someone finds a big problem, then we can fix it.
-            const newLvlX = svgWidth / maxWidth / 2;
-            const newLvlY = svgHeight / maxHeight / 2;
+            const newLvlX = svgWidth / maxWidth;
+            const newLvlY = svgHeight / maxHeight;
 
-            const xOrigin = dimensions.viewbox.x - 20;
-            const yOrigin = dimensions.viewbox.y - 20;
+            const xOrigin = dimensions.viewbox.x;
+            const yOrigin = dimensions.viewbox.y;
 
             if (newLvlX > newLvlY) {
                 const offsetY = (maxHeight - svgHeight) / newLvlX;
                 draw.zoom(
-                    newLvlX,
+                    1,
                     new Point(xOrigin, (yOrigin + maxHeight - offsetY) / 2)
                 );
             } else {
                 const offsetX = (maxWidth - svgWidth) / newLvlY;
                 draw.zoom(
-                    newLvlY,
+                    1,
                     new Point((xOrigin + maxWidth - offsetX) / 2, yOrigin)
                 );
             }
