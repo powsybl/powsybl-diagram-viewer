@@ -173,20 +173,24 @@ export class SingleLineDiagramViewer {
     }
 
     // this method calculates min/max zooms depending on current sld size, then checks current zoom isn't exceeding any of them
-    public refreshZoom() : void {
+    public refreshZoom(): void {
         // min and max zoom depends on the ratio between client width / height and SVG width / height
-        let ratioX = (this.getWidth()) / this.getContainer().clientWidth;
-        let ratioY = (this.getHeight()) / this.getContainer().clientHeight;
-        let ratio =  Math.max(ratioX, ratioY);
+        let ratioX = this.getWidth() / this.getContainer().clientWidth;
+        let ratioY = this.getHeight() / this.getContainer().clientHeight;
+        let ratio = Math.max(ratioX, ratioY);
 
-        let minZoom = ratio * (this.svgType === 'voltage-level' ? MIN_ZOOM_LEVEL_VL : MIN_ZOOM_LEVEL_SUB);
+        let minZoom =
+            ratio *
+            (this.svgType === 'voltage-level'
+                ? MIN_ZOOM_LEVEL_VL
+                : MIN_ZOOM_LEVEL_SUB);
         let maxZoom = ratio * MAX_ZOOM_LEVEL;
 
-        if(this.svgDraw){
-            if(this.svgDraw.zoom() > maxZoom){
+        if (this.svgDraw) {
+            if (this.svgDraw.zoom() > maxZoom) {
                 this.svgDraw.zoom(maxZoom);
             }
-            if(this.svgDraw.zoom() < minZoom){
+            if (this.svgDraw.zoom() < minZoom) {
                 this.svgDraw.zoom(minZoom);
             }
         }
@@ -233,7 +237,10 @@ export class SingleLineDiagramViewer {
             )
             .panZoom({
                 panning: true,
-                zoomMin: this.svgType === 'voltage-level' ? MIN_ZOOM_LEVEL_VL : MIN_ZOOM_LEVEL_SUB,
+                zoomMin:
+                    this.svgType === 'voltage-level'
+                        ? MIN_ZOOM_LEVEL_VL
+                        : MIN_ZOOM_LEVEL_SUB,
                 zoomMax: MAX_ZOOM_LEVEL,
                 zoomFactor: this.svgType === 'voltage-level' ? 0.3 : 0.15,
                 margins: { top: 100, left: 100, right: 100, bottom: 100 },
