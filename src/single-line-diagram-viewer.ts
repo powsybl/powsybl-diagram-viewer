@@ -175,16 +175,16 @@ export class SingleLineDiagramViewer {
     // this method calculates min/max zooms depending on current sld size, then checks current zoom isn't exceeding any of them
     public refreshZoom(): void {
         // min and max zoom depends on the ratio between client width / height and SVG width / height
-        let ratioX = this.getWidth() / this.getContainer().clientWidth;
-        let ratioY = this.getHeight() / this.getContainer().clientHeight;
-        let ratio = Math.max(ratioX, ratioY);
+        const ratioX = this.getWidth() / this.getContainer().clientWidth;
+        const ratioY = this.getHeight() / this.getContainer().clientHeight;
+        const ratio = Math.max(ratioX, ratioY);
 
-        let minZoom =
+        const minZoom =
             ratio *
             (this.svgType === 'voltage-level'
                 ? MIN_ZOOM_LEVEL_VL
                 : MIN_ZOOM_LEVEL_SUB);
-        let maxZoom = ratio * MAX_ZOOM_LEVEL;
+        const maxZoom = ratio * MAX_ZOOM_LEVEL;
 
         if (this.svgDraw) {
             if (this.svgDraw.zoom() > maxZoom) {
