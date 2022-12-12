@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { SVG } from '@svgdotjs/svg.js';
+import { SVG, ViewBoxLike, Svg } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
@@ -16,6 +16,9 @@ export class NetworkAreaDiagramViewer {
     svgContent: string;
     width: number;
     height: number;
+    originalWidth: number;
+    originalHeight: number;
+    svgDraw: Svg | undefined;
 
     constructor(
         container: HTMLElement,
@@ -34,8 +37,16 @@ export class NetworkAreaDiagramViewer {
         this.width = width;
     }
 
+    public setOriginalWidth(originalWidth: number): void {
+        this.originalWidth = originalWidth;
+    }
+
     public setHeight(height: number): void {
         this.height = height;
+    }
+
+    public setOriginalHeight(originalHeight: number): void {
+        this.originalHeight = originalHeight;
     }
 
     public setContainer(container: HTMLElement): void {
@@ -50,8 +61,16 @@ export class NetworkAreaDiagramViewer {
         return this.width;
     }
 
+    public getOriginalWidth(): number {
+        return this.originalWidth;
+    }
+
     public getHeight(): number {
         return this.height;
+    }
+
+    public getOriginalHeight(): number {
+        return this.originalHeight;
     }
 
     public getContainer(): HTMLElement {
@@ -60,6 +79,16 @@ export class NetworkAreaDiagramViewer {
 
     public getSvgContent(): string {
         return this.svgContent;
+    }
+
+    public getViewBox(): ViewBoxLike | undefined {
+        return this.svgDraw?.viewbox();
+    }
+
+    public setViewBox(viewBox: ViewBoxLike): void {
+        if (viewBox !== undefined && viewBox !== null) {
+            this.svgDraw?.viewbox(viewBox);
+        }
     }
 
     public init(
@@ -80,6 +109,9 @@ export class NetworkAreaDiagramViewer {
 
         // clear the previous svg in div element before replacing
         this.container.innerHTML = '';
+
+        this.setOriginalWidth(dimensions.width);
+        this.setOriginalHeight(dimensions.height);
 
         this.setWidth(
             dimensions.width < minWidth
@@ -117,6 +149,8 @@ export class NetworkAreaDiagramViewer {
         firstChild.removeAttribute('viewBox');
         firstChild.removeAttribute('width');
         firstChild.removeAttribute('height');
+
+        this.svgDraw = draw;
     }
 
     public getDimensionsFromSvg(): DIMENSIONS {
