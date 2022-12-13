@@ -87,6 +87,8 @@ export class SingleLineDiagramViewer {
     svgMetadata: SLDMetadata | null;
     width: number;
     height: number;
+    originalWidth: number;
+    originalHeight: number;
     onNextVoltageCallback: OnNextVoltageCallbackType | null;
     onBreakerCallback: OnBreakerCallbackType | null;
     onFeederCallback: OnFeederCallbackType | null;
@@ -120,6 +122,8 @@ export class SingleLineDiagramViewer {
         this.selectionBackColor = selectionBackColor;
         this.width = 0;
         this.height = 0;
+        this.originalWidth = 0;
+        this.originalHeight = 0;
         this.init(minWidth, minHeight, maxWidth, maxHeight);
         this.arrowSvg = ARROW_SVG;
         this.arrowHoverSvg = ARROW_HOVER_SVG;
@@ -130,8 +134,16 @@ export class SingleLineDiagramViewer {
         this.width = width;
     }
 
+    public setOriginalWidth(originalWidth: number): void {
+        this.originalWidth = originalWidth;
+    }
+
     public setHeight(height: number): void {
         this.height = height;
+    }
+
+    public setOriginalHeight(originalHeight: number): void {
+        this.originalHeight = originalHeight;
     }
 
     public setContainer(container: HTMLElement): void {
@@ -146,8 +158,16 @@ export class SingleLineDiagramViewer {
         return this.width;
     }
 
+    public getOriginalWidth(): number {
+        return this.originalWidth;
+    }
+
     public getHeight(): number {
         return this.height;
+    }
+
+    public getOriginalHeight(): number {
+        return this.originalHeight;
     }
 
     public getContainer(): HTMLElement {
@@ -187,6 +207,9 @@ export class SingleLineDiagramViewer {
 
         // clear the previous svg in div element before replacing
         this.container.innerHTML = '';
+
+        this.setOriginalWidth(dimensions.width);
+        this.setOriginalHeight(dimensions.height);
 
         this.setWidth(
             dimensions.width < minWidth
