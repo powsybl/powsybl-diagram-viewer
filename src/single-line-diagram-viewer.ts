@@ -38,6 +38,10 @@ const FEEDER_COMPONENT_TYPES = new Set([
     'PHASE_SHIFT_TRANSFORMER',
 ]);
 
+const MAX_ZOOM_LEVEL = 10;
+const MIN_ZOOM_LEVEL_SUB = 0.1;
+const MIN_ZOOM_LEVEL_VL = 0.5;
+
 const ARROW_SVG =
     '<svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg"><path class="arrow" fill-rule="evenodd" clip-rule="evenodd" d="M16 24.0163L17.2358 25.3171L21.9837 20.5691L26.7317 25.3171L28 24.0163L21.9837 18L16 24.0163Z"/></svg>';
 const ARROW_HOVER_SVG =
@@ -188,6 +192,30 @@ export class SingleLineDiagramViewer {
         }
     }
 
+    // this method calculates min/max zooms depending on current sld size, then checks current zoom isn't exceeding any of them
+    public refreshZoom(): void {
+        // min and max zoom depends on the ratio between client width / height and SVG width / height
+        const ratioX = this.getWidth() / this.getContainer().clientWidth;
+        const ratioY = this.getHeight() / this.getContainer().clientHeight;
+        const ratio = Math.max(ratioX, ratioY);
+
+        const minZoom =
+            ratio *
+            (this.svgType === 'voltage-level'
+                ? MIN_ZOOM_LEVEL_VL
+                : MIN_ZOOM_LEVEL_SUB);
+        const maxZoom = ratio * MAX_ZOOM_LEVEL;
+
+        if (this.svgDraw) {
+            if (this.svgDraw.zoom() > maxZoom) {
+                this.svgDraw.zoom(maxZoom);
+            }
+            if (this.svgDraw.zoom() < minZoom) {
+                this.svgDraw.zoom(minZoom);
+            }
+        }
+    }
+
     public init(
         minWidth: number,
         minHeight: number,
@@ -232,8 +260,11 @@ export class SingleLineDiagramViewer {
             )
             .panZoom({
                 panning: true,
-                zoomMin: this.svgType === 'voltage-level' ? 0.5 : 0.1,
-                zoomMax: 10,
+                zoomMin:
+                    this.svgType === 'voltage-level'
+                        ? MIN_ZOOM_LEVEL_VL
+                        : MIN_ZOOM_LEVEL_SUB,
+                zoomMax: MAX_ZOOM_LEVEL,
                 zoomFactor: this.svgType === 'voltage-level' ? 0.3 : 0.15,
                 margins: { top: 100, left: 100, right: 100, bottom: 100 },
             });
