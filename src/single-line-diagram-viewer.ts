@@ -195,7 +195,11 @@ export class SingleLineDiagramViewer {
     // this method calculates min/max zooms depending on current sld size, then checks current zoom isn't exceeding any of them
     public refreshZoom(): void {
         // min and max zoom depends on the ratio between client width / height and SVG width / height
-        if (this.getContainer() === undefined || this.getContainer().clientWidth === 0 || this.getContainer().clientHeight === 0) {
+        if (
+            !this.getContainer() ||
+            this.getContainer().clientWidth === 0 ||
+            this.getContainer().clientHeight === 0
+        ) {
             // Do nothing if the sld is not displayed and therefor its width and height are equal to zero.
             return;
         }
