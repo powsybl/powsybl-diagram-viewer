@@ -18,6 +18,7 @@ export class NetworkAreaDiagramViewer {
     height: number;
     originalWidth: number;
     originalHeight: number;
+    depth: number;
     svgDraw: Svg | undefined;
 
     constructor(
@@ -26,8 +27,10 @@ export class NetworkAreaDiagramViewer {
         minWidth: number,
         minHeight: number,
         maxWidth: number,
-        maxHeight: number
+        maxHeight: number,
+        depth: number
     ) {
+        this.depth = depth;
         this.container = container;
         this.svgContent = svgContent;
         this.init(minWidth, minHeight, maxWidth, maxHeight);
@@ -134,7 +137,7 @@ export class NetworkAreaDiagramViewer {
             )
             .panZoom({
                 panning: true,
-                zoomMin: 0.5,
+                zoomMin: 0.1 / (this.depth === 0 ? 1 : this.depth),
                 zoomMax: 200,
                 zoomFactor: 0.3,
                 margins: { top: 0, left: 0, right: 0, bottom: 0 },
