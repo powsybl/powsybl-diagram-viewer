@@ -11,6 +11,7 @@ describe('Test network-area-diagram-viewer.ts', () => {
             0,
             0,
             0,
+            0,
             0
         );
 
