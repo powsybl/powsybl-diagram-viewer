@@ -18,7 +18,6 @@ export class NetworkAreaDiagramViewer {
     height: number;
     originalWidth: number;
     originalHeight: number;
-    depth: number;
     svgDraw: Svg | undefined;
 
     constructor(
@@ -28,9 +27,7 @@ export class NetworkAreaDiagramViewer {
         minHeight: number,
         maxWidth: number,
         maxHeight: number,
-        depth: number
     ) {
-        this.depth = depth;
         this.container = container;
         this.svgContent = svgContent;
         this.init(minWidth, minHeight, maxWidth, maxHeight);
@@ -137,7 +134,7 @@ export class NetworkAreaDiagramViewer {
             )
             .panZoom({
                 panning: true,
-                zoomMin: 0.1 / (this.depth === 0 ? 1 : this.depth),
+                zoomMin: 0.5,
                 zoomMax: 200,
                 zoomFactor: 0.3,
                 margins: { top: 0, left: 0, right: 0, bottom: 0 },
@@ -170,5 +167,28 @@ export class NetworkAreaDiagramViewer {
         const height: number = +svg.getAttribute('height');
         const viewbox: VIEWBOX = svg.viewBox.baseVal;
         return { width: width, height: height, viewbox: viewbox };
+    }
+
+    public refreshZoom(): void {
+        // check viewBox width and height are defined before checking the zoom
+        if (
+            !this.getViewBox()?.width ||
+            !this.getViewBox()?.height
+        ) {
+            return;
+        }
+
+        // we check if there is an "initial zoom" by checking ratio of width and height
+        const widthRatio = this.getViewBox().width / this.getWidth()
+        const heightRatio = this.getViewBox().height / this.getHeight()
+        const ratio = Math.max(widthRatio, heightRatio)
+
+        this.svgDraw.panZoom({
+            panning: true,
+            zoomMin: 0.5 / ratio,
+            zoomMax: 200 * ratio,
+            zoomFactor: 0.3,
+            margins: { top: 0, left: 0, right: 0, bottom: 0 },
+        });
     }
 }
