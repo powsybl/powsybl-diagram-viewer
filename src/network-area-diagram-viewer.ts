@@ -26,7 +26,7 @@ export class NetworkAreaDiagramViewer {
         minWidth: number,
         minHeight: number,
         maxWidth: number,
-        maxHeight: number,
+        maxHeight: number
     ) {
         this.container = container;
         this.svgContent = svgContent;
@@ -123,6 +123,12 @@ export class NetworkAreaDiagramViewer {
                 ? minHeight
                 : Math.min(dimensions.height, maxHeight)
         );
+
+        // we check if there is an "initial zoom" by checking ratio of width and height of the nad compared with viewBox sizes
+        const widthRatio = dimensions.viewbox.width / this.getWidth();
+        const heightRatio = dimensions.viewbox.height / this.getHeight();
+        const ratio = Math.max(widthRatio, heightRatio);
+
         const draw = SVG()
             .addTo(this.container)
             .size(this.width, this.height)
@@ -134,8 +140,8 @@ export class NetworkAreaDiagramViewer {
             )
             .panZoom({
                 panning: true,
-                zoomMin: 0.5,
-                zoomMax: 200,
+                zoomMin: 0.5 / ratio,
+                zoomMax: 30 * ratio,
                 zoomFactor: 0.3,
                 margins: { top: 0, left: 0, right: 0, bottom: 0 },
             });
@@ -167,28 +173,5 @@ export class NetworkAreaDiagramViewer {
         const height: number = +svg.getAttribute('height');
         const viewbox: VIEWBOX = svg.viewBox.baseVal;
         return { width: width, height: height, viewbox: viewbox };
-    }
-
-    public refreshZoom(): void {
-        // check viewBox width and height are defined before checking the zoom
-        if (
-            !this.getViewBox()?.width ||
-            !this.getViewBox()?.height
-        ) {
-            return;
-        }
-
-        // we check if there is an "initial zoom" by checking ratio of width and height
-        const widthRatio = this.getViewBox().width / this.getWidth()
-        const heightRatio = this.getViewBox().height / this.getHeight()
-        const ratio = Math.max(widthRatio, heightRatio)
-
-        this.svgDraw.panZoom({
-            panning: true,
-            zoomMin: 0.5 / ratio,
-            zoomMax: 200 * ratio,
-            zoomFactor: 0.3,
-            margins: { top: 0, left: 0, right: 0, bottom: 0 },
-        });
     }
 }
