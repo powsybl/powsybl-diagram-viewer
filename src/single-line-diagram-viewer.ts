@@ -88,7 +88,7 @@ export type OnFeederCallbackType = (
 export type handleTogglePopoverType = (
     shouldDisplay: boolean,
     anchorEl: EventTarget | null,
-    lineId: string,
+    lineId: string
 ) => void;
 
 export class SingleLineDiagramViewer {
@@ -122,7 +122,7 @@ export class SingleLineDiagramViewer {
         onBreakerCallback: OnBreakerCallbackType | null,
         onFeederCallback: OnFeederCallbackType | null,
         selectionBackColor: string,
-        handleTogglePopover: handleTogglePopoverType,
+        handleTogglePopover: handleTogglePopoverType
     ) {
         this.container = container;
         this.svgType = svgType;
@@ -680,16 +680,21 @@ export class SingleLineDiagramViewer {
 
     private addLinesPopover() {
         // handling the hover on the lines
-        let svgLines = this.svgMetadata.nodes.filter((node) => node.componentType === "LINE");
+        const svgLines = this.svgMetadata.nodes.filter(
+            (node) => node.componentType === 'LINE'
+        );
         svgLines.forEach((line) => {
-            let svgLine = this.container?.querySelector('#' + line.id)
-            svgLine.addEventListener("mouseover", (event) => {
-                this.handleTogglePopover(true, event.currentTarget, line.equipmentId);
+            const svgLine = this.container?.querySelector('#' + line.id);
+            svgLine.addEventListener('mouseover', (event) => {
+                this.handleTogglePopover(
+                    true,
+                    event.currentTarget,
+                    line.equipmentId
+                );
             });
-            svgLine.addEventListener("mouseout", () => {
+            svgLine.addEventListener('mouseout', () => {
                 this.handleTogglePopover(false, null, '');
             });
-        })
+        });
     }
-
 }
