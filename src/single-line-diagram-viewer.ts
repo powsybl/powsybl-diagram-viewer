@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Point, SVG, Svg, ViewBoxLike } from '@svgdotjs/svg.js';
+import { EventTarget, Point, SVG, Svg, ViewBoxLike } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
@@ -85,6 +85,12 @@ export type OnFeederCallbackType = (
     y: number
 ) => void;
 
+export type handleTogglePopoverType = (
+    shouldDisplay: boolean,
+    anchorEl: EventTarget | null,
+    lineId: string
+) => void;
+
 export class SingleLineDiagramViewer {
     container: HTMLElement;
     svgContent: string;
@@ -101,6 +107,7 @@ export class SingleLineDiagramViewer {
     arrowSvg: string;
     arrowHoverSvg: string;
     svgDraw: Svg | undefined;
+    handleTogglePopover: handleTogglePopoverType | null;
 
     constructor(
         container: HTMLElement,
@@ -114,7 +121,8 @@ export class SingleLineDiagramViewer {
         onNextVoltageCallback: OnNextVoltageCallbackType | null,
         onBreakerCallback: OnBreakerCallbackType | null,
         onFeederCallback: OnFeederCallbackType | null,
-        selectionBackColor: string
+        selectionBackColor: string,
+        handleTogglePopover: handleTogglePopoverType
     ) {
         this.container = container;
         this.svgType = svgType;
@@ -132,6 +140,7 @@ export class SingleLineDiagramViewer {
         this.arrowSvg = ARROW_SVG;
         this.arrowHoverSvg = ARROW_HOVER_SVG;
         this.addNavigationArrow();
+        this.handleTogglePopover = handleTogglePopover;
     }
 
     public setWidth(width: number): void {
@@ -325,6 +334,7 @@ export class SingleLineDiagramViewer {
 
         this.addSwitchesHandler();
         this.addFeedersHandler();
+        this.addLinesPopover();
         this.svgDraw = draw;
     }
 
@@ -666,5 +676,25 @@ export class SingleLineDiagramViewer {
                 }
             });
         }
+    }
+
+    private addLinesPopover() {
+        // handling the hover on the lines
+        const svgLines = this.svgMetadata.nodes.filter(
+            (node) => node.componentType === 'LINE'
+        );
+        svgLines.forEach((line) => {
+            const svgLine = this.container?.querySelector('#' + line.id);
+            svgLine.addEventListener('mouseover', (event) => {
+                this.handleTogglePopover(
+                    true,
+                    event.currentTarget,
+                    line.equipmentId
+                );
+            });
+            svgLine.addEventListener('mouseout', () => {
+                this.handleTogglePopover(false, null, '');
+            });
+        });
     }
 }
