@@ -88,7 +88,8 @@ export type OnFeederCallbackType = (
 export type handleTogglePopoverType = (
     shouldDisplay: boolean,
     anchorEl: EventTarget | null,
-    lineId: string
+    lineId: string,
+    equipmentType: string
 ) => void;
 
 export class SingleLineDiagramViewer {
@@ -334,7 +335,7 @@ export class SingleLineDiagramViewer {
 
         this.addSwitchesHandler();
         this.addFeedersHandler();
-        this.addLinesPopover();
+        this.addEquipmentsPopover();
         this.svgDraw = draw;
     }
 
@@ -678,22 +679,25 @@ export class SingleLineDiagramViewer {
         }
     }
 
-    private addLinesPopover() {
-        // handling the hover on the lines
-        const svgLines = this.svgMetadata.nodes.filter(
-            (node) => node.componentType === 'LINE'
+    private addEquipmentsPopover() {
+        const equipmentsWithPopover = ['LINE', 'TWO_WINDINGS_TRANSFORMER'];
+
+        // handling the hover on the equipments
+        const svgLines = this.svgMetadata.nodes.filter((node) =>
+            equipmentsWithPopover.includes(node.componentType)
         );
-        svgLines.forEach((line) => {
-            const svgLine = this.container?.querySelector('#' + line.id);
+        svgLines.forEach((equipment) => {
+            const svgLine = this.container?.querySelector('#' + equipment.id);
             svgLine.addEventListener('mouseover', (event) => {
                 this.handleTogglePopover(
                     true,
                     event.currentTarget,
-                    line.equipmentId
+                    equipment.equipmentId,
+                    equipment.componentType
                 );
             });
             svgLine.addEventListener('mouseout', () => {
-                this.handleTogglePopover(false, null, '');
+                this.handleTogglePopover(false, null, '', '');
             });
         });
     }
