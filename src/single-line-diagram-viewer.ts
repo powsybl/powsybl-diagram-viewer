@@ -88,7 +88,7 @@ export type OnFeederCallbackType = (
 export type handleTogglePopoverType = (
     shouldDisplay: boolean,
     anchorEl: EventTarget | null,
-    lineId: string,
+    equipmentId: string,
     equipmentType: string
 ) => void;
 
@@ -683,12 +683,14 @@ export class SingleLineDiagramViewer {
         const equipmentsWithPopover = ['LINE', 'TWO_WINDINGS_TRANSFORMER'];
 
         // handling the hover on the equipments
-        const svgLines = this.svgMetadata.nodes.filter((node) =>
+        const svgEquipments = this.svgMetadata.nodes.filter((node) =>
             equipmentsWithPopover.includes(node.componentType)
         );
-        svgLines.forEach((equipment) => {
-            const svgLine = this.container?.querySelector('#' + equipment.id);
-            svgLine.addEventListener('mouseover', (event) => {
+        svgEquipments.forEach((equipment) => {
+            const svgEquipment = this.container?.querySelector(
+                '#' + equipment.id
+            );
+            svgEquipment.addEventListener('mouseover', (event) => {
                 this.handleTogglePopover(
                     true,
                     event.currentTarget,
@@ -696,7 +698,7 @@ export class SingleLineDiagramViewer {
                     equipment.componentType
                 );
             });
-            svgLine.addEventListener('mouseout', () => {
+            svgEquipment.addEventListener('mouseout', () => {
                 this.handleTogglePopover(false, null, '', '');
             });
         });
