@@ -88,7 +88,8 @@ export type OnFeederCallbackType = (
 export type handleTogglePopoverType = (
     shouldDisplay: boolean,
     anchorEl: EventTarget | null,
-    lineId: string
+    equipmentId: string,
+    equipmentType: string
 ) => void;
 
 export class SingleLineDiagramViewer {
@@ -334,7 +335,7 @@ export class SingleLineDiagramViewer {
 
         this.addSwitchesHandler();
         this.addFeedersHandler();
-        this.addLinesPopover();
+        this.addEquipmentsPopover();
         this.svgDraw = draw;
     }
 
@@ -678,22 +679,27 @@ export class SingleLineDiagramViewer {
         }
     }
 
-    private addLinesPopover() {
-        // handling the hover on the lines
-        const svgLines = this.svgMetadata.nodes.filter(
-            (node) => node.componentType === 'LINE'
+    private addEquipmentsPopover() {
+        const equipmentsWithPopover = ['LINE', 'TWO_WINDINGS_TRANSFORMER'];
+
+        // handling the hover on the equipments
+        const svgEquipments = this.svgMetadata.nodes.filter((node) =>
+            equipmentsWithPopover.includes(node.componentType)
         );
-        svgLines.forEach((line) => {
-            const svgLine = this.container?.querySelector('#' + line.id);
-            svgLine.addEventListener('mouseover', (event) => {
+        svgEquipments.forEach((equipment) => {
+            const svgEquipment = this.container?.querySelector(
+                '#' + equipment.id
+            );
+            svgEquipment.addEventListener('mouseover', (event) => {
                 this.handleTogglePopover(
                     true,
                     event.currentTarget,
-                    line.equipmentId
+                    equipment.equipmentId,
+                    equipment.componentType
                 );
             });
-            svgLine.addEventListener('mouseout', () => {
-                this.handleTogglePopover(false, null, '');
+            svgEquipment.addEventListener('mouseout', () => {
+                this.handleTogglePopover(false, null, '', '');
             });
         });
     }
