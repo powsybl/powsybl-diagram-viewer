@@ -38,6 +38,8 @@ const FEEDER_COMPONENT_TYPES = new Set([
     'PHASE_SHIFT_TRANSFORMER',
 ]);
 
+const BUSBAR_SECTION_TYPES = new Set(['BUSBAR_SECTION']);
+
 const MAX_ZOOM_LEVEL = 10;
 const MIN_ZOOM_LEVEL_SUB = 0.1;
 const MIN_ZOOM_LEVEL_VL = 0.5;
@@ -85,6 +87,14 @@ export type OnFeederCallbackType = (
     y: number
 ) => void;
 
+export type OnBusCallbackType = (
+    busId: string,
+    busType: string | null,
+    svgId: string,
+    x: number,
+    y: number
+) => void;
+
 export type handleTogglePopoverType = (
     shouldDisplay: boolean,
     anchorEl: EventTarget | null,
@@ -103,6 +113,7 @@ export class SingleLineDiagramViewer {
     onNextVoltageCallback: OnNextVoltageCallbackType | null;
     onBreakerCallback: OnBreakerCallbackType | null;
     onFeederCallback: OnFeederCallbackType | null;
+    onBusCallback: OnBusCallbackType | null;
     selectionBackColor: string;
     svgType: string;
     arrowSvg: string;
@@ -122,6 +133,7 @@ export class SingleLineDiagramViewer {
         onNextVoltageCallback: OnNextVoltageCallbackType | null,
         onBreakerCallback: OnBreakerCallbackType | null,
         onFeederCallback: OnFeederCallbackType | null,
+        onBusCallback: OnBusCallbackType | null,
         selectionBackColor: string,
         handleTogglePopover: handleTogglePopoverType
     ) {
@@ -132,6 +144,7 @@ export class SingleLineDiagramViewer {
         this.onNextVoltageCallback = onNextVoltageCallback;
         this.onBreakerCallback = onBreakerCallback;
         this.onFeederCallback = onFeederCallback;
+        this.onBusCallback = onBusCallback;
         this.selectionBackColor = selectionBackColor;
         this.width = 0;
         this.height = 0;
@@ -336,6 +349,7 @@ export class SingleLineDiagramViewer {
         this.addSwitchesHandler();
         this.addFeedersHandler();
         this.addEquipmentsPopover();
+        this.addBusHandler();
         this.svgDraw = draw;
     }
 
@@ -690,6 +704,7 @@ export class SingleLineDiagramViewer {
             const svgEquipment = this.container?.querySelector(
                 '#' + equipment.id
             );
+
             svgEquipment.addEventListener('mouseover', (event) => {
                 this.handleTogglePopover(
                     true,
@@ -700,6 +715,29 @@ export class SingleLineDiagramViewer {
             });
             svgEquipment.addEventListener('mouseout', () => {
                 this.handleTogglePopover(false, null, '', '');
+            });
+        });
+    }
+
+    private addBusHandler() {
+        const buses = this.svgMetadata.nodes.filter((element) =>
+            BUSBAR_SECTION_TYPES.has(element.componentType)
+        );
+        buses.forEach((bus) => {
+            const svgBus: HTMLElement | null | undefined =
+                this.container?.querySelector('#' + bus.id);
+            svgBus.style.cursor = 'pointer';
+
+            svgBus.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                this.onBusCallback(
+                    bus.equipmentId,
+                    bus.componentType,
+                    bus.id,
+                    event.x,
+                    event.y
+                );
             });
         });
     }
