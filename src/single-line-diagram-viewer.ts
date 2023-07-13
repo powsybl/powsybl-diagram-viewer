@@ -731,13 +731,14 @@ export class SingleLineDiagramViewer {
             svgBus.addEventListener('contextmenu', (event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                this.onBusCallback(
-                    bus.equipmentId,
-                    bus.componentType,
-                    bus.id,
-                    event.x,
-                    event.y
-                );
+                this.onBusCallback &&
+                    this.onBusCallback(
+                        bus.equipmentId,
+                        bus.componentType,
+                        bus.id,
+                        event.x,
+                        event.y
+                    );
             });
         });
     }
