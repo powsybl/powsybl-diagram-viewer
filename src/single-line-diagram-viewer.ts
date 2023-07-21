@@ -89,7 +89,6 @@ export type OnFeederCallbackType = (
 
 export type OnBusCallbackType = (
     busId: string,
-    busType: string | null,
     svgId: string,
     x: number,
     y: number
@@ -734,7 +733,6 @@ export class SingleLineDiagramViewer {
                 this.onBusCallback &&
                     this.onBusCallback(
                         bus.equipmentId,
-                        bus.componentType,
                         bus.id,
                         event.x,
                         event.y
