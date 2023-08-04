@@ -30,6 +30,10 @@ export class NetworkAreaDiagramViewer {
     ) {
         this.container = container;
         this.svgContent = svgContent;
+        this.width = 0;
+        this.height = 0;
+        this.originalWidth = 0;
+        this.originalHeight = 0;
         this.init(minWidth, minHeight, maxWidth, maxHeight);
     }
 
@@ -101,7 +105,7 @@ export class NetworkAreaDiagramViewer {
             return;
         }
 
-        const dimensions: DIMENSIONS = this.getDimensionsFromSvg();
+        const dimensions: DIMENSIONS | null = this.getDimensionsFromSvg();
 
         if (!dimensions) {
             return;
@@ -159,7 +163,7 @@ export class NetworkAreaDiagramViewer {
         this.svgDraw = draw;
     }
 
-    public getDimensionsFromSvg(): DIMENSIONS {
+    public getDimensionsFromSvg(): DIMENSIONS | null {
         // Dimensions are set in the main svg tag attributes. We want to parse those data without loading the whole svg in the DOM.
         const result = this.svgContent.match('<svg[^>]*>');
         if (result === null || result.length === 0) {
@@ -169,8 +173,8 @@ export class NetworkAreaDiagramViewer {
         const svg: SVGSVGElement = new DOMParser()
             .parseFromString(emptiedSvgContent, 'image/svg+xml')
             .getElementsByTagName('svg')[0];
-        const width: number = +svg.getAttribute('width');
-        const height: number = +svg.getAttribute('height');
+        const width: number = Number(svg.getAttribute('width'));
+        const height: number = Number(svg.getAttribute('height'));
         const viewbox: VIEWBOX = svg.viewBox.baseVal;
         return { width: width, height: height, viewbox: viewbox };
     }

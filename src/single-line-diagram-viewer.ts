@@ -354,8 +354,8 @@ export class SingleLineDiagramViewer {
         viewbox.y -= 20;
         viewbox.width += 40;
         viewbox.height += 40;
-        let width: number = +svg.getAttribute('width');
-        let height: number = +svg.getAttribute('height');
+        let width: number = Number(svg.getAttribute('width'));
+        let height: number = Number(svg.getAttribute('height'));
         width = width == 0 ? viewbox.width : width + 40;
         height = height == 0 ? viewbox.height : height + 40;
         return { width: width, height: height, viewbox: viewbox };
@@ -363,23 +363,23 @@ export class SingleLineDiagramViewer {
 
     private addNavigationArrow() {
         if (this.onNextVoltageCallback !== null) {
-            let navigable = this.svgMetadata.nodes.filter((el) => el.nextVId);
-            let vlList = this.svgMetadata.nodes.map((element) => element.vid);
-            vlList = vlList.filter(
+            let navigable = this.svgMetadata?.nodes.filter((el) => el.nextVId);
+            let vlList = this.svgMetadata?.nodes.map((element) => element.vid);
+            vlList = vlList?.filter(
                 (element, index) =>
-                    element !== '' && vlList.indexOf(element) === index
+                    element !== '' && vlList?.indexOf(element) === index
             );
 
             //remove arrows if the arrow points to the current svg
-            navigable = navigable.filter((element) => {
-                return vlList.indexOf(element.nextVId) === -1;
+            navigable = navigable?.filter((element) => {
+                return vlList?.indexOf(element.nextVId) === -1;
             });
 
             const highestY = new Map();
             const lowestY = new Map();
             let y;
 
-            navigable.forEach((element) => {
+            navigable?.forEach((element) => {
                 const elementById: HTMLElement | null =
                     this.container.querySelector('#' + element.id);
                 if (elementById != null) {
@@ -406,7 +406,7 @@ export class SingleLineDiagramViewer {
                 }
             });
 
-            navigable.forEach((element) => {
+            navigable?.forEach((element) => {
                 const elementById: HTMLElement | null =
                     this.container.querySelector('#' + element.id);
                 if (elementById != null) {
@@ -494,11 +494,11 @@ export class SingleLineDiagramViewer {
                 if (dragged || event.button !== 0) {
                     return;
                 }
-                const meta = svgMetadata.nodes.find(
+                const meta = svgMetadata?.nodes.find(
                     (other) => other.id === element.id
                 );
                 if (meta !== undefined && meta !== null) {
-                    this.onNextVoltageCallback(meta.nextVId);
+                    this.onNextVoltageCallback && this.onNextVoltageCallback(meta.nextVId);
                 }
             });
 
@@ -524,10 +524,10 @@ export class SingleLineDiagramViewer {
     private addSwitchesHandler() {
         // handling the click on a switch
         if (this.onBreakerCallback != null) {
-            const switches = this.svgMetadata.nodes.filter((element) =>
+            const switches = this.svgMetadata?.nodes.filter((element) =>
                 SWITCH_COMPONENT_TYPES.has(element.componentType)
             );
-            switches.forEach((aSwitch) => {
+            switches?.forEach((aSwitch) => {
                 const domEl: HTMLElement | null = this.container.querySelector(
                     '#' + aSwitch.id
                 );
@@ -540,13 +540,13 @@ export class SingleLineDiagramViewer {
                     domEl.addEventListener('mousemove', () => {
                         dragged = true;
                     });
-                    domEl.addEventListener('mouseup', (event) => {
+                    domEl.addEventListener('mouseup', (event: any) => {
                         if (dragged || event.button !== 0) {
                             return;
                         }
                         const switchId = aSwitch.equipmentId;
                         const open = aSwitch.open;
-                        this.onBreakerCallback(
+                        this.onBreakerCallback && this.onBreakerCallback(
                             switchId,
                             !open,
                             event.currentTarget
@@ -644,13 +644,13 @@ export class SingleLineDiagramViewer {
                 }
             };
 
-            const feeders = this.svgMetadata.nodes.filter((element) => {
+            const feeders = this.svgMetadata?.nodes.filter((element) => {
                 return (
                     element.vid !== '' &&
                     FEEDER_COMPONENT_TYPES.has(element.componentType)
                 );
             });
-            feeders.forEach((feeder) => {
+            feeders?.forEach((feeder) => {
                 const svgText: SVGTextElement | null | undefined =
                     this.container
                         ?.querySelector('#' + feeder.id)
@@ -666,7 +666,7 @@ export class SingleLineDiagramViewer {
                     svgText.addEventListener('contextmenu', (event) => {
                         event.preventDefault();
                         event.stopPropagation();
-                        this.onFeederCallback(
+                        this.onFeederCallback && this.onFeederCallback(
                             feeder.equipmentId,
                             feeder.componentType,
                             feeder.id,
@@ -683,23 +683,23 @@ export class SingleLineDiagramViewer {
         const equipmentsWithPopover = ['LINE', 'TWO_WINDINGS_TRANSFORMER'];
 
         // handling the hover on the equipments
-        const svgEquipments = this.svgMetadata.nodes.filter((node) =>
+        const svgEquipments = this.svgMetadata?.nodes.filter((node) =>
             equipmentsWithPopover.includes(node.componentType)
         );
-        svgEquipments.forEach((equipment) => {
+        svgEquipments?.forEach((equipment) => {
             const svgEquipment = this.container?.querySelector(
                 '#' + equipment.id
             );
-            svgEquipment.addEventListener('mouseover', (event) => {
-                this.handleTogglePopover(
+            svgEquipment?.addEventListener('mouseover', (event: any) => {
+                this.handleTogglePopover && this.handleTogglePopover(
                     true,
                     event.currentTarget,
                     equipment.equipmentId,
                     equipment.componentType
                 );
             });
-            svgEquipment.addEventListener('mouseout', () => {
-                this.handleTogglePopover(false, null, '', '');
+            svgEquipment?.addEventListener('mouseout', () => {
+                this.handleTogglePopover && this.handleTogglePopover(false, null, '', '');
             });
         });
     }
