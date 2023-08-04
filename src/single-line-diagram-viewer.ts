@@ -718,15 +718,16 @@ export class SingleLineDiagramViewer {
     }
 
     private addBusHandler() {
-        const buses = this.svgMetadata.nodes.filter((element) =>
+        const buses = this.svgMetadata?.nodes.filter((element) =>
             BUSBAR_SECTION_TYPES.has(element.componentType)
         );
-        buses.forEach((bus) => {
-            const svgBus: HTMLElement | null | undefined =
+        buses?.forEach((bus) => {
+            const svgBus: HTMLElement | null  =
                 this.container?.querySelector('#' + bus.id);
-            svgBus.style.cursor = 'pointer';
-
-            svgBus.addEventListener('contextmenu', (event) => {
+            if(svgBus){
+                svgBus.style.cursor = 'pointer';
+            }
+            svgBus?.addEventListener('contextmenu', (event) => {
                 event.preventDefault();
                 event.stopPropagation();
                 this.onBusCallback &&
