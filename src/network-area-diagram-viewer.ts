@@ -173,8 +173,8 @@ export class NetworkAreaDiagramViewer {
         const svg: SVGSVGElement = new DOMParser()
             .parseFromString(emptiedSvgContent, 'image/svg+xml')
             .getElementsByTagName('svg')[0];
-        const width: number = Number(svg.getAttribute('width'));
-        const height: number = Number(svg.getAttribute('height'));
+        const width = Number(svg.getAttribute('width'));
+        const height = Number(svg.getAttribute('height'));
         const viewbox: VIEWBOX = svg.viewBox.baseVal;
         return { width: width, height: height, viewbox: viewbox };
     }

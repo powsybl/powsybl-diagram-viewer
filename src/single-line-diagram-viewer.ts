@@ -367,8 +367,8 @@ export class SingleLineDiagramViewer {
         viewbox.y -= 20;
         viewbox.width += 40;
         viewbox.height += 40;
-        let width: number = Number(svg.getAttribute('width'));
-        let height: number = Number(svg.getAttribute('height'));
+        let width = Number(svg.getAttribute('width'));
+        let height = Number(svg.getAttribute('height'));
         width = width == 0 ? viewbox.width : width + 40;
         height = height == 0 ? viewbox.height : height + 40;
         return { width: width, height: height, viewbox: viewbox };
