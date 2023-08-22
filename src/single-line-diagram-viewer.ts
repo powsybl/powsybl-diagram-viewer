@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { EventTarget, Point, SVG, Svg, ViewBoxLike } from '@svgdotjs/svg.js';
+import { Point, SVG, Svg, ViewBoxLike } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
@@ -554,7 +554,7 @@ export class SingleLineDiagramViewer {
                     domEl.addEventListener('mousemove', () => {
                         dragged = true;
                     });
-                    domEl.addEventListener('mouseup', (event: any) => {
+                    domEl.addEventListener('mouseup', (event) => {
                         if (dragged || event.button !== 0) {
                             return;
                         }
@@ -706,7 +706,7 @@ export class SingleLineDiagramViewer {
             const svgEquipment = this.container?.querySelector(
                 '#' + equipment.id
             );
-            svgEquipment?.addEventListener('mouseover', (event: any) => {
+            svgEquipment?.addEventListener('mouseover', (event) => {
                 this.handleTogglePopover &&
                     this.handleTogglePopover(
                         true,
