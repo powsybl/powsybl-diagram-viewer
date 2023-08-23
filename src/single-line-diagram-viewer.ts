@@ -511,7 +511,7 @@ export class SingleLineDiagramViewer {
                     (other) => other.id === element.id
                 );
                 if (meta !== undefined && meta !== null) {
-                        this.onNextVoltageCallback?.(meta.nextVId);
+                    this.onNextVoltageCallback?.(meta.nextVId);
                 }
             });
 
@@ -559,11 +559,11 @@ export class SingleLineDiagramViewer {
                         }
                         const switchId = aSwitch.equipmentId;
                         const open = aSwitch.open;
-                            this.onBreakerCallback?.(
-                                switchId,
-                                !open,
-                                event.currentTarget
-                            );
+                        this.onBreakerCallback?.(
+                            switchId,
+                            !open,
+                            event.currentTarget
+                        );
                     });
                 }
             });
@@ -679,13 +679,13 @@ export class SingleLineDiagramViewer {
                     svgText.addEventListener('contextmenu', (event) => {
                         event.preventDefault();
                         event.stopPropagation();
-                            this.onFeederCallback?.(
-                                feeder.equipmentId,
-                                feeder.componentType,
-                                feeder.id,
-                                event.x,
-                                event.y
-                            );
+                        this.onFeederCallback?.(
+                            feeder.equipmentId,
+                            feeder.componentType,
+                            feeder.id,
+                            event.x,
+                            event.y
+                        );
                     });
                 }
             });
@@ -704,15 +704,15 @@ export class SingleLineDiagramViewer {
                 '#' + equipment.id
             );
             svgEquipment?.addEventListener('mouseover', (event) => {
-                    this.handleTogglePopover?.(
-                        true,
-                        event.currentTarget,
-                        equipment.equipmentId,
-                        equipment.componentType
-                    );
+                this.handleTogglePopover?.(
+                    true,
+                    event.currentTarget,
+                    equipment.equipmentId,
+                    equipment.componentType
+                );
             });
             svgEquipment?.addEventListener('mouseout', () => {
-                    this.handleTogglePopover?.(false, null, '', '');
+                this.handleTogglePopover?.(false, null, '', '');
             });
         });
     }
@@ -731,12 +731,12 @@ export class SingleLineDiagramViewer {
                     event.preventDefault();
                     event.stopPropagation();
                     this.onBusCallback &&
-                        this.onBusCallback(
-                            bus.equipmentId,
-                            bus.id,
-                            event.x,
-                            event.y
-                        );
+                    this.onBusCallback(
+                        bus.equipmentId,
+                        bus.id,
+                        event.x,
+                        event.y
+                    );
                 });
             }
         });
