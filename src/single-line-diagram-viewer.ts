@@ -511,8 +511,7 @@ export class SingleLineDiagramViewer {
                     (other) => other.id === element.id
                 );
                 if (meta !== undefined && meta !== null) {
-                    this.onNextVoltageCallback &&
-                        this.onNextVoltageCallback(meta.nextVId);
+                        this.onNextVoltageCallback?.(meta.nextVId);
                 }
             });
 
@@ -560,8 +559,7 @@ export class SingleLineDiagramViewer {
                         }
                         const switchId = aSwitch.equipmentId;
                         const open = aSwitch.open;
-                        this.onBreakerCallback &&
-                            this.onBreakerCallback(
+                            this.onBreakerCallback?.(
                                 switchId,
                                 !open,
                                 event.currentTarget
@@ -681,8 +679,7 @@ export class SingleLineDiagramViewer {
                     svgText.addEventListener('contextmenu', (event) => {
                         event.preventDefault();
                         event.stopPropagation();
-                        this.onFeederCallback &&
-                            this.onFeederCallback(
+                            this.onFeederCallback?.(
                                 feeder.equipmentId,
                                 feeder.componentType,
                                 feeder.id,
@@ -707,8 +704,7 @@ export class SingleLineDiagramViewer {
                 '#' + equipment.id
             );
             svgEquipment?.addEventListener('mouseover', (event) => {
-                this.handleTogglePopover &&
-                    this.handleTogglePopover(
+                    this.handleTogglePopover?.(
                         true,
                         event.currentTarget,
                         equipment.equipmentId,
@@ -716,8 +712,7 @@ export class SingleLineDiagramViewer {
                     );
             });
             svgEquipment?.addEventListener('mouseout', () => {
-                this.handleTogglePopover &&
-                    this.handleTogglePopover(false, null, '', '');
+                    this.handleTogglePopover?.(false, null, '', '');
             });
         });
     }
