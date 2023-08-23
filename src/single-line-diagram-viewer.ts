@@ -730,8 +730,7 @@ export class SingleLineDiagramViewer {
                 svgBus.addEventListener('contextmenu', (event) => {
                     event.preventDefault();
                     event.stopPropagation();
-                    this.onBusCallback &&
-                    this.onBusCallback(
+                    this.onBusCallback?.(
                         bus.equipmentId,
                         bus.id,
                         event.x,
