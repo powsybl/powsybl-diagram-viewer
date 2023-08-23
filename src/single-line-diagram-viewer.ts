@@ -76,7 +76,7 @@ export type OnNextVoltageCallbackType = (nextVId: string) => void;
 export type OnBreakerCallbackType = (
     breakerId: string,
     open: boolean,
-    switchElement: EventTarget | null,
+    switchElement: EventTarget | null
 ) => void;
 
 export type OnFeederCallbackType = (
@@ -84,21 +84,21 @@ export type OnFeederCallbackType = (
     equipmentType: string | null,
     svgId: string,
     x: number,
-    y: number,
+    y: number
 ) => void;
 
 export type OnBusCallbackType = (
     busId: string,
     svgId: string,
     x: number,
-    y: number,
+    y: number
 ) => void;
 
 export type handleTogglePopoverType = (
     shouldDisplay: boolean,
     anchorEl: EventTarget | null,
     equipmentId: string,
-    equipmentType: string,
+    equipmentType: string
 ) => void;
 
 export class SingleLineDiagramViewer {
@@ -134,7 +134,7 @@ export class SingleLineDiagramViewer {
         onFeederCallback: OnFeederCallbackType | null,
         onBusCallback: OnBusCallbackType | null,
         selectionBackColor: string,
-        handleTogglePopover: handleTogglePopoverType,
+        handleTogglePopover: handleTogglePopoverType
     ) {
         this.container = container;
         this.svgType = svgType;
@@ -250,7 +250,7 @@ export class SingleLineDiagramViewer {
         minWidth: number,
         minHeight: number,
         maxWidth: number,
-        maxHeight: number,
+        maxHeight: number
     ): void {
         if (!this.container || !this.svgContent) {
             return;
@@ -272,12 +272,12 @@ export class SingleLineDiagramViewer {
         this.setWidth(
             dimensions.width < minWidth
                 ? minWidth
-                : Math.min(dimensions.width, maxWidth),
+                : Math.min(dimensions.width, maxWidth)
         );
         this.setHeight(
             dimensions.height < minHeight
                 ? minHeight
-                : Math.min(dimensions.height, maxHeight),
+                : Math.min(dimensions.height, maxHeight)
         );
         const draw = SVG()
             .addTo(this.container)
@@ -286,7 +286,7 @@ export class SingleLineDiagramViewer {
                 dimensions.viewbox.x,
                 dimensions.viewbox.y,
                 dimensions.viewbox.width,
-                dimensions.viewbox.height,
+                dimensions.viewbox.height
             )
             .panZoom({
                 panning: true,
@@ -327,13 +327,13 @@ export class SingleLineDiagramViewer {
                 const offsetY = (maxHeight - svgHeight) / newLvlX;
                 draw.zoom(
                     1,
-                    new Point(xOrigin, (yOrigin + maxHeight - offsetY) / 2),
+                    new Point(xOrigin, (yOrigin + maxHeight - offsetY) / 2)
                 );
             } else {
                 const offsetX = (maxWidth - svgWidth) / newLvlY;
                 draw.zoom(
                     1,
-                    new Point((xOrigin + maxWidth - offsetX) / 2, yOrigin),
+                    new Point((xOrigin + maxWidth - offsetX) / 2, yOrigin)
                 );
             }
         }
@@ -380,7 +380,7 @@ export class SingleLineDiagramViewer {
             let vlList = this.svgMetadata?.nodes.map((element) => element.vid);
             vlList = vlList?.filter(
                 (element, index) =>
-                    element !== '' && vlList?.indexOf(element) === index,
+                    element !== '' && vlList?.indexOf(element) === index
             );
 
             //remove arrows if the arrow points to the current svg
@@ -434,7 +434,7 @@ export class SingleLineDiagramViewer {
                             element.direction,
                             x,
                             highestY.get(element.vid),
-                            lowestY.get(element.vid),
+                            lowestY.get(element.vid)
                         );
                     }
                 }
@@ -445,7 +445,7 @@ export class SingleLineDiagramViewer {
     private setArrowsStyle = (
         target: SVGElement,
         color1: string,
-        color2: string,
+        color2: string
     ) => {
         const pe1 = target.querySelector('.arrow') as SVGPathElement;
         const pe2 = target.querySelector('.arrow-hover') as SVGPathElement;
@@ -462,7 +462,7 @@ export class SingleLineDiagramViewer {
         position: string,
         x: number,
         highestY: number,
-        lowestY: number,
+        lowestY: number
     ) {
         const svgInsert: HTMLElement | null = element?.parentElement;
         if (svgInsert !== undefined && svgInsert !== null) {
@@ -481,12 +481,12 @@ export class SingleLineDiagramViewer {
             if (position === 'BOTTOM') {
                 group.setAttribute(
                     'transform',
-                    'translate(' + x + ',' + y + ') rotate(180)',
+                    'translate(' + x + ',' + y + ') rotate(180)'
                 );
             } else {
                 group.setAttribute(
                     'transform',
-                    'translate(' + x + ',' + y + ')',
+                    'translate(' + x + ',' + y + ')'
                 );
             }
 
@@ -508,7 +508,7 @@ export class SingleLineDiagramViewer {
                     return;
                 }
                 const meta = svgMetadata?.nodes.find(
-                    (other) => other.id === element.id,
+                    (other) => other.id === element.id
                 );
                 if (meta !== undefined && meta !== null) {
                     this.onNextVoltageCallback &&
@@ -521,7 +521,7 @@ export class SingleLineDiagramViewer {
                 this.setArrowsStyle(
                     e.target as SVGElement,
                     this.selectionBackColor,
-                    'currentColor',
+                    'currentColor'
                 );
             });
 
@@ -529,7 +529,7 @@ export class SingleLineDiagramViewer {
                 this.setArrowsStyle(
                     e.target as SVGElement,
                     'currentColor',
-                    this.selectionBackColor,
+                    this.selectionBackColor
                 );
             });
         }
@@ -539,11 +539,11 @@ export class SingleLineDiagramViewer {
         // handling the click on a switch
         if (this.onBreakerCallback != null) {
             const switches = this.svgMetadata?.nodes.filter((element) =>
-                SWITCH_COMPONENT_TYPES.has(element.componentType),
+                SWITCH_COMPONENT_TYPES.has(element.componentType)
             );
             switches?.forEach((aSwitch) => {
                 const domEl: HTMLElement | null = this.container.querySelector(
-                    '#' + aSwitch.id,
+                    '#' + aSwitch.id
                 );
                 if (domEl !== null) {
                     domEl.style.cursor = 'pointer';
@@ -564,7 +564,7 @@ export class SingleLineDiagramViewer {
                             this.onBreakerCallback(
                                 switchId,
                                 !open,
-                                event.currentTarget,
+                                event.currentTarget
                             );
                     });
                 }
@@ -574,7 +574,7 @@ export class SingleLineDiagramViewer {
 
     private addFeederSelectionRect(
         svgText: SVGTextElement,
-        backgroundColor: string,
+        backgroundColor: string
     ) {
         svgText.style.setProperty('fill', backgroundColor);
         const selectionBackgroundColor = 'currentColor';
@@ -590,11 +590,11 @@ export class SingleLineDiagramViewer {
         selectionRect.setAttribute('stroke-width', '0');
         selectionRect.setAttribute(
             'x',
-            (bounds.x - padding_left - selectionPadding).toString(),
+            (bounds.x - padding_left - selectionPadding).toString()
         );
         selectionRect.setAttribute(
             'y',
-            (bounds.y - padding_top - selectionPadding).toString(),
+            (bounds.y - padding_top - selectionPadding).toString()
         );
         selectionRect.setAttribute(
             'width',
@@ -603,7 +603,7 @@ export class SingleLineDiagramViewer {
                 padding_left +
                 padding_right +
                 2 * selectionPadding
-            ).toString(),
+            ).toString()
         );
         selectionRect.setAttribute(
             'height',
@@ -612,7 +612,7 @@ export class SingleLineDiagramViewer {
                 padding_top +
                 padding_bottom +
                 2 * selectionPadding
-            ).toString(),
+            ).toString()
         );
         selectionRect.setAttribute('fill', selectionBackgroundColor);
         selectionRect.setAttribute('rx', selectionPadding.toString());
@@ -630,12 +630,12 @@ export class SingleLineDiagramViewer {
         if (this.onFeederCallback != null) {
             const showFeederSelection = (
                 svgText: SVGTextElement,
-                colorSelected: string,
+                colorSelected: string
             ) => {
                 if (svgText.parentElement !== null) {
                     if (
                         svgText.parentElement.getElementsByClassName(
-                            'sld-label-selection',
+                            'sld-label-selection'
                         ).length === 0
                     ) {
                         this.addFeederSelectionRect(svgText, colorSelected);
@@ -651,7 +651,7 @@ export class SingleLineDiagramViewer {
                 ) {
                     const selectionRect =
                         svgText.parentElement.getElementsByClassName(
-                            'sld-label-selection',
+                            'sld-label-selection'
                         );
                     if (selectionRect.length !== 0) {
                         svgText.parentNode.removeChild(selectionRect[0]);
@@ -687,7 +687,7 @@ export class SingleLineDiagramViewer {
                                 feeder.componentType,
                                 feeder.id,
                                 event.x,
-                                event.y,
+                                event.y
                             );
                     });
                 }
@@ -700,11 +700,11 @@ export class SingleLineDiagramViewer {
 
         // handling the hover on the equipments
         const svgEquipments = this.svgMetadata?.nodes.filter((node) =>
-            equipmentsWithPopover.includes(node.componentType),
+            equipmentsWithPopover.includes(node.componentType)
         );
         svgEquipments?.forEach((equipment) => {
             const svgEquipment = this.container?.querySelector(
-                '#' + equipment.id,
+                '#' + equipment.id
             );
             svgEquipment?.addEventListener('mouseover', (event) => {
                 this.handleTogglePopover &&
@@ -712,7 +712,7 @@ export class SingleLineDiagramViewer {
                         true,
                         event.currentTarget,
                         equipment.equipmentId,
-                        equipment.componentType,
+                        equipment.componentType
                     );
             });
             svgEquipment?.addEventListener('mouseout', () => {
@@ -724,11 +724,11 @@ export class SingleLineDiagramViewer {
 
     private addBusHandler() {
         const buses = this.svgMetadata?.nodes.filter((element) =>
-            BUSBAR_SECTION_TYPES.has(element.componentType),
+            BUSBAR_SECTION_TYPES.has(element.componentType)
         );
         buses?.forEach((bus) => {
             const svgBus: HTMLElement | null = this.container?.querySelector(
-                '#' + bus.id,
+                '#' + bus.id
             );
             if (svgBus) {
                 svgBus.style.cursor = 'pointer';
@@ -740,7 +740,7 @@ export class SingleLineDiagramViewer {
                             bus.equipmentId,
                             bus.id,
                             event.x,
-                            event.y,
+                            event.y
                         );
                 });
             }
