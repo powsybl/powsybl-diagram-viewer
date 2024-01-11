@@ -8,35 +8,34 @@
   "repository": "git://github.com/powsybl/powsybl-diagram-viewer.git",
   "types": "dist/types.d.ts",
   "source": "src/index.ts",
-  "main": "dist/main.js",
-  "module": "dist/module.js",
+  "main": "dist/powsybl-diagram-viewer.mjs",
+  "module": "dist/powsybl-diagram-viewer.mjs",
   "files": [
     "/dist"
   ],
   "scripts": {
-    "watch": "parcel watch",
-    "build": "parcel build",
+    "watch": "vite watch",
+    "build": "vite build",
     "test": "jest",
-    "start": "parcel demo/src/index.html --dist-dir ./output --open",
+    "start": "vite demo/src/ --open",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "devDependencies": {
     "@babel/core": "^7.17.10",
     "@babel/preset-env": "^7.17.10",
     "@babel/preset-typescript": "^7.16.7",
-    "@parcel/packager-ts": "^2.5.0",
-    "@parcel/transformer-typescript-types": "^2.5.0",
     "@types/jest": "^27.5.1",
     "@typescript-eslint/eslint-plugin": "^5.23.0",
+    "@vitejs/plugin-react": "^4.2.1",
     "babel-jest": "^28.1.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
     "jest": "^28.1.0",
     "jest-environment-jsdom": "^28.1.0",
-    "parcel": "^2.5.0",
     "ts-jest": "^28.0.2",
     "ts-node": "^10.7.0",
-    "typescript": "^4.6.4"
+    "typescript": "^4.6.4",
+    "vite": "^5.0.11"
   },
   "dependencies": {
     "@svgdotjs/svg.js": "^3.0.12",
