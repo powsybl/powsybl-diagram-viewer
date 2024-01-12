@@ -16,5 +16,4 @@ export default class MapEquipments extends MapEquipmentsBase {
         super();
         this.initEquipments(smapdata, lmapdata);
     }
-
 }
