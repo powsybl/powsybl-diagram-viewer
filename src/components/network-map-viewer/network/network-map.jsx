@@ -14,9 +14,6 @@ import React, {
 } from 'react';
 import PropTypes from 'prop-types';
 
-import { FlyToInterpolator } from '@deck.gl/core';
-import DeckGL from '@deck.gl/react';
-
 import { decomposeColor } from '@mui/system';
 import LoaderWithOverlay from '../utils/loader-with-overlay';
 
@@ -25,13 +22,9 @@ import { LineLayer, LineFlowColorMode, LineFlowMode } from './line-layer';
 import { SubstationLayer } from './substation-layer';
 import { getNominalVoltageColor } from '../../../utils/colors';
 import { RunningStatus } from '../utils/running-status';
-import { FormattedMessage } from 'react-intl';
-import ReplayIcon from '@mui/icons-material/Replay';
-import { Button, useTheme } from '@mui/material';
+import { useTheme } from '@mui/material';
 import { MapEquipmentsBase } from './map-equipments-base';
 import { useNameOrId } from '../utils/equipmentInfosHandler';
-import { Box } from '@mui/system';
-import { MapContext } from 'react-map-gl/dist/esm/components/map';
 import { Map, NavigationControl, useControl } from 'react-map-gl';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 
@@ -50,20 +43,21 @@ const DeckGLOverlay = React.forwardRef((props, ref) => {
 
 const PICKING_RADIUS = 5;
 
-const styles = {
-    mapManualRefreshBackdrop: {
-        width: '100%',
-        height: '100%',
-        textAlign: 'center',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'grey',
-        opacity: '0.8',
-        zIndex: 99,
-        fontSize: 30,
-    },
-};
+// FIXME: to uncomment when system is fixed
+// const styles = {
+//     mapManualRefreshBackdrop: {
+//         width: '100%',
+//         height: '100%',
+//         textAlign: 'center',
+//         display: 'flex',
+//         alignItems: 'center',
+//         justifyContent: 'center',
+//         background: 'grey',
+//         opacity: '0.8',
+//         zIndex: 99,
+//         fontSize: 30,
+//     },
+// };
 
 const FALLBACK_MAPBOX_TOKEN =
     'pk.eyJ1IjoiZ2VvZmphbWciLCJhIjoiY2pwbnRwcm8wMDYzMDQ4b2pieXd0bDMxNSJ9.Q4aL20nBo5CzGkrWtxroug';
@@ -101,9 +95,6 @@ const NetworkMap = (props) => {
     //const reloadMapNeeded = useSelector((state) => state.reloadMap);
     //const currentNode = useSelector((state) => state.currentTreeNode);
     const centerOnSubstation = props.centerOnSubstation;
-    const mapManualRefresh = props.mapManualRefresh;
-    const reloadMapNeeded = props.reloadMapNeeded;
-    const currentNodeBuilt = props.currentNodeBuilt;
 
     const { getNameOrId } = useNameOrId(props.useName);
 
@@ -164,8 +155,6 @@ const NetworkMap = (props) => {
                 (centered.centeredSubstationId &&
                     centered.centeredSubstationId !==
                         centered.lastCenteredSubstation)) &&
-            deck !== null &&
-            deck.viewManager != null &&
             props.geoData !== null
         ) {
             if (props.geoData.substationPositionsById.size > 0) {
@@ -456,6 +445,7 @@ const NetworkMap = (props) => {
     // redrawn. It seems like this is autodetected when the browser window is
     // resized, but not for programmatic resizes of the parent. For now in our
     // app, only study display mode resizes programmatically
+    // FIXME: to reproduce with props
     // const studyDisplayMode = useSelector((state) => state.studyDisplayMode);
     // useEffect(() => {
     //     mapRef.current?.resize();
@@ -478,21 +468,22 @@ const NetworkMap = (props) => {
                 onContextMenu={onMapContextMenu}
             >
                 {props.displayOverlayLoader && renderOverlay()}
-                {mapManualRefresh &&
+                {/* FIXME: to reproduce with props */}
+                {/* {mapManualRefresh &&
                     reloadMapNeeded &&
-                    isNodeBuilt(currentNode) && (
-                        <Box sx={styles.mapManualRefreshBackdrop}>
-                            <Button
-                                onClick={props.onReloadMapClick}
-                                aria-label="reload"
-                                color="inherit"
-                                size="large"
-                            >
-                                <ReplayIcon />
-                                <FormattedMessage id="ManuallyRefreshGeoData" />
-                            </Button>
-                        </Box>
-                    )}
+                    isNodeBuilt(currentNode) && ( 
+                <Box sx={styles.mapManualRefreshBackdrop}>
+                    <Button
+                        onClick={props.onReloadMapClick}
+                        aria-label="reload"
+                        color="inherit"
+                        size="large"
+                    >
+                        <ReplayIcon />
+                        <FormattedMessage id="ManuallyRefreshGeoData" />
+                    </Button>
+                </Box>
+                 )} */}
                 <DeckGLOverlay
                     ref={deckRef}
                     onClick={(info, event) => {
@@ -585,7 +576,6 @@ NetworkMap.propTypes = {
     centerOnSubstation: PropTypes.any,
     mapManualRefresh: PropTypes.bool,
     reloadMapNeeded: PropTypes.bool,
-    currentNodeBuilt: PropTypes.bool,
     useName: PropTypes.bool,
     mapBoxToken: PropTypes.string,
     onReloadMapClick: PropTypes.func,
