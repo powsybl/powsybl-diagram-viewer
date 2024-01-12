@@ -28,6 +28,8 @@ import { useNameOrId } from '../utils/equipmentInfosHandler';
 import { Map, NavigationControl, useControl } from 'react-map-gl';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 
+import 'mapbox-gl/dist/mapbox-gl.css';
+
 // MouseEvent.button https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
 const MOUSE_EVENT_BUTTON_LEFT = 0;
 const MOUSE_EVENT_BUTTON_RIGHT = 2;
