@@ -17,7 +17,7 @@
         "watch": "vite watch",
         "build": "vite build",
         "test": "jest",
-        "start": "vite demo/src/ --open",
+        "start": "vite demo/ --open",
         "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
     },
     "devDependencies": {

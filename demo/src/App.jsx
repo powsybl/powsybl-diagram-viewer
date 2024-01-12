@@ -6,20 +6,20 @@
  */
 
 import React, { useEffect } from 'react';
-import { NetworkMap, GeoData } from '@powsybl/network-map-viewer';
+import { NetworkMap, GeoData } from '../../src/';
 import {
     createTheme,
     ThemeProvider,
     StyledEngineProvider,
 } from '@mui/material/styles';
 
-import MapEquipments from './map-equipments';
+import MapEquipments from './map-viewer/map-equipments';
 
-import sposdata from './data/spos.json';
-import lposdata from './data/lpos.json';
-import smapdata from './data/smap.json';
-import lmapdata from './data/lmap.json';
-import { addNadToDemo, addSldToDemo } from './add-diagrams';
+import sposdata from './map-viewer/data/spos.json';
+import lposdata from './map-viewer/data/lpos.json';
+import smapdata from './map-viewer/data/smap.json';
+import lmapdata from './map-viewer/data/lmap.json';
+import { addNadToDemo, addSldToDemo } from './diagram-viewers/add-diagrams';
 
 function App() {
     const INITIAL_POSITION = [9.322, 45.255];
