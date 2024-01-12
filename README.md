@@ -12,6 +12,17 @@ For development purpose, you can run 'npm run watch' for hot building (rebuild a
 Your consumer project should point on the local distribution. Edit your package.json depedencies : 
 '"powsybl-diagram-viewer": "file: path/to/powsybl-diagram-viewer",'
 
+# Demo
+The library includes a demo react app, in the demo directory (the network-map-viewer component is instantiated in demo/src/App.js).
+
+To run the demo:
+```console
+cd demo
+npm run build
+npm start
+```
+and point the browser to http://localhost:3000
+
 #### For integrators
 
 If you want to deploy a new version of powsybl-diagram-viewer in the [NPM package registry](https://www.npmjs.com/package/@powsybl/powsybl-diagram-viewer),
