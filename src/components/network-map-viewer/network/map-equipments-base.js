@@ -6,7 +6,6 @@
  */
 
 import { EQUIPMENT_TYPES } from '../utils/equipment-types';
-import { MAX_NUMBER_OF_IMPACTED_SUBSTATIONS } from './constants';
 
 const elementIdIndexer = (map, element) => {
     map.set(element.id, element);
@@ -34,7 +33,7 @@ export class MapEquipmentsBase {
 
     intlRef = undefined;
 
-    constructor(fakeParam) {
+    constructor() {
         // dummy constructor, to make children classes constructors happy
     }
 
@@ -68,7 +67,7 @@ export class MapEquipmentsBase {
             );
 
             this.substationsById.set(substation.id, substation);
-            substation.voltageLevels.forEach((voltageLevel, index) => {
+            substation.voltageLevels.forEach((voltageLevel) => {
                 voltageLevel.substationId = substation.id;
                 voltageLevel.substationName = substation.name;
 
@@ -207,11 +206,12 @@ export class MapEquipmentsBase {
 
     removeEquipment(equipmentType, equipmentId) {
         switch (equipmentType) {
-            case EQUIPMENT_TYPES.LINE:
+            case EQUIPMENT_TYPES.LINE: {
                 this.lines = this.lines.filter((l) => l.id !== equipmentId);
                 this.linesById.delete(equipmentId);
                 break;
-            case EQUIPMENT_TYPES.VOLTAGE_LEVEL:
+            }
+            case EQUIPMENT_TYPES.VOLTAGE_LEVEL: {
                 const substationId =
                     this.voltageLevelsById.get(equipmentId).substationId;
                 let voltageLevelsOfSubstation =
@@ -226,7 +226,8 @@ export class MapEquipmentsBase {
                 //New reference on substations to trigger reload of NetworkExplorer and NetworkMap
                 this.substations = [...this.substations];
                 break;
-            case EQUIPMENT_TYPES.SUBSTATION:
+            }
+            case EQUIPMENT_TYPES.SUBSTATION: {
                 this.substations = this.substations.filter(
                     (l) => l.id !== equipmentId
                 );
@@ -237,6 +238,7 @@ export class MapEquipmentsBase {
                 );
                 this.completeSubstationsInfos([substation]);
                 break;
+            }
             default:
         }
     }

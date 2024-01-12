@@ -961,7 +961,7 @@ export class LineLayer extends CompositeLayer {
                     getPosition: (branchStatus) => branchStatus.printPosition,
                     getIcon: (branchStatus) => getLineIcon(branchStatus.status),
                     getSize: this.props.iconSize,
-                    getColor: (branchStatus) => this.props.labelColor,
+                    getColor: () => this.props.labelColor,
                     getPixelOffset: (branchStatus) => branchStatus.offset,
                     visible:
                         (!this.props.filteredNominalVoltages ||

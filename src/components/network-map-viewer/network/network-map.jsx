@@ -366,7 +366,7 @@ const NetworkMap = (props) => {
                 labelColor: foregroundNeutralColor,
                 labelSize: LABEL_SIZE,
                 pickable: true,
-                onHover: ({ object, x, y }) => {
+                onHover: ({ object }) => {
                     setCursorType(object ? 'pointer' : 'grab');
                 },
                 getNameOrId: getNameOrId,
@@ -513,14 +513,14 @@ NetworkMap.defaultProps = {
 
     mapBoxToken: null,
 
-    onSubstationClick: (sId) => {},
-    onSubstationClickChooseVoltageLevel: (idSubstation, x, y) => {},
-    onSubstationMenuClick: (idSubstation, x, y) => {},
-    onVoltageLevelMenuClick: (equipment, x, y) => {},
-    onLineMenuClick: (equipment, x, y) => {},
-    onHvdcLineMenuClick: (equipment, x, y) => {},
+    onSubstationClick: () => {},
+    onSubstationClickChooseVoltageLevel: () => {},
+    onSubstationMenuClick: () => {},
+    onVoltageLevelMenuClick: () => {},
+    onLineMenuClick: () => {},
+    onHvdcLineMenuClick: () => {},
     onReloadMapClick: () => {},
-    renderPopover: (eId, aEl) => {
+    renderPopover: (eId) => {
         return eId;
     },
 };

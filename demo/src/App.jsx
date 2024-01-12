@@ -110,8 +110,7 @@ function App() {
                                 y
                             ) =>
                                 console.log(
-                                    '# Choose Voltage Level for substation: ' +
-                                        idSubstation
+                                    `# Choose Voltage Level for substation: ${idSubstation}  at coordinates (${x}, ${y})`
                                 )
                             }
                             onSubstationMenuClick={(equipment, x, y) =>
@@ -122,8 +121,9 @@ function App() {
                             }
                             onVoltageLevelMenuClick={(equipment, x, y) => {
                                 console.log(
-                                    '# VoltageLevel menu click: ' +
-                                        JSON.stringify(equipment)
+                                    `# VoltageLevel menu click: ${JSON.stringify(
+                                        equipment
+                                    )} at coordinates (${x}, ${y})`
                                 );
                             }}
                         />

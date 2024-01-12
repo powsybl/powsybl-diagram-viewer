@@ -60,7 +60,7 @@ const defaultProps = {
  *         minParallelOffset: min pixel distance
  */
 export class ArrowLayer extends Layer {
-    getShaders(id) {
+    getShaders() {
         return super.getShaders({ vs, fs, modules: [project32, picking] });
     }
 
