@@ -9,6 +9,7 @@
     "types": "dist/types.d.ts",
     "source": "src/index.js",
     "type": "module",
+    "main": "dist/powsybl-diagram-viewer.js",
     "module": "dist/powsybl-diagram-viewer.js",
     "files": [
         "/dist"
