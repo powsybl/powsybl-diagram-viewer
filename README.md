@@ -12,6 +12,9 @@ For development purpose, you can run 'npm run watch' for hot building (rebuild a
 Your consumer project should point on the local distribution. Edit your package.json depedencies : 
 '"powsybl-diagram-viewer": "file: path/to/powsybl-diagram-viewer",'
 
+Before importing this library locally from a main project, run this command in order to prevent duplicate React instances :
+'npm link {path_to_main_project}/node_modules/react'
+
 #### For integrators
 
 If you want to deploy a new version of powsybl-diagram-viewer in the [NPM package registry](https://www.npmjs.com/package/@powsybl/powsybl-diagram-viewer),

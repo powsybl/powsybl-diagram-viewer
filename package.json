@@ -8,8 +8,8 @@
     "repository": "git://github.com/powsybl/powsybl-diagram-viewer.git",
     "types": "dist/types.d.ts",
     "source": "src/index.js",
-    "main": "dist/powsybl-diagram-viewer.mjs",
-    "module": "dist/powsybl-diagram-viewer.mjs",
+    "type": "module",
+    "module": "dist/powsybl-diagram-viewer.js",
     "files": [
         "/dist"
     ],
@@ -20,13 +20,31 @@
         "start": "vite demo/ --open",
         "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
     },
+    "dependencies": {
+        "@mui/icons-material": "^5.5.1",
+        "@mui/material": "^5.5.3",
+        "@mui/system": "^5.5.3",
+        "@svgdotjs/svg.js": "^3.0.12",
+        "@svgdotjs/svg.panzoom.js": "^2.1.2",
+        "cheap-ruler": "^3.0.0",
+        "deck.gl": "^8.9.18",
+        "geolib": "^3.3.4",
+        "mapbox-gl": "^3.0.0",
+        "react-map-gl": "^7.0.0"
+    },
+    "peerDependencies": {
+        "@emotion/styled": "^11.8.1",
+        "react": "^18.0.0",
+        "react-dom": "^18.0.0",
+        "react-intl": "^6.0.0"
+    },
     "devDependencies": {
         "@babel/core": "^7.17.10",
         "@babel/preset-env": "^7.17.10",
         "@babel/preset-typescript": "^7.16.7",
         "@types/jest": "^27.5.1",
-        "@typescript-eslint/eslint-plugin": "^6.0.0",
-        "@vitejs/plugin-react": "^4.2.1",
+        "@typescript-eslint/eslint-plugin": "^5.23.0",
+        "@vitejs/plugin-react": "^4.2.0",
         "babel-jest": "^28.1.0",
         "eslint": "^8.45.0",
         "eslint-config-prettier": "^8.5.0",
@@ -40,24 +58,6 @@
         "ts-jest": "^28.0.2",
         "ts-node": "^10.7.0",
         "typescript": "^5.0.4",
-        "vite": "^5.0.11"
-    },
-    "dependencies": {
-        "@svgdotjs/svg.js": "^3.0.12",
-        "@svgdotjs/svg.panzoom.js": "^2.1.2",
-        "cheap-ruler": "^3.0.0",
-        "deck.gl": "^8.9.18",
-        "geolib": "^3.2.1",
-        "react-map-gl": "^7.0.0",
-        "mapbox-gl": "^3.0.0",
-        "@mui/material": "^5.5.3",
-        "@mui/system": "^5.5.3",
-        "@mui/icons-material": "^5.5.1"
-    },
-    "peerDependencies": {
-        "@emotion/styled": "^11.8.1",
-        "react": "^18.0.0",
-        "react-dom": "^18.0.0",
-        "react-intl": "^6.0.0"
+        "vite": "^5.0.0"
     }
 }
