@@ -10,10 +10,10 @@
     "node": ">=18",
     "npm": ">=10"
   },
-  "types": "dist/types.d.ts",
-  "source": "src/index.ts",
-  "main": "dist/powsybl-diagram-viewer.mjs",
-  "module": "dist/powsybl-diagram-viewer.mjs",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "main": "dist/powsybl-diagram-viewer.js",
+  "module": "dist/powsybl-diagram-viewer.js",
   "files": [
     "/dist"
   ],
@@ -39,7 +39,9 @@
     "ts-jest": "^28.0.2",
     "ts-node": "^10.7.0",
     "typescript": "^4.6.4",
-    "vite": "^5.0.11"
+    "vite": "^5.0.11",
+    "vite-plugin-dts": "^3.7.1",
+    "vite-plugin-eslint": "^1.8.1"
   },
   "dependencies": {
     "@svgdotjs/svg.js": "^3.0.12",
