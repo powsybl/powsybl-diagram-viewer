@@ -6,16 +6,16 @@
     "homepage": "https://www.powsybl.org/",
     "license": "MPL",
     "repository": "git://github.com/powsybl/powsybl-diagram-viewer.git",
-     "engine": {
-    "node": ">=18",
-    "npm": ">=10"
+    "engine": {
+        "node": ">=18",
+        "npm": ">=10"
     },
     "types": "dist/index.d.ts",
     "type": "module",
     "main": "dist/powsybl-diagram-viewer.js",
     "module": "dist/powsybl-diagram-viewer.js",
     "files": [
-      "/dist"
+        "/dist"
     ],
     "scripts": {
         "watch": "vite watch",
@@ -44,19 +44,21 @@
         "ts-jest": "^28.0.2",
         "ts-node": "^10.7.0",
         "typescript": "^5.0.4",
-        "vite": "^5.0.11"
+        "vite": "^5.0.11",
+        "vite-plugin-dts": "^3.7.1",
+        "vite-plugin-eslint": "^1.8.1"
     },
     "dependencies": {
+        "@mui/icons-material": "^5.5.1",
+        "@mui/material": "^5.5.3",
+        "@mui/system": "^5.5.3",
         "@svgdotjs/svg.js": "^3.0.12",
         "@svgdotjs/svg.panzoom.js": "^2.1.2",
         "cheap-ruler": "^3.0.0",
         "deck.gl": "^8.0.0",
         "geolib": "^3.2.1",
-        "react-map-gl": "^6.0.0",
         "mapbox-gl": "^2.3.0",
-        "@mui/material": "^5.5.3",
-        "@mui/system": "^5.5.3",
-        "@mui/icons-material": "^5.5.1"
+        "react-map-gl": "^6.0.0"
     },
     "peerDependencies": {
         "@emotion/styled": "^11.8.1",
