@@ -6,12 +6,16 @@
     "homepage": "https://www.powsybl.org/",
     "license": "MPL",
     "repository": "git://github.com/powsybl/powsybl-diagram-viewer.git",
-    "types": "dist/types.d.ts",
-    "source": "src/index.js",
-    "main": "dist/powsybl-diagram-viewer.mjs",
-    "module": "dist/powsybl-diagram-viewer.mjs",
+     "engine": {
+    "node": ">=18",
+    "npm": ">=10"
+    },
+    "types": "dist/index.d.ts",
+    "type": "module",
+    "main": "dist/powsybl-diagram-viewer.js",
+    "module": "dist/powsybl-diagram-viewer.js",
     "files": [
-        "/dist"
+      "/dist"
     ],
     "scripts": {
         "watch": "vite watch",
