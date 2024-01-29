@@ -6,14 +6,10 @@
   "homepage": "https://www.powsybl.org/",
   "license": "MPL",
   "repository": "git://github.com/powsybl/powsybl-diagram-viewer.git",
-  "engine": {
-    "node": ">=18",
-    "npm": ">=10"
-  },
   "types": "dist/index.d.ts",
   "type": "module",
   "main": "dist/powsybl-diagram-viewer.js",
-  "module": "dist/powsybl-diagram-viewer.js",
+  "exports": "./dist/powsybl-diagram-viewer.js",
   "files": [
     "/dist"
   ],
@@ -30,7 +26,6 @@
     "@babel/preset-typescript": "^7.16.7",
     "@types/jest": "^27.5.1",
     "@typescript-eslint/eslint-plugin": "^5.23.0",
-    "@vitejs/plugin-react": "^4.2.1",
     "babel-jest": "^28.1.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
