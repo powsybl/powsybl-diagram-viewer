@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import eslint from 'vite-plugin-eslint';
 import dts from 'vite-plugin-dts';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
     plugins: [react(), eslint(), dts()],
