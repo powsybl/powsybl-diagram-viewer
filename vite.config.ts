@@ -1,9 +1,10 @@
-import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import eslint from 'vite-plugin-eslint';
+import dts from 'vite-plugin-dts';
 
 export default defineConfig({
-    plugins: [react()],
+    plugins: [react(), eslint(), dts()],
     build: {
         lib: {
             // Could also be a dictionary or array of multiple entry points
@@ -11,6 +12,7 @@ export default defineConfig({
             name: 'Powsybl diagram viewer',
             // the proper extensions will be added
             fileName: 'powsybl-diagram-viewer',
+            formats: ['es'],
         },
         rollupOptions: {
             // make sure to externalize deps that shouldn't be bundled
