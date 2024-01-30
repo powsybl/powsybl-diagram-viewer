@@ -1,9 +1,10 @@
-import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import eslint from 'vite-plugin-eslint';
+import dts from 'vite-plugin-dts';
 
 export default defineConfig({
-    plugins: [react()],
+    plugins: [react(), eslint(), dts()],
     build: {
         lib: {
             // Could also be a dictionary or array of multiple entry points
