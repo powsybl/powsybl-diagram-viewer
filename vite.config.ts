@@ -1,4 +1,3 @@
-import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import eslint from 'vite-plugin-eslint';
