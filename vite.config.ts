@@ -14,5 +14,8 @@ export default defineConfig({
             fileName: 'powsybl-diagram-viewer',
             formats: ['es'],
         },
+        rollupOptions: {
+            external: ['@svgdotjs/svg.js', '@svgdotjs/svg.panzoom.js'],
+        },
     },
 });
