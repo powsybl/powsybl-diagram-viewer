@@ -12,10 +12,16 @@ export default defineConfig({
             name: 'Powsybl diagram viewer',
             // the proper extensions will be added
             fileName: 'powsybl-diagram-viewer',
-            formats: ['es'],
         },
         rollupOptions: {
             external: ['@svgdotjs/svg.js', '@svgdotjs/svg.panzoom.js'],
+            output: {
+                // Provide global variables to use in the UMD build
+                // for externalized deps
+                globals: {
+                    '@svgdotjs/svg.js': 'SvgJs',
+                },
+            },
         },
     },
 });
