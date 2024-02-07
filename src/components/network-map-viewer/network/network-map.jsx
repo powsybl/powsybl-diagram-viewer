@@ -568,7 +568,7 @@ NetworkMap.propTypes = {
     // resized, but not for programmatic resizes of the parent. For now in our
     // app, only study display mode resizes programmatically
     // use this prop to make the map resize when needed, each time this prop changes, map.resize() is trigged
-    triggerMapResizeOnChange: PropTypes.object,
+    triggerMapResizeOnChange: PropTypes.any,
 
     centerOnSubstation: PropTypes.any,
     useName: PropTypes.bool,
