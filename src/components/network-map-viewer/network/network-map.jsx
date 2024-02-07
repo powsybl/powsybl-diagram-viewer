@@ -14,7 +14,7 @@ import React, {
 } from 'react';
 import PropTypes from 'prop-types';
 
-import { decomposeColor } from '@mui/system';
+import { Box, decomposeColor } from '@mui/system';
 import LoaderWithOverlay from '../utils/loader-with-overlay';
 
 import { GeoData } from './geo-data';
@@ -22,11 +22,13 @@ import { LineLayer, LineFlowColorMode, LineFlowMode } from './line-layer';
 import { SubstationLayer } from './substation-layer';
 import { getNominalVoltageColor } from '../../../utils/colors';
 import { RunningStatus } from '../utils/running-status';
-import { useTheme } from '@mui/material';
+import { Button, useTheme } from '@mui/material';
 import { MapEquipmentsBase } from './map-equipments-base';
 import { useNameOrId } from '../utils/equipmentInfosHandler';
 import { Map, NavigationControl, useControl } from 'react-map-gl';
 import { MapboxOverlay } from '@deck.gl/mapbox';
+import { Replay } from '@mui/icons-material';
+import { FormattedMessage } from 'react-intl';
 
 import 'mapbox-gl/dist/mapbox-gl.css';
 
@@ -45,21 +47,20 @@ const DeckGLOverlay = React.forwardRef((props, ref) => {
 
 const PICKING_RADIUS = 5;
 
-// FIXME: to uncomment when system is fixed
-// const styles = {
-//     mapManualRefreshBackdrop: {
-//         width: '100%',
-//         height: '100%',
-//         textAlign: 'center',
-//         display: 'flex',
-//         alignItems: 'center',
-//         justifyContent: 'center',
-//         background: 'grey',
-//         opacity: '0.8',
-//         zIndex: 99,
-//         fontSize: 30,
-//     },
-// };
+const styles = {
+    mapManualRefreshBackdrop: {
+        width: '100%',
+        height: '100%',
+        textAlign: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'grey',
+        opacity: '0.8',
+        zIndex: 99,
+        fontSize: 30,
+    },
+};
 
 const FALLBACK_MAPBOX_TOKEN =
     'pk.eyJ1IjoiZ2VvZmphbWciLCJhIjoiY2pwbnRwcm8wMDYzMDQ4b2pieXd0bDMxNSJ9.Q4aL20nBo5CzGkrWtxroug';
@@ -90,11 +91,6 @@ const NetworkMap = (props) => {
     const [cursorType, setCursorType] = useState('grab');
     const [isDragging, setDragging] = useState(false);
     //NOTE these constants are moved to the component's parameters list
-    //const centerOnSubstation = useSelector((state) => state.centerOnSubstation);
-    //const mapManualRefresh = useSelector(
-    //    (state) => state[PARAM_MAP_MANUAL_REFRESH]
-    //);
-    //const reloadMapNeeded = useSelector((state) => state.reloadMap);
     //const currentNode = useSelector((state) => state.currentTreeNode);
     const centerOnSubstation = props.centerOnSubstation;
 
@@ -442,16 +438,9 @@ const NetworkMap = (props) => {
         />
     );
 
-    // With mapboxgl v2 (not a problem with maplibre), we need to call
-    // map.resize() when the parent size has changed, otherwise the map is not
-    // redrawn. It seems like this is autodetected when the browser window is
-    // resized, but not for programmatic resizes of the parent. For now in our
-    // app, only study display mode resizes programmatically
-    // FIXME: to reproduce with props
-    // const studyDisplayMode = useSelector((state) => state.studyDisplayMode);
-    // useEffect(() => {
-    //     mapRef.current?.resize();
-    // }, [studyDisplayMode]);
+    useEffect(() => {
+        mapRef.current?.resize();
+    }, [props.triggerMapResizeOnChange]);
 
     return (
         mToken && (
@@ -470,22 +459,19 @@ const NetworkMap = (props) => {
                 onContextMenu={onMapContextMenu}
             >
                 {props.displayOverlayLoader && renderOverlay()}
-                {/* FIXME: to reproduce with props */}
-                {/* {mapManualRefresh &&
-                    reloadMapNeeded &&
-                    isNodeBuilt(currentNode) && ( 
-                <Box sx={styles.mapManualRefreshBackdrop}>
-                    <Button
-                        onClick={props.onReloadMapClick}
-                        aria-label="reload"
-                        color="inherit"
-                        size="large"
-                    >
-                        <ReplayIcon />
-                        <FormattedMessage id="ManuallyRefreshGeoData" />
-                    </Button>
-                </Box>
-                 )} */}
+                {props.isManualRefreshBackdropDisplayed && (
+                    <Box sx={styles.mapManualRefreshBackdrop}>
+                        <Button
+                            onClick={props.onManualRefreshClick}
+                            aria-label="reload"
+                            color="inherit"
+                            size="large"
+                        >
+                            <Replay />
+                            <FormattedMessage id="ManuallyRefreshGeoData" />
+                        </Button>
+                    </Box>
+                )}
                 <DeckGLOverlay
                     ref={deckRef}
                     onClick={(info, event) => {
@@ -529,12 +515,12 @@ NetworkMap.defaultProps = {
     disabled: false,
 
     centerOnSubstation: null,
-    mapManualRefresh: false,
-    reloadMapNeeded: true,
     currentNodeBuilt: false,
     useName: true,
 
     mapBoxToken: null,
+
+    isManualRefreshBackdropDisplayed: false,
 
     onSubstationClick: () => {},
     onSubstationClickChooseVoltageLevel: () => {},
@@ -542,7 +528,7 @@ NetworkMap.defaultProps = {
     onVoltageLevelMenuClick: () => {},
     onLineMenuClick: () => {},
     onHvdcLineMenuClick: () => {},
-    onReloadMapClick: () => {},
+    onManualRefreshClick: () => {},
     renderPopover: (eId) => {
         return eId;
     },
@@ -574,13 +560,20 @@ NetworkMap.propTypes = {
     updatedLines: PropTypes.array,
     displayOverlayLoader: PropTypes.bool,
     disabled: PropTypes.bool,
+    isManualRefreshBackdropDisplayed: PropTypes.bool,
+
+    // With mapboxgl v2 (not a problem with maplibre), we need to call
+    // map.resize() when the parent size has changed, otherwise the map is not
+    // redrawn. It seems like this is autodetected when the browser window is
+    // resized, but not for programmatic resizes of the parent. For now in our
+    // app, only study display mode resizes programmatically
+    // use this prop to make the map resize when needed, each time this prop changes, map.resize() is trigged
+    triggerMapResizeOnChange: PropTypes.object,
 
     centerOnSubstation: PropTypes.any,
-    mapManualRefresh: PropTypes.bool,
-    reloadMapNeeded: PropTypes.bool,
     useName: PropTypes.bool,
     mapBoxToken: PropTypes.string,
-    onReloadMapClick: PropTypes.func,
+    onManualRefreshClick: PropTypes.func,
     renderPopover: PropTypes.func,
 };
 
