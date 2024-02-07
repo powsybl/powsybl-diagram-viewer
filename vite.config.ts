@@ -6,7 +6,7 @@ import react from '@vitejs/plugin-react';
 import { externalizeDeps } from 'vite-plugin-externalize-deps';
 
 export default defineConfig({
-    plugins: [react(), eslint(), dts(), externalizeDeps()],
+    plugins: [react(), eslint(), dts()],
     build: {
         lib: {
             // Could also be a dictionary or array of multiple entry points
@@ -16,6 +16,21 @@ export default defineConfig({
             fileName: 'powsybl-diagram-viewer',
         },
         rollupOptions: {
+            external: [
+                'cheap-ruler',
+                'deck.gl',
+                'mapbox-gl',
+                'react',
+                'react-map-gl',
+                /@mui*/,
+                '@svgdotjs/svg.js',
+                '@svgdotjs/svg.panzoom.js',
+                //https://stackoverflow.com/questions/59134241/using-deck-gl-as-webpack-external
+                //https://github.com/visgl/deck.gl/blob/94bad4bb209a5da0686fb03f107e86b18199c108/website/webpack.config.js#L128-L141
+                /@deck.gl*/,
+                /@loaders.gl*/,
+                /@luma.gl*/,
+            ],
             output: {
                 // DO NOT define any external deps. External deps are dealt with externalizeDeps from vite-plugin-externalize-deps
                 // defining externals manually will prevent this plugin from working
@@ -23,24 +38,29 @@ export default defineConfig({
                 // Provide global variables to use in the UMD build
                 // for externalized deps
                 globals: {
-                    react: 'React',
-                    'react/jsx-runtime': 'ReactJsxRuntime',
-                    'react-intl': 'ReactIntl',
-                    '@emotion/react': 'EmotionReact',
-                    '@svgdotjs/svg.js': 'SvgJs',
+                    'cheap-ruler': 'CheapRuler',
+                    'deck.gl': 'DeckGl',
                     'geolib/es/computeDestinationPoint':
                         'GeolibComputeDestinationpoint',
-                    'cheap-ruler': 'CheapRuler',
+                    'geolib/es/getDistance': 'GeolibGetDistance',
                     'geolib/es/getGreatCircleBearing':
                         'GeolibGetGreatCircleBearing',
                     'geolib/es/getRhumbLineBearing':
                         'GeolibGetRhumbLineBearing',
-                    'deck.gl': 'DeckGl',
-                    'geolib/es/getDistance': 'GeolibGetDistance',
+                    react: 'React',
+                    'react/jsx-runtime': 'ReactJsxRuntime',
+                    'react-intl': 'ReactIntl',
                     'react-map-gl': 'ReactMapGl',
-                    '@mui/system': 'MuiSystem',
-                    '@mui/material': 'MuiMaterial',
+                    '@deck.gl/core': 'DeckGlCore',
+                    '@deck.gl/extensions': 'DeckGlExtensions',
+                    '@deck.gl/mapbox': 'DeckGlMapbox',
+                    '@emotion/react': 'EmotionReact',
                     '@mui/icons-material/Replay': 'MuiIconsMaterialReplay',
+                    '@mui/material': 'MuiMaterial',
+                    '@mui/system': 'MuiSystem',
+                    '@luma.gl/constants': 'LumaGlConstants',
+                    '@luma.gl/core': 'LumaGlCore',
+                    '@svgdotjs/svg.js': 'SvgJs',
                 },
             },
         },
