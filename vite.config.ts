@@ -6,7 +6,16 @@ import react from '@vitejs/plugin-react';
 import { externalizeDeps } from 'vite-plugin-externalize-deps';
 
 export default defineConfig({
-    plugins: [react(), eslint(), dts()],
+    plugins: [
+        react(),
+        eslint(),
+        dts(),
+        //https://stackoverflow.com/questions/59134241/using-deck-gl-as-webpack-external
+        //https://github.com/visgl/deck.gl/blob/94bad4bb209a5da0686fb03f107e86b18199c108/website/webpack.config.js#L128-L141
+        externalizeDeps({
+            include: [/@deck.gl*/, /@loaders.gl*/, /@luma.gl*/],
+        }),
+    ],
     build: {
         lib: {
             // Could also be a dictionary or array of multiple entry points
@@ -16,21 +25,6 @@ export default defineConfig({
             fileName: 'powsybl-diagram-viewer',
         },
         rollupOptions: {
-            external: [
-                'cheap-ruler',
-                'deck.gl',
-                'mapbox-gl',
-                'react',
-                'react-map-gl',
-                /@mui*/,
-                '@svgdotjs/svg.js',
-                '@svgdotjs/svg.panzoom.js',
-                //https://stackoverflow.com/questions/59134241/using-deck-gl-as-webpack-external
-                //https://github.com/visgl/deck.gl/blob/94bad4bb209a5da0686fb03f107e86b18199c108/website/webpack.config.js#L128-L141
-                /@deck.gl*/,
-                /@loaders.gl*/,
-                /@luma.gl*/,
-            ],
             output: {
                 // DO NOT define any external deps. External deps are dealt with externalizeDeps from vite-plugin-externalize-deps
                 // defining externals manually will prevent this plugin from working
