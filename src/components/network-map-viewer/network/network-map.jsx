@@ -23,7 +23,7 @@ import { SubstationLayer } from './substation-layer';
 import { getNominalVoltageColor } from '../../../utils/colors';
 import { RunningStatus } from '../utils/running-status';
 import { Button, useTheme } from '@mui/material';
-import { MapEquipmentsBase } from './map-equipments-base';
+import { MapEquipments } from './map-equipments';
 import { useNameOrId } from '../utils/equipmentInfosHandler';
 import { Map, NavigationControl, useControl } from 'react-map-gl';
 import { MapboxOverlay } from '@deck.gl/mapbox';
@@ -535,7 +535,7 @@ NetworkMap.defaultProps = {
 };
 
 NetworkMap.propTypes = {
-    mapEquipments: PropTypes.instanceOf(MapEquipmentsBase),
+    mapEquipments: PropTypes.instanceOf(MapEquipments),
     geoData: PropTypes.instanceOf(GeoData),
     filteredNominalVoltages: PropTypes.array,
     labelsZoomThreshold: PropTypes.number.isRequired,

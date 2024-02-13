@@ -13,7 +13,7 @@ import {
     StyledEngineProvider,
 } from '@mui/material/styles';
 
-import MapEquipments from './map-viewer/map-equipments';
+import DemoMapEquipments from './map-viewer/map-equipments';
 
 import sposdata from './map-viewer/data/spos.json';
 import lposdata from './map-viewer/data/lpos.json';
@@ -68,7 +68,7 @@ function App() {
     geoData.setSubstationPositions(sposdata);
     geoData.setLinePositions(lposdata);
 
-    const mapEquipments = new MapEquipments(smapdata, lmapdata);
+    const mapEquipments = new DemoMapEquipments(smapdata, lmapdata);
 
     useEffect(() => {
         const handleContextmenu = (e) => {

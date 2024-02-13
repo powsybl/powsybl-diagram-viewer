@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { MapEquipmentsBase } from '../../../src';
-export default class MapEquipments extends MapEquipmentsBase {
+import { MapEquipments } from '../../../src';
+export default class DemoMapEquipments extends MapEquipments {
     initEquipments(smapdata, lmapdata) {
         this.updateSubstations(smapdata, true);
         this.updateLines(lmapdata, true);
