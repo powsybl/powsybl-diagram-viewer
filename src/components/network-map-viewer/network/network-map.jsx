@@ -532,33 +532,29 @@ const NetworkMap = (props) => {
 };
 
 NetworkMap.defaultProps = {
-    mapEquipments: null,
-    updatedLines: [],
-    geoData: null,
-    filteredNominalVoltages: null,
-    labelsZoomThreshold: 9,
     arrowsZoomThreshold: 7,
-    tooltipZoomThreshold: 7,
-    initialZoom: 5,
+    centerOnSubstation: null,
+    disabled: false,
+    displayOverlayLoader: false,
+    filteredNominalVoltages: null,
+    geoData: null,
     initialPosition: [0, 0],
+    initialZoom: 5,
+    isManualRefreshBackdropDisplayed: false,
+    labelsZoomThreshold: 9,
+    lineFlowAlertThreshold: 100,
+    lineFlowColorMode: LineFlowColorMode.NOMINAL_VOLTAGE,
+    lineFlowHidden: true,
+    lineFlowMode: LineFlowMode.FEEDERS,
     lineFullPath: true,
     lineParallelPath: true,
-    lineFlowMode: LineFlowMode.FEEDERS,
-    lineFlowHidden: true,
-    lineFlowColorMode: LineFlowColorMode.NOMINAL_VOLTAGE,
-    lineFlowAlertThreshold: 100,
     loadFlowStatus: RunningStatus.IDLE,
-    visible: true,
-    displayOverlayLoader: false,
-    disabled: false,
-
-    centerOnSubstation: null,
-    currentNodeBuilt: false,
-    useName: true,
-
     mapBoxToken: null,
-
-    isManualRefreshBackdropDisplayed: false,
+    mapEquipments: null,
+    tooltipZoomThreshold: 7,
+    updatedLines: [],
+    useName: true,
+    visible: true,
 
     onSubstationClick: () => {},
     onSubstationClickChooseVoltageLevel: () => {},
@@ -573,33 +569,29 @@ NetworkMap.defaultProps = {
 };
 
 NetworkMap.propTypes = {
-    mapEquipments: PropTypes.instanceOf(MapEquipments),
+    disabled: PropTypes.bool,
     geoData: PropTypes.instanceOf(GeoData),
+    mapBoxToken: PropTypes.string,
+    mapEquipments: PropTypes.instanceOf(MapEquipments),
+    mapLibrary: PropTypes.oneOf(CARTO, CARTO_NOLABEL, MAPBOX),
+
+    arrowsZoomThreshold: PropTypes.number,
+    centerOnSubstation: PropTypes.any,
+    displayOverlayLoader: PropTypes.bool,
     filteredNominalVoltages: PropTypes.array,
-    labelsZoomThreshold: PropTypes.number.isRequired,
-    arrowsZoomThreshold: PropTypes.number.isRequired,
-    tooltipZoomThreshold: PropTypes.number.isRequired,
-    initialZoom: PropTypes.number.isRequired,
-    initialPosition: PropTypes.arrayOf(PropTypes.number).isRequired,
-    onSubstationClick: PropTypes.func,
-    onLineMenuClick: PropTypes.func,
-    onHvdcLineMenuClick: PropTypes.func,
-    onSubstationClickChooseVoltageLevel: PropTypes.func,
-    onSubstationMenuClick: PropTypes.func,
-    onVoltageLevelMenuClick: PropTypes.func,
+    initialPosition: PropTypes.arrayOf(PropTypes.number),
+    initialZoom: PropTypes.number,
+    isManualRefreshBackdropDisplayed: PropTypes.bool,
+    labelsZoomThreshold: PropTypes.number,
+    lineFlowAlertThreshold: PropTypes.number,
+    lineFlowColorMode: PropTypes.oneOf(Object.values(LineFlowColorMode)),
+    lineFlowHidden: PropTypes.bool,
+    lineFlowMode: PropTypes.oneOf(Object.values(LineFlowMode)),
     lineFullPath: PropTypes.bool,
     lineParallelPath: PropTypes.bool,
-    lineFlowMode: PropTypes.oneOf(Object.values(LineFlowMode)),
-    lineFlowHidden: PropTypes.bool,
-    lineFlowColorMode: PropTypes.oneOf(Object.values(LineFlowColorMode)),
-    lineFlowAlertThreshold: PropTypes.number.isRequired,
     loadFlowStatus: PropTypes.oneOf(Object.values(RunningStatus)),
-    visible: PropTypes.bool,
-    updatedLines: PropTypes.array,
-    displayOverlayLoader: PropTypes.bool,
-    disabled: PropTypes.bool,
-    isManualRefreshBackdropDisplayed: PropTypes.bool,
-
+    renderPopover: PropTypes.func,
+    tooltipZoomThreshold: PropTypes.number,
     // With mapboxgl v2 (not a problem with maplibre), we need to call
     // map.resize() when the parent size has changed, otherwise the map is not
     // redrawn. It seems like this is autodetected when the browser window is
@@ -607,13 +599,17 @@ NetworkMap.propTypes = {
     // app, only study display mode resizes programmatically
     // use this prop to make the map resize when needed, each time this prop changes, map.resize() is trigged
     triggerMapResizeOnChange: PropTypes.any,
-
-    centerOnSubstation: PropTypes.any,
+    updatedLines: PropTypes.array,
     useName: PropTypes.bool,
-    mapBoxToken: PropTypes.string,
+    visible: PropTypes.bool,
+
+    onHvdcLineMenuClick: PropTypes.func,
+    onLineMenuClick: PropTypes.func,
     onManualRefreshClick: PropTypes.func,
-    renderPopover: PropTypes.func,
-    mapLibrary: PropTypes.oneOf(CARTO, CARTO_NOLABEL, MAPBOX),
+    onSubstationClick: PropTypes.func,
+    onSubstationClickChooseVoltageLevel: PropTypes.func,
+    onSubstationMenuClick: PropTypes.func,
+    onVoltageLevelMenuClick: PropTypes.func,
 };
 
 export default React.memo(NetworkMap);
