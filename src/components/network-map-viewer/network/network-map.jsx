@@ -5,32 +5,35 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import PropTypes from 'prop-types';
 import React, {
     useEffect,
+    useImperativeHandle,
     useMemo,
     useRef,
     useState,
-    useImperativeHandle,
 } from 'react';
-import PropTypes from 'prop-types';
 
 import { Box, decomposeColor } from '@mui/system';
 import LoaderWithOverlay from '../utils/loader-with-overlay';
 
-import { GeoData } from './geo-data';
-import { LineLayer, LineFlowColorMode, LineFlowMode } from './line-layer';
-import { SubstationLayer } from './substation-layer';
-import { getNominalVoltageColor } from '../../../utils/colors';
-import { RunningStatus } from '../utils/running-status';
-import { Button, useTheme } from '@mui/material';
-import { MapEquipments } from './map-equipments';
-import { useNameOrId } from '../utils/equipmentInfosHandler';
-import { Map, NavigationControl, useControl } from 'react-map-gl';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import { Replay } from '@mui/icons-material';
+import { Button, useTheme } from '@mui/material';
 import { FormattedMessage } from 'react-intl';
+import { Map, NavigationControl, useControl } from 'react-map-gl';
+import { getNominalVoltageColor } from '../../../utils/colors';
+import { useNameOrId } from '../utils/equipmentInfosHandler';
+import { RunningStatus } from '../utils/running-status';
+import { GeoData } from './geo-data';
+import { LineFlowColorMode, LineFlowMode, LineLayer } from './line-layer';
+import { MapEquipments } from './map-equipments';
+import { SubstationLayer } from './substation-layer';
 
+import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 // MouseEvent.button https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
 const MOUSE_EVENT_BUTTON_LEFT = 0;
@@ -46,6 +49,10 @@ const DeckGLOverlay = React.forwardRef((props, ref) => {
 });
 
 const PICKING_RADIUS = 5;
+
+const CARTO = 'carto';
+const CARTO_NOLABEL = 'cartonolabel';
+const MAPBOX = 'mapbox';
 
 const styles = {
     mapManualRefreshBackdrop: {
@@ -68,6 +75,11 @@ const FALLBACK_MAPBOX_TOKEN =
 const SUBSTATION_LAYER_PREFIX = 'substationLayer';
 const LINE_LAYER_PREFIX = 'lineLayer';
 const LABEL_SIZE = 12;
+const INITIAL_CENTERED = {
+    lastCenteredSubstation: null,
+    centeredSubstationId: null,
+    centered: false,
+};
 
 const NetworkMap = (props) => {
     const [labelsVisible, setLabelsVisible] = useState(false);
@@ -75,11 +87,7 @@ const NetworkMap = (props) => {
     const [showTooltip, setShowTooltip] = useState(true);
     const mapRef = useRef();
     const deckRef = useRef();
-    const [centered, setCentered] = useState({
-        lastCenteredSubstation: null,
-        centeredSubstationId: null,
-        centered: false,
-    });
+    const [centered, setCentered] = useState(INITIAL_CENTERED);
     const lastViewStateRef = useRef(null);
     const [tooltip, setTooltip] = useState({});
     const theme = useTheme();
@@ -442,16 +450,46 @@ const NetworkMap = (props) => {
         mapRef.current?.resize();
     }, [props.triggerMapResizeOnChange]);
 
+    const getMapStyle = (mapStyle) => {
+        switch (mapStyle) {
+            case CARTO_NOLABEL:
+                return 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json';
+            case CARTO:
+                return 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+            case MAPBOX:
+                return 'mapbox://styles/mapbox/light-v9';
+        }
+    };
+
+    const mapLib =
+        props.mapLibrary === MAPBOX
+            ? mToken && {
+                  key: 'mapboxgl',
+                  mapLib: mapboxgl,
+                  mapboxAccessToken: mToken,
+              }
+            : {
+                  key: 'maplibregl',
+                  mapLib: maplibregl,
+              };
+
+    // because the mapLib prop of react-map-gl is not reactive, we need to
+    // unmount/mount the Map with 'key', so we need also to reset all state
+    // associated with uncontrolled state of the map
+    useEffect(() => {
+        setCentered(INITIAL_CENTERED);
+    }, [mapLib?.key]);
+
     return (
-        mToken && (
+        mapLib && (
             <Map
                 ref={mapRef}
                 style={{ zIndex: 0 }}
                 onMove={onViewStateChange}
                 doubleClickZoom={false}
-                mapStyle={theme.mapboxStyle}
+                mapStyle={getMapStyle(props.mapLibrary)}
                 preventStyleDiffing={true}
-                mapboxAccessToken={mToken}
+                {...mapLib}
                 initialViewState={initialViewState}
                 cursor={cursorHandler()} //TODO needed for pointer on our features, but forces us to reeimplement grabbing/grab for panning. Can we avoid reimplementing?
                 onDrag={() => setDragging(true)}
@@ -575,6 +613,7 @@ NetworkMap.propTypes = {
     mapBoxToken: PropTypes.string,
     onManualRefreshClick: PropTypes.func,
     renderPopover: PropTypes.func,
+    mapLibrary: PropTypes.oneOf(CARTO, CARTO_NOLABEL, MAPBOX),
 };
 
 export default React.memo(NetworkMap);
