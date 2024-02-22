@@ -429,10 +429,11 @@ export class SingleLineDiagramViewer {
                     const xs = transform?.[0]?.match(/\d+/)?.[0];
                     if (xs !== undefined) {
                         const x = parseInt(xs, 10);
+			const fWidth = this.svgMetadata?.components.find((comp) => comp.type === element.componentType)?.size.width || 0;
                         this.createSvgArrow(
                             elementById,
                             element.direction,
-                            x,
+                            x + fWidth / 2,
                             highestY.get(element.vid),
                             lowestY.get(element.vid)
                         );
