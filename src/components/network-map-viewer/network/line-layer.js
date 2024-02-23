@@ -12,7 +12,7 @@ import { PathStyleExtension } from '@deck.gl/extensions';
 import { ArrowLayer, ArrowDirection } from './layers/arrow-layer';
 import ParallelPathLayer from './layers/parallel-path-layer';
 import ForkLineLayer from './layers/fork-line-layer';
-import getDistance from 'geolib/es/getDistance';
+import { getDistance } from 'geolib';
 import {
     SUBSTATION_RADIUS,
     SUBSTATION_RADIUS_MAX_PIXEL,

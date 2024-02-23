@@ -54,6 +54,9 @@ const CARTO = 'carto';
 const CARTO_NOLABEL = 'cartonolabel';
 const MAPBOX = 'mapbox';
 
+const LIGHT = 'light';
+const DARK = 'dark';
+
 const styles = {
     mapManualRefreshBackdrop: {
         width: '100%',
@@ -450,16 +453,33 @@ const NetworkMap = (props) => {
         mapRef.current?.resize();
     }, [props.triggerMapResizeOnChange]);
 
-    const getMapStyle = (mapStyle) => {
-        switch (mapStyle) {
-            case CARTO_NOLABEL:
-                return 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json';
-            case CARTO:
-                return 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+    const getMapStyle = (mapLibrary, mapTheme) => {
+        switch (mapLibrary) {
             case MAPBOX:
-                return 'mapbox://styles/mapbox/light-v9';
+                if (mapTheme === LIGHT) {
+                    return 'mapbox://styles/mapbox/light-v9';
+                } else {
+                    return 'mapbox://styles/mapbox/dark-v9';
+                }
+            case CARTO:
+                if (mapTheme === LIGHT) {
+                    return 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+                } else {
+                    return 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json';
+                }
+            case CARTO_NOLABEL:
+                if (mapTheme === LIGHT) {
+                    return 'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json';
+                } else {
+                    return 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+                }
         }
     };
+
+    const mapStyle = useMemo(
+        () => getMapStyle(props.mapLibrary, props.mapTheme),
+        [props.mapLibrary, props.mapTheme]
+    );
 
     const mapLib =
         props.mapLibrary === MAPBOX
@@ -487,7 +507,7 @@ const NetworkMap = (props) => {
                 style={{ zIndex: 0 }}
                 onMove={onViewStateChange}
                 doubleClickZoom={false}
-                mapStyle={getMapStyle(props.mapLibrary)}
+                mapStyle={mapStyle}
                 preventStyleDiffing={true}
                 {...mapLib}
                 initialViewState={initialViewState}
@@ -551,7 +571,9 @@ NetworkMap.defaultProps = {
     loadFlowStatus: RunningStatus.IDLE,
     mapBoxToken: null,
     mapEquipments: null,
+    mapLibrary: CARTO,
     tooltipZoomThreshold: 7,
+    mapTheme: DARK,
     updatedLines: [],
     useName: true,
     visible: true,
@@ -574,6 +596,7 @@ NetworkMap.propTypes = {
     mapBoxToken: PropTypes.string,
     mapEquipments: PropTypes.instanceOf(MapEquipments),
     mapLibrary: PropTypes.oneOf(CARTO, CARTO_NOLABEL, MAPBOX),
+    mapTheme: PropTypes.oneOf(LIGHT, DARK),
 
     arrowsZoomThreshold: PropTypes.number,
     centerOnSubstation: PropTypes.any,

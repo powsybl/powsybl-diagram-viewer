@@ -5,10 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import computeDestinationPoint from 'geolib/es/computeDestinationPoint';
+import {
+    computeDestinationPoint,
+    getGreatCircleBearing,
+    getRhumbLineBearing,
+} from 'geolib';
 import cheapRuler from 'cheap-ruler';
-import getGreatCircleBearing from 'geolib/es/getGreatCircleBearing';
-import getRhumbLineBearing from 'geolib/es/getRhumbLineBearing';
 import { ArrowDirection } from './layers/arrow-layer';
 
 const substationPositionByIdIndexer = (map, substation) => {
