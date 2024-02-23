@@ -377,9 +377,7 @@ export class SingleLineDiagramViewer {
     private addNavigationArrow() {
         if (this.onNextVoltageCallback !== null) {
             let navigable = this.svgMetadata?.nodes.filter((el) => el.nextVId);
-            const vlList = navigable
-                ?.map((element) => element.vid)
-                .filter((vid) => vid !== '');
+            const vlList = navigable?.map((element) => element.vid);
             const vlSet = new Set(vlList);
 
             //remove arrows if the arrow points to the current svg
