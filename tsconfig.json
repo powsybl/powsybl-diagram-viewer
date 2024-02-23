@@ -12,5 +12,5 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node"
   },
-  "include": ["src", "demo"]
+  "include": ["src", "demo"] // we can let demo because the file generation is managed my vite
 }

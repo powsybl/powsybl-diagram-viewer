@@ -4,7 +4,14 @@ import eslint from 'vite-plugin-eslint';
 import dts from 'vite-plugin-dts';
 
 export default defineConfig({
-    plugins: [eslint(), dts()],
+    plugins: [
+        eslint({
+            failOnWarning: true,
+        }),
+        dts({
+            include: ['src'],
+        }),
+    ],
     build: {
         lib: {
             // Could also be a dictionary or array of multiple entry points
