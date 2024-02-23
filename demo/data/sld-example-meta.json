@@ -17,6 +17,10 @@
       "y" : 7.5,
       "orientation" : "VERTICAL"
     } ],
+    "size" : {
+      "width" : 14.0,
+      "height" : 15.0
+    },
     "transformations" : {
       "LEFT" : "ROTATION",
       "RIGHT" : "ROTATION",
