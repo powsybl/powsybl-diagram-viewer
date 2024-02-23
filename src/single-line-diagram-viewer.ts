@@ -377,16 +377,15 @@ export class SingleLineDiagramViewer {
     private addNavigationArrow() {
         if (this.onNextVoltageCallback !== null) {
             let navigable = this.svgMetadata?.nodes.filter((el) => el.nextVId);
-            let vlList = this.svgMetadata?.nodes.map((element) => element.vid);
-            vlList = vlList?.filter(
-                (element, index) =>
-                    element !== '' && vlList?.indexOf(element) === index
-            );
+            const vlList = navigable
+                ?.map((element) => element.vid)
+                .filter((vid) => vid !== '');
+            const vlSet = new Set(vlList);
 
             //remove arrows if the arrow points to the current svg
-            navigable = navigable?.filter((element) => {
-                return vlList?.indexOf(element.nextVId) === -1;
-            });
+            navigable = navigable?.filter(
+                (element) => !vlSet.has(element.nextVId)
+            );
 
             navigable?.forEach((element) => {
                 const elementById: HTMLElement | null =
