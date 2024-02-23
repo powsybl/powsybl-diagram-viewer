@@ -396,7 +396,7 @@ export class SingleLineDiagramViewer {
                         ?.getAttribute('transform')
                         ?.split(',');
                     const xs = transform?.[0]?.match(/\d+/)?.[0];
-                    const ys = transform?.[1]?.match(/\d+/)?.[0] || 0;
+                    const ys = transform?.[1]?.match(/\d+/)?.[0] || '';
                     const y = parseInt(ys, 10);
                     if (xs !== undefined) {
                         const x = parseInt(xs, 10);
