@@ -446,7 +446,7 @@ export class SingleLineDiagramViewer {
                         const feederWidth =
                             this.svgMetadata?.components.find(
                                 (comp) => comp.type === element.componentType
-                            ).size.width || 0;
+                            )?.size.width || 0;
                         this.createSvgArrow(
                             elementById,
                             element.direction,
