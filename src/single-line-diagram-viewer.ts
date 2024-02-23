@@ -388,37 +388,6 @@ export class SingleLineDiagramViewer {
                 return vlList?.indexOf(element.nextVId) === -1;
             });
 
-            const highestY = new Map();
-            const lowestY = new Map();
-            let y;
-
-            navigable?.forEach((element) => {
-                const elementById: HTMLElement | null =
-                    this.container.querySelector('#' + element.id);
-                if (elementById != null) {
-                    const transform: string[] | undefined = elementById
-                        ?.getAttribute('transform')
-                        ?.split(',');
-
-                    const ys = transform?.[1]?.match(/\d+/)?.[0];
-                    if (ys !== undefined) {
-                        y = parseInt(ys, 10);
-                        if (
-                            highestY.get(element.vid) === undefined ||
-                            y > highestY.get(element.vid)
-                        ) {
-                            highestY.set(element.vid, y);
-                        }
-                        if (
-                            lowestY.get(element.vid) === undefined ||
-                            y < lowestY.get(element.vid)
-                        ) {
-                            lowestY.set(element.vid, y);
-                        }
-                    }
-                }
-            });
-
             navigable?.forEach((element) => {
                 const elementById: HTMLElement | null =
                     this.container.querySelector('#' + element.id);
@@ -427,6 +396,8 @@ export class SingleLineDiagramViewer {
                         ?.getAttribute('transform')
                         ?.split(',');
                     const xs = transform?.[0]?.match(/\d+/)?.[0];
+                    const ys = transform?.[1]?.match(/\d+/)?.[0] || 0;
+                    const y = parseInt(ys, 10);
                     if (xs !== undefined) {
                         const x = parseInt(xs, 10);
                         const feederWidth =
@@ -437,8 +408,7 @@ export class SingleLineDiagramViewer {
                             elementById,
                             element.direction,
                             x + feederWidth / 2,
-                            highestY.get(element.vid),
-                            lowestY.get(element.vid)
+                            y
                         );
                     }
                 }
@@ -465,20 +435,17 @@ export class SingleLineDiagramViewer {
         element: HTMLElement,
         position: string,
         x: number,
-        highestY: number,
-        lowestY: number
+        y: number
     ) {
         const svgInsert: HTMLElement | null = element?.parentElement;
         if (svgInsert !== undefined && svgInsert !== null) {
             const group = document.createElementNS(SVG_NS, 'g');
             const svgMetadata = this.svgMetadata;
-            let y;
-
             if (position === 'TOP') {
-                y = lowestY - 65;
+                y = y - 65;
                 x = x - 22;
             } else {
-                y = highestY + 65;
+                y = y + 65;
                 x = x + 22;
             }
 
