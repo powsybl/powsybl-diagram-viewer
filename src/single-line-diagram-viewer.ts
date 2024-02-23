@@ -61,9 +61,23 @@ export interface SLDMetadataNode {
     equipmentId: string;
 }
 
+export interface SLDMetadataComponentSize {
+    width: number;
+    height: number;
+}
+
+export interface SLDMetadataComponent {
+    type: string;
+    vid: string;
+    anchorPoints: unknown[];
+    size: SLDMetadataComponentSize;
+    transformations: unknown;
+    styleClass: string;
+}
+
 //models just the metadata subelements that are actually used(nodes)
 export interface SLDMetadata {
-    components: unknown[];
+    components: SLDMetadataComponent[];
     nodes: SLDMetadataNode[];
     wires: unknown[];
     lines: unknown[];
