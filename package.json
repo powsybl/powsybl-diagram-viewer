@@ -19,7 +19,7 @@
   "files": ["dist"],
   "scripts": {
     "watch": "vite watch",
-    "build": "vite build",
+    "build": "tsc && vite build",
     "test": "jest",
     "start": "vite demo/src/ --config vite.config.ts --open",
     "lint": "eslint . --ext js,mjs,jsx,ts,mts,tsx --max-warnings 0"
