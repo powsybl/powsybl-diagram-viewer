@@ -697,7 +697,11 @@ export class SingleLineDiagramViewer {
     }
 
     private addEquipmentsPopover() {
-        const equipmentsWithPopover = ['LINE', 'TWO_WINDINGS_TRANSFORMER','PHASE_SHIFT_TRANSFORMER'];
+        const equipmentsWithPopover = [
+            'LINE',
+            'TWO_WINDINGS_TRANSFORMER',
+            'PHASE_SHIFT_TRANSFORMER',
+        ];
 
         // handling the hover on the equipments
         const svgEquipments = this.svgMetadata?.nodes.filter((node) =>
@@ -708,7 +712,10 @@ export class SingleLineDiagramViewer {
                 '#' + equipment.id
             );
             svgEquipment?.addEventListener('mouseover', (event) => {
-            const equipmentType = equipment.componentType === 'PHASE_SHIFT_TRANSFORMER' ? 'TWO_WINDINGS_TRANSFORMER':  equipment.componentType
+                const equipmentType =
+                    equipment.componentType === 'PHASE_SHIFT_TRANSFORMER'
+                        ? 'TWO_WINDINGS_TRANSFORMER'
+                        : equipment.componentType;
                 this.handleTogglePopover?.(
                     true,
                     event.currentTarget,
