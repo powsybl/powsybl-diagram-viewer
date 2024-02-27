@@ -19,10 +19,10 @@
   "files": ["dist"],
   "scripts": {
     "watch": "vite watch",
-    "build": "vite build",
+    "build": "tsc && vite build",
     "test": "jest",
     "start": "vite demo/src/ --config vite.config.ts --open",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
+    "lint": "eslint . --ext js,mjs,jsx,ts,mts,tsx --max-warnings 0"
   },
   "devDependencies": {
     "@babel/core": "^7.17.10",

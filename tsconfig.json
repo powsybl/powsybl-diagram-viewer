@@ -10,9 +10,8 @@
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
     "noFallthroughCasesInSwitch": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "noEmit": true
   },
-  "include": [
-    "src/**/*"
-  ]
+  "include": ["src", "demo"] // we can let demo because the file generation is managed my vite and we have noEmit anyway
 }
