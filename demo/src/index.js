@@ -87,6 +87,28 @@ const handleFeeder = (id, feederType, svgId, x, y) => {
     console.log(msg);
 };
 
+const handleBus = (id, svgId, x, y) => {
+    const msg =
+        'Clicked on bus: ' + id + ', svgId: ' + svgId + 'x: ' + x + ', y: ' + y;
+    console.log(msg);
+};
+
+const handleTogglePopover = (
+    shouldDisplay,
+    anchorEl,
+    equipmentId,
+    equipmentType
+) => {
+    if (shouldDisplay) {
+        const msg =
+            'Hovers on equipment: ' +
+            equipmentId +
+            ', equipmentType: ' +
+            equipmentType;
+        console.log(msg);
+    }
+};
+
 fetch(SldSvgExample)
     .then((response) => response.text())
     .then((svgContent) => {
@@ -102,7 +124,9 @@ fetch(SldSvgExample)
             handleNextVL, //callback on the next voltage arrows
             handleSwitch, //callback on the breakers
             handleFeeder, //callback on the feeders
-            'lightblue' //arrows color
+            handleBus, //callback on the buses
+            'lightblue', //arrows color
+            handleTogglePopover //hovers on equipments callback
         );
 
         document
@@ -126,7 +150,9 @@ fetch(SldSvgSubExample)
             handleNextVL, //callback on the next voltage arrows
             handleSwitch, //callback on the breakers
             handleFeeder, //callback on the feeders
-            'lightblue' //arrows color
+            handleBus, //callback on the buses
+            'lightblue', //arrows color
+            handleTogglePopover //hovers on equipments callback
         );
 
         document
