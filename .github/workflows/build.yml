@@ -18,12 +18,5 @@ jobs:
               run: |
                   npm install
                   npm run test
-                  npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=0
+                  npx eslint . --ext js,mjs,jsx,ts,mts,tsx --max-warnings 0
                   npm run build
-
-            - name: Broadcast update event
-              if: github.ref == 'refs/heads/main'
-              uses: gridsuite/broadcast-event@main
-              with:
-                  token: ${{ secrets.REPO_ACCESS_TOKEN }}
-                  event-type: powsybl-diagram-viewer-updated
