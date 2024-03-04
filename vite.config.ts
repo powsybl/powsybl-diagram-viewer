@@ -6,7 +6,16 @@ import react from '@vitejs/plugin-react';
 import { externalizeDeps } from 'vite-plugin-externalize-deps';
 
 export default defineConfig({
-    plugins: [react(), eslint(), dts(), externalizeDeps()],
+    plugins: [
+        react(),
+        eslint({
+            failOnWarning: true,
+        }),
+        dts({
+            include: ['src'],
+        }),
+        externalizeDeps(),
+    ],
     build: {
         lib: {
             // Could also be a dictionary or array of multiple entry points
