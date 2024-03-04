@@ -22,11 +22,9 @@ import lmapdata from './map-viewer/data/lmap.json';
 import { addNadToDemo, addSldToDemo } from './diagram-viewers/add-diagrams';
 
 function App() {
-    const INITIAL_POSITION = [9.322, 45.255];
     const INITIAL_ZOOM = 9;
     const LABELS_ZOOM_THRESHOLD = 9;
     const ARROWS_ZOOM_THRESHOLD = 7;
-    const centerOnSubstation = { to: 'SUB1' };
     const useName = true;
 
     useEffect(() => {
@@ -97,9 +95,7 @@ function App() {
                             geoData={geoData}
                             labelsZoomThreshold={LABELS_ZOOM_THRESHOLD}
                             arrowsZoomThreshold={ARROWS_ZOOM_THRESHOLD}
-                            initialPosition={INITIAL_POSITION}
                             initialZoom={INITIAL_ZOOM}
-                            centerOnSubstation={centerOnSubstation}
                             useName={useName}
                             onSubstationClick={(vlId) => {
                                 console.log('# OpenVoltageLevel: ' + vlId);
@@ -126,6 +122,8 @@ function App() {
                                     )} at coordinates (${x}, ${y})`
                                 );
                             }}
+                            mapLibrary={'cartonolabel'}
+                            mapTheme={'dark'}
                         />
                     </div>
                 </ThemeProvider>

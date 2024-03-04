@@ -473,6 +473,8 @@ const NetworkMap = (props) => {
                 } else {
                     return 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
                 }
+            default:
+                return 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
         }
     };
 
