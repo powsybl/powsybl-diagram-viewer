@@ -18,7 +18,6 @@ import {
     SUBSTATION_RADIUS_MAX_PIXEL,
     SUBSTATION_RADIUS_MIN_PIXEL,
 } from './constants';
-import { RunningStatus } from '../utils/running-status';
 import { INVALID_LOADFLOW_OPACITY } from '../../../utils/colors';
 
 const DISTANCE_BETWEEN_ARROWS = 10000.0;
@@ -786,10 +785,9 @@ export class LineLayer extends CompositeLayer {
                             this.props.filteredNominalVoltages.includes(
                                 compositeData.nominalV
                             )),
-                    opacity:
-                        this.props.loadFlowStatus !== RunningStatus.SUCCEED
-                            ? INVALID_LOADFLOW_OPACITY
-                            : 1,
+                    opacity: this.props.areFlowsValid
+                        ? 1
+                        : INVALID_LOADFLOW_OPACITY,
                     updateTriggers: {
                         getLinePositions: linePathUpdateTriggers,
                         getLineParallelIndex: [this.props.lineParallelPath],
@@ -800,7 +798,7 @@ export class LineLayer extends CompositeLayer {
                             this.props.lineFlowAlertThreshold,
                             this.props.updatedLines,
                         ],
-                        opacity: [this.props.loadFlowStatus],
+                        opacity: [this.props.areFlowsValid],
                     },
                 })
             );
@@ -933,17 +931,16 @@ export class LineLayer extends CompositeLayer {
                                 compositeData.nominalV
                             )) &&
                         this.props.labelsVisible,
-                    opacity:
-                        this.props.loadFlowStatus !== RunningStatus.SUCCEED
-                            ? INVALID_LOADFLOW_OPACITY
-                            : 1,
+                    opacity: this.props.areFlowsValid
+                        ? 1
+                        : INVALID_LOADFLOW_OPACITY,
                     updateTriggers: {
                         getPosition: [
                             this.props.lineParallelPath,
                             linePathUpdateTriggers,
                         ],
                         getPixelOffset: linePathUpdateTriggers,
-                        opacity: [this.props.loadFlowStatus],
+                        opacity: [this.props.areFlowsValid],
                     },
                 })
             );

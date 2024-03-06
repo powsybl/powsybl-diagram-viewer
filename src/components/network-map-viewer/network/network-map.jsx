@@ -24,7 +24,6 @@ import { FormattedMessage } from 'react-intl';
 import { Map, NavigationControl, useControl } from 'react-map-gl';
 import { getNominalVoltageColor } from '../../../utils/colors';
 import { useNameOrId } from '../utils/equipmentInfosHandler';
-import { RunningStatus } from '../utils/running-status';
 import { GeoData } from './geo-data';
 import { LineFlowColorMode, LineFlowMode, LineLayer } from './line-layer';
 import { MapEquipments } from './map-equipments';
@@ -391,6 +390,7 @@ const NetworkMap = (props) => {
     if (readyToDisplayLines) {
         layers.push(
             new LineLayer({
+                areFlowsValid: props.areFlowsValid,
                 id: LINE_LAYER_PREFIX,
                 data: mapEquipmentsLines,
                 network: props.mapEquipments,
@@ -403,7 +403,6 @@ const NetworkMap = (props) => {
                 showLineFlow: props.visible && showLineFlow,
                 lineFlowColorMode: props.lineFlowColorMode,
                 lineFlowAlertThreshold: props.lineFlowAlertThreshold,
-                loadFlowStatus: props?.loadFlowStatus,
                 lineFullPath:
                     props.geoData.linePositionsById.size > 0 &&
                     props.lineFullPath,
@@ -554,6 +553,7 @@ const NetworkMap = (props) => {
 };
 
 NetworkMap.defaultProps = {
+    areFlowsValid: true,
     arrowsZoomThreshold: 7,
     centerOnSubstation: null,
     disabled: false,
@@ -570,7 +570,6 @@ NetworkMap.defaultProps = {
     lineFlowMode: LineFlowMode.FEEDERS,
     lineFullPath: true,
     lineParallelPath: true,
-    loadFlowStatus: RunningStatus.IDLE,
     mapBoxToken: null,
     mapEquipments: null,
     mapLibrary: CARTO,
@@ -600,6 +599,7 @@ NetworkMap.propTypes = {
     mapLibrary: PropTypes.oneOf(CARTO, CARTO_NOLABEL, MAPBOX),
     mapTheme: PropTypes.oneOf(LIGHT, DARK),
 
+    areFlowsValid: PropTypes.bool,
     arrowsZoomThreshold: PropTypes.number,
     centerOnSubstation: PropTypes.any,
     displayOverlayLoader: PropTypes.bool,
@@ -614,7 +614,6 @@ NetworkMap.propTypes = {
     lineFlowMode: PropTypes.oneOf(Object.values(LineFlowMode)),
     lineFullPath: PropTypes.bool,
     lineParallelPath: PropTypes.bool,
-    loadFlowStatus: PropTypes.oneOf(Object.values(RunningStatus)),
     renderPopover: PropTypes.func,
     tooltipZoomThreshold: PropTypes.number,
     // With mapboxgl v2 (not a problem with maplibre), we need to call
