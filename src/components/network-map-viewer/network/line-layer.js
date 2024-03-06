@@ -18,7 +18,7 @@ import {
     SUBSTATION_RADIUS_MAX_PIXEL,
     SUBSTATION_RADIUS_MIN_PIXEL,
 } from './constants';
-import { INVALID_LOADFLOW_OPACITY } from '../../../utils/colors';
+import { INVALID_FLOW_OPACITY } from '../../../utils/colors';
 
 const DISTANCE_BETWEEN_ARROWS = 10000.0;
 //Constants for Feeders mode
@@ -787,7 +787,7 @@ export class LineLayer extends CompositeLayer {
                             )),
                     opacity: this.props.areFlowsValid
                         ? 1
-                        : INVALID_LOADFLOW_OPACITY,
+                        : INVALID_FLOW_OPACITY,
                     updateTriggers: {
                         getLinePositions: linePathUpdateTriggers,
                         getLineParallelIndex: [this.props.lineParallelPath],
@@ -933,7 +933,7 @@ export class LineLayer extends CompositeLayer {
                         this.props.labelsVisible,
                     opacity: this.props.areFlowsValid
                         ? 1
-                        : INVALID_LOADFLOW_OPACITY,
+                        : INVALID_FLOW_OPACITY,
                     updateTriggers: {
                         getPosition: [
                             this.props.lineParallelPath,
