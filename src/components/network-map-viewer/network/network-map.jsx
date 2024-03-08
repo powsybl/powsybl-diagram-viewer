@@ -5,28 +5,34 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import PropTypes from 'prop-types';
 import React, {
     useEffect,
+    useImperativeHandle,
     useMemo,
     useRef,
     useState,
-    useImperativeHandle,
 } from 'react';
-import PropTypes from 'prop-types';
 
-import { decomposeColor } from '@mui/system';
+import { Box, decomposeColor } from '@mui/system';
 import LoaderWithOverlay from '../utils/loader-with-overlay';
 
-import { GeoData } from './geo-data';
-import { LineLayer, LineFlowColorMode, LineFlowMode } from './line-layer';
-import { SubstationLayer } from './substation-layer';
-import { getNominalVoltageColor } from '../../../utils/colors';
-import { RunningStatus } from '../utils/running-status';
-import { useTheme } from '@mui/material';
-import { MapEquipmentsBase } from './map-equipments-base';
-import { useNameOrId } from '../utils/equipmentInfosHandler';
-import { Map, NavigationControl, useControl } from 'react-map-gl';
 import { MapboxOverlay } from '@deck.gl/mapbox';
+import { Replay } from '@mui/icons-material';
+import { Button, useTheme } from '@mui/material';
+import { FormattedMessage } from 'react-intl';
+import { Map, NavigationControl, useControl } from 'react-map-gl';
+import { getNominalVoltageColor } from '../../../utils/colors';
+import { useNameOrId } from '../utils/equipmentInfosHandler';
+import { GeoData } from './geo-data';
+import { LineFlowColorMode, LineFlowMode, LineLayer } from './line-layer';
+import { MapEquipments } from './map-equipments';
+import { SubstationLayer } from './substation-layer';
+
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 // MouseEvent.button https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
 const MOUSE_EVENT_BUTTON_LEFT = 0;
@@ -43,21 +49,27 @@ const DeckGLOverlay = React.forwardRef((props, ref) => {
 
 const PICKING_RADIUS = 5;
 
-// FIXME: to uncomment when system is fixed
-// const styles = {
-//     mapManualRefreshBackdrop: {
-//         width: '100%',
-//         height: '100%',
-//         textAlign: 'center',
-//         display: 'flex',
-//         alignItems: 'center',
-//         justifyContent: 'center',
-//         background: 'grey',
-//         opacity: '0.8',
-//         zIndex: 99,
-//         fontSize: 30,
-//     },
-// };
+const CARTO = 'carto';
+const CARTO_NOLABEL = 'cartonolabel';
+const MAPBOX = 'mapbox';
+
+const LIGHT = 'light';
+const DARK = 'dark';
+
+const styles = {
+    mapManualRefreshBackdrop: {
+        width: '100%',
+        height: '100%',
+        textAlign: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'grey',
+        opacity: '0.8',
+        zIndex: 99,
+        fontSize: 30,
+    },
+};
 
 const FALLBACK_MAPBOX_TOKEN =
     'pk.eyJ1IjoiZ2VvZmphbWciLCJhIjoiY2pwbnRwcm8wMDYzMDQ4b2pieXd0bDMxNSJ9.Q4aL20nBo5CzGkrWtxroug';
@@ -65,6 +77,11 @@ const FALLBACK_MAPBOX_TOKEN =
 const SUBSTATION_LAYER_PREFIX = 'substationLayer';
 const LINE_LAYER_PREFIX = 'lineLayer';
 const LABEL_SIZE = 12;
+const INITIAL_CENTERED = {
+    lastCenteredSubstation: null,
+    centeredSubstationId: null,
+    centered: false,
+};
 
 const NetworkMap = (props) => {
     const [labelsVisible, setLabelsVisible] = useState(false);
@@ -72,11 +89,7 @@ const NetworkMap = (props) => {
     const [showTooltip, setShowTooltip] = useState(true);
     const mapRef = useRef();
     const deckRef = useRef();
-    const [centered, setCentered] = useState({
-        lastCenteredSubstation: null,
-        centeredSubstationId: null,
-        centered: false,
-    });
+    const [centered, setCentered] = useState(INITIAL_CENTERED);
     const lastViewStateRef = useRef(null);
     const [tooltip, setTooltip] = useState({});
     const theme = useTheme();
@@ -88,11 +101,6 @@ const NetworkMap = (props) => {
     const [cursorType, setCursorType] = useState('grab');
     const [isDragging, setDragging] = useState(false);
     //NOTE these constants are moved to the component's parameters list
-    //const centerOnSubstation = useSelector((state) => state.centerOnSubstation);
-    //const mapManualRefresh = useSelector(
-    //    (state) => state[PARAM_MAP_MANUAL_REFRESH]
-    //);
-    //const reloadMapNeeded = useSelector((state) => state.reloadMap);
     //const currentNode = useSelector((state) => state.currentTreeNode);
     const centerOnSubstation = props.centerOnSubstation;
 
@@ -382,6 +390,7 @@ const NetworkMap = (props) => {
     if (readyToDisplayLines) {
         layers.push(
             new LineLayer({
+                areFlowsValid: props.areFlowsValid,
                 id: LINE_LAYER_PREFIX,
                 data: mapEquipmentsLines,
                 network: props.mapEquipments,
@@ -394,7 +403,6 @@ const NetworkMap = (props) => {
                 showLineFlow: props.visible && showLineFlow,
                 lineFlowColorMode: props.lineFlowColorMode,
                 lineFlowAlertThreshold: props.lineFlowAlertThreshold,
-                loadFlowStatus: props?.loadFlowStatus,
                 lineFullPath:
                     props.geoData.linePositionsById.size > 0 &&
                     props.lineFullPath,
@@ -426,7 +434,7 @@ const NetworkMap = (props) => {
         longitude: props.initialPosition[0],
         latitude: props.initialPosition[1],
         zoom: props.initialZoom,
-        maxZoom: 12,
+        maxZoom: 14,
         pitch: 0,
         bearing: 0,
     };
@@ -440,27 +448,69 @@ const NetworkMap = (props) => {
         />
     );
 
-    // With mapboxgl v2 (not a problem with maplibre), we need to call
-    // map.resize() when the parent size has changed, otherwise the map is not
-    // redrawn. It seems like this is autodetected when the browser window is
-    // resized, but not for programmatic resizes of the parent. For now in our
-    // app, only study display mode resizes programmatically
-    // FIXME: to reproduce with props
-    // const studyDisplayMode = useSelector((state) => state.studyDisplayMode);
-    // useEffect(() => {
-    //     mapRef.current?.resize();
-    // }, [studyDisplayMode]);
+    useEffect(() => {
+        mapRef.current?.resize();
+    }, [props.triggerMapResizeOnChange]);
+
+    const getMapStyle = (mapLibrary, mapTheme) => {
+        switch (mapLibrary) {
+            case MAPBOX:
+                if (mapTheme === LIGHT) {
+                    return 'mapbox://styles/mapbox/light-v9';
+                } else {
+                    return 'mapbox://styles/mapbox/dark-v9';
+                }
+            case CARTO:
+                if (mapTheme === LIGHT) {
+                    return 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+                } else {
+                    return 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json';
+                }
+            case CARTO_NOLABEL:
+                if (mapTheme === LIGHT) {
+                    return 'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json';
+                } else {
+                    return 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+                }
+            default:
+                return 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+        }
+    };
+
+    const mapStyle = useMemo(
+        () => getMapStyle(props.mapLibrary, props.mapTheme),
+        [props.mapLibrary, props.mapTheme]
+    );
+
+    const mapLib =
+        props.mapLibrary === MAPBOX
+            ? mToken && {
+                  key: 'mapboxgl',
+                  mapLib: mapboxgl,
+                  mapboxAccessToken: mToken,
+              }
+            : {
+                  key: 'maplibregl',
+                  mapLib: maplibregl,
+              };
+
+    // because the mapLib prop of react-map-gl is not reactive, we need to
+    // unmount/mount the Map with 'key', so we need also to reset all state
+    // associated with uncontrolled state of the map
+    useEffect(() => {
+        setCentered(INITIAL_CENTERED);
+    }, [mapLib?.key]);
 
     return (
-        mToken && (
+        mapLib && (
             <Map
                 ref={mapRef}
                 style={{ zIndex: 0 }}
                 onMove={onViewStateChange}
                 doubleClickZoom={false}
-                mapStyle={theme.mapboxStyle}
+                mapStyle={mapStyle}
                 preventStyleDiffing={true}
-                mapboxAccessToken={mToken}
+                {...mapLib}
                 initialViewState={initialViewState}
                 cursor={cursorHandler()} //TODO needed for pointer on our features, but forces us to reeimplement grabbing/grab for panning. Can we avoid reimplementing?
                 onDrag={() => setDragging(true)}
@@ -468,22 +518,19 @@ const NetworkMap = (props) => {
                 onContextMenu={onMapContextMenu}
             >
                 {props.displayOverlayLoader && renderOverlay()}
-                {/* FIXME: to reproduce with props */}
-                {/* {mapManualRefresh &&
-                    reloadMapNeeded &&
-                    isNodeBuilt(currentNode) && ( 
-                <Box sx={styles.mapManualRefreshBackdrop}>
-                    <Button
-                        onClick={props.onReloadMapClick}
-                        aria-label="reload"
-                        color="inherit"
-                        size="large"
-                    >
-                        <ReplayIcon />
-                        <FormattedMessage id="ManuallyRefreshGeoData" />
-                    </Button>
-                </Box>
-                 )} */}
+                {props.isManualRefreshBackdropDisplayed && (
+                    <Box sx={styles.mapManualRefreshBackdrop}>
+                        <Button
+                            onClick={props.onManualRefreshClick}
+                            aria-label="reload"
+                            color="inherit"
+                            size="large"
+                        >
+                            <Replay />
+                            <FormattedMessage id="ManuallyRefreshGeoData" />
+                        </Button>
+                    </Box>
+                )}
                 <DeckGLOverlay
                     ref={deckRef}
                     onClick={(info, event) => {
@@ -506,33 +553,31 @@ const NetworkMap = (props) => {
 };
 
 NetworkMap.defaultProps = {
-    mapEquipments: null,
-    updatedLines: [],
-    geoData: null,
-    filteredNominalVoltages: null,
-    labelsZoomThreshold: 9,
+    areFlowsValid: true,
     arrowsZoomThreshold: 7,
-    tooltipZoomThreshold: 7,
-    initialZoom: 5,
+    centerOnSubstation: null,
+    disabled: false,
+    displayOverlayLoader: false,
+    filteredNominalVoltages: null,
+    geoData: null,
     initialPosition: [0, 0],
+    initialZoom: 5,
+    isManualRefreshBackdropDisplayed: false,
+    labelsZoomThreshold: 9,
+    lineFlowAlertThreshold: 100,
+    lineFlowColorMode: LineFlowColorMode.NOMINAL_VOLTAGE,
+    lineFlowHidden: true,
+    lineFlowMode: LineFlowMode.FEEDERS,
     lineFullPath: true,
     lineParallelPath: true,
-    lineFlowMode: LineFlowMode.FEEDERS,
-    lineFlowHidden: true,
-    lineFlowColorMode: LineFlowColorMode.NOMINAL_VOLTAGE,
-    lineFlowAlertThreshold: 100,
-    loadFlowStatus: RunningStatus.IDLE,
-    visible: true,
-    displayOverlayLoader: false,
-    disabled: false,
-
-    centerOnSubstation: null,
-    mapManualRefresh: false,
-    reloadMapNeeded: true,
-    currentNodeBuilt: false,
-    useName: true,
-
     mapBoxToken: null,
+    mapEquipments: null,
+    mapLibrary: CARTO,
+    tooltipZoomThreshold: 7,
+    mapTheme: DARK,
+    updatedLines: [],
+    useName: true,
+    visible: true,
 
     onSubstationClick: () => {},
     onSubstationClickChooseVoltageLevel: () => {},
@@ -540,46 +585,55 @@ NetworkMap.defaultProps = {
     onVoltageLevelMenuClick: () => {},
     onLineMenuClick: () => {},
     onHvdcLineMenuClick: () => {},
-    onReloadMapClick: () => {},
+    onManualRefreshClick: () => {},
     renderPopover: (eId) => {
         return eId;
     },
 };
 
 NetworkMap.propTypes = {
-    mapEquipments: PropTypes.instanceOf(MapEquipmentsBase),
+    disabled: PropTypes.bool,
     geoData: PropTypes.instanceOf(GeoData),
+    mapBoxToken: PropTypes.string,
+    mapEquipments: PropTypes.instanceOf(MapEquipments),
+    mapLibrary: PropTypes.oneOf(CARTO, CARTO_NOLABEL, MAPBOX),
+    mapTheme: PropTypes.oneOf(LIGHT, DARK),
+
+    areFlowsValid: PropTypes.bool,
+    arrowsZoomThreshold: PropTypes.number,
+    centerOnSubstation: PropTypes.any,
+    displayOverlayLoader: PropTypes.bool,
     filteredNominalVoltages: PropTypes.array,
-    labelsZoomThreshold: PropTypes.number.isRequired,
-    arrowsZoomThreshold: PropTypes.number.isRequired,
-    tooltipZoomThreshold: PropTypes.number.isRequired,
-    initialZoom: PropTypes.number.isRequired,
-    initialPosition: PropTypes.arrayOf(PropTypes.number).isRequired,
-    onSubstationClick: PropTypes.func,
-    onLineMenuClick: PropTypes.func,
+    initialPosition: PropTypes.arrayOf(PropTypes.number),
+    initialZoom: PropTypes.number,
+    isManualRefreshBackdropDisplayed: PropTypes.bool,
+    labelsZoomThreshold: PropTypes.number,
+    lineFlowAlertThreshold: PropTypes.number,
+    lineFlowColorMode: PropTypes.oneOf(Object.values(LineFlowColorMode)),
+    lineFlowHidden: PropTypes.bool,
+    lineFlowMode: PropTypes.oneOf(Object.values(LineFlowMode)),
+    lineFullPath: PropTypes.bool,
+    lineParallelPath: PropTypes.bool,
+    renderPopover: PropTypes.func,
+    tooltipZoomThreshold: PropTypes.number,
+    // With mapboxgl v2 (not a problem with maplibre), we need to call
+    // map.resize() when the parent size has changed, otherwise the map is not
+    // redrawn. It seems like this is autodetected when the browser window is
+    // resized, but not for programmatic resizes of the parent. For now in our
+    // app, only study display mode resizes programmatically
+    // use this prop to make the map resize when needed, each time this prop changes, map.resize() is trigged
+    triggerMapResizeOnChange: PropTypes.any,
+    updatedLines: PropTypes.array,
+    useName: PropTypes.bool,
+    visible: PropTypes.bool,
+
     onHvdcLineMenuClick: PropTypes.func,
+    onLineMenuClick: PropTypes.func,
+    onManualRefreshClick: PropTypes.func,
+    onSubstationClick: PropTypes.func,
     onSubstationClickChooseVoltageLevel: PropTypes.func,
     onSubstationMenuClick: PropTypes.func,
     onVoltageLevelMenuClick: PropTypes.func,
-    lineFullPath: PropTypes.bool,
-    lineParallelPath: PropTypes.bool,
-    lineFlowMode: PropTypes.oneOf(Object.values(LineFlowMode)),
-    lineFlowHidden: PropTypes.bool,
-    lineFlowColorMode: PropTypes.oneOf(Object.values(LineFlowColorMode)),
-    lineFlowAlertThreshold: PropTypes.number.isRequired,
-    loadFlowStatus: PropTypes.oneOf(Object.values(RunningStatus)),
-    visible: PropTypes.bool,
-    updatedLines: PropTypes.array,
-    displayOverlayLoader: PropTypes.bool,
-    disabled: PropTypes.bool,
-
-    centerOnSubstation: PropTypes.any,
-    mapManualRefresh: PropTypes.bool,
-    reloadMapNeeded: PropTypes.bool,
-    useName: PropTypes.bool,
-    mapBoxToken: PropTypes.string,
-    onReloadMapClick: PropTypes.func,
-    renderPopover: PropTypes.func,
 };
 
 export default React.memo(NetworkMap);

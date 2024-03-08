@@ -5,14 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import NadSvgExample from '../data/nad-example.svg';
-import SldSvgExample from '../data/sld-example.svg';
-import SldSvgExampleMeta from '../data/sld-example-meta.json';
-import SldSvgSubExample from '../data/sld-sub-example.svg';
-import SldSvgSubExampleMeta from '../data/sld-sub-example-meta.json';
+import NadSvgExample from './data/nad-example.svg';
+import SldSvgExample from './data/sld-example.svg';
+import SldSvgExampleMeta from './data/sld-example-meta.json';
+import SldSvgSubExample from './data/sld-sub-example.svg';
+import SldSvgSubExampleMeta from './data/sld-sub-example-meta.json';
 
-import { NetworkAreaDiagramViewer } from '../../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
-import { SingleLineDiagramViewer } from '../../src/components/single-line-diagram-viewer/single-line-diagram-viewer';
+import { NetworkAreaDiagramViewer } from '../../../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
+import { SingleLineDiagramViewer } from '../../../src/components/single-line-diagram-viewer/single-line-diagram-viewer';
 
 export const addNadToDemo = () => {
     fetch(NadSvgExample)

@@ -12,7 +12,7 @@ const elementIdIndexer = (map, element) => {
     return map;
 };
 
-export class MapEquipmentsBase {
+export class MapEquipments {
     substations = [];
 
     substationsById = new Map();
@@ -46,8 +46,6 @@ export class MapEquipmentsBase {
         return equipments ? equipments : [];
     }
 
-    reloadImpactedSubstationsEquipments() {}
-
     completeSubstationsInfos(equipementsToIndex) {
         const nominalVoltagesSet = new Set(this.nominalVoltages);
         if (equipementsToIndex?.length === 0) {
@@ -63,7 +61,7 @@ export class MapEquipmentsBase {
             // sort voltage levels inside substations by nominal voltage
             substation.voltageLevels = substation.voltageLevels.sort(
                 (voltageLevel1, voltageLevel2) =>
-                    voltageLevel1.nominalVoltage - voltageLevel2.nominalVoltage
+                    voltageLevel1.nominalV - voltageLevel2.nominalV
             );
 
             this.substationsById.set(substation.id, substation);
@@ -72,7 +70,7 @@ export class MapEquipmentsBase {
                 voltageLevel.substationName = substation.name;
 
                 this.voltageLevelsById.set(voltageLevel.id, voltageLevel);
-                nominalVoltagesSet.add(voltageLevel.nominalVoltage);
+                nominalVoltagesSet.add(voltageLevel.nominalV);
             });
         });
 

@@ -12,14 +12,13 @@ import { PathStyleExtension } from '@deck.gl/extensions';
 import { ArrowLayer, ArrowDirection } from './layers/arrow-layer';
 import ParallelPathLayer from './layers/parallel-path-layer';
 import ForkLineLayer from './layers/fork-line-layer';
-import getDistance from 'geolib/es/getDistance';
+import { getDistance } from 'geolib';
 import {
     SUBSTATION_RADIUS,
     SUBSTATION_RADIUS_MAX_PIXEL,
     SUBSTATION_RADIUS_MIN_PIXEL,
 } from './constants';
-import { RunningStatus } from '../utils/running-status';
-import { INVALID_LOADFLOW_OPACITY } from '../../../utils/colors';
+import { INVALID_FLOW_OPACITY } from '../../../utils/colors';
 
 const DISTANCE_BETWEEN_ARROWS = 10000.0;
 //Constants for Feeders mode
@@ -214,13 +213,13 @@ export class LineLayer extends CompositeLayer {
         return (
             [
                 ...new Set(
-                    substation.voltageLevels.map((vl) => vl.nominalVoltage) // only one voltage level
+                    substation.voltageLevels.map((vl) => vl.nominalV) // only one voltage level
                 ),
             ]
                 .sort((a, b) => {
                     return a - b; // force numerical sort
                 })
-                .indexOf(vl.nominalVoltage) + 1
+                .indexOf(vl.nominalV) + 1
         );
     }
 
@@ -248,10 +247,10 @@ export class LineLayer extends CompositeLayer {
                     const vl1 = network.getVoltageLevel(line.voltageLevelId1);
                     const vl2 = network.getVoltageLevel(line.voltageLevelId2);
                     const vl = vl1 || vl2;
-                    let list = map.get(vl.nominalVoltage);
+                    let list = map.get(vl.nominalV);
                     if (!list) {
                         list = [];
-                        map.set(vl.nominalVoltage, list);
+                        map.set(vl.nominalV, list);
                     }
                     if (vl1.substationId !== vl2.substationId) {
                         list.push(line);
@@ -265,9 +264,9 @@ export class LineLayer extends CompositeLayer {
 
                 compositeData = Array.from(linesByNominalVoltage.entries())
                     .map((e) => {
-                        return { nominalVoltage: e[0], lines: e[1] };
+                        return { nominalV: e[0], lines: e[1] };
                     })
-                    .sort((a, b) => b.nominalVoltage - a.nominalVoltage);
+                    .sort((a, b) => b.nominalV - a.nominalV);
 
                 compositeData.forEach((compositeData) => {
                     //find lines with same substations set
@@ -668,11 +667,11 @@ export class LineLayer extends CompositeLayer {
         // lines : create one layer per nominal voltage, starting from higher to lower nominal voltage
         this.state.compositeData.forEach((compositeData) => {
             const nominalVoltageColor = this.props.getNominalVoltageColor(
-                compositeData.nominalVoltage
+                compositeData.nominalV
             );
             const lineLayer = new ParallelPathLayer(
                 this.getSubLayerProps({
-                    id: 'LineNominalVoltage' + compositeData.nominalVoltage,
+                    id: 'LineNominalVoltage' + compositeData.nominalV,
                     data: compositeData.lines,
                     widthScale: 20,
                     widthMinPixels: 1,
@@ -711,7 +710,7 @@ export class LineLayer extends CompositeLayer {
                     visible:
                         !this.props.filteredNominalVoltages ||
                         this.props.filteredNominalVoltages.includes(
-                            compositeData.nominalVoltage
+                            compositeData.nominalV
                         ),
                     updateTriggers: {
                         getPath: linePathUpdateTriggers,
@@ -738,7 +737,7 @@ export class LineLayer extends CompositeLayer {
 
             const arrowLayer = new ArrowLayer(
                 this.getSubLayerProps({
-                    id: 'ArrowNominalVoltage' + compositeData.nominalVoltage,
+                    id: 'ArrowNominalVoltage' + compositeData.nominalV,
                     data: compositeData.arrows,
                     sizeMinPixels: 3,
                     sizeMaxPixels: 7,
@@ -784,12 +783,11 @@ export class LineLayer extends CompositeLayer {
                         this.props.showLineFlow &&
                         (!this.props.filteredNominalVoltages ||
                             this.props.filteredNominalVoltages.includes(
-                                compositeData.nominalVoltage
+                                compositeData.nominalV
                             )),
-                    opacity:
-                        this.props.loadFlowStatus !== RunningStatus.SUCCEED
-                            ? INVALID_LOADFLOW_OPACITY
-                            : 1,
+                    opacity: this.props.areFlowsValid
+                        ? 1
+                        : INVALID_FLOW_OPACITY,
                     updateTriggers: {
                         getLinePositions: linePathUpdateTriggers,
                         getLineParallelIndex: [this.props.lineParallelPath],
@@ -800,7 +798,7 @@ export class LineLayer extends CompositeLayer {
                             this.props.lineFlowAlertThreshold,
                             this.props.updatedLines,
                         ],
-                        opacity: [this.props.loadFlowStatus],
+                        opacity: [this.props.areFlowsValid],
                     },
                 })
             );
@@ -808,7 +806,7 @@ export class LineLayer extends CompositeLayer {
 
             const startFork = new ForkLineLayer(
                 this.getSubLayerProps({
-                    id: 'LineForkStart' + compositeData.nominalVoltage,
+                    id: 'LineForkStart' + compositeData.nominalV,
                     getSourcePosition: (line) => line.origin,
                     getTargetPosition: (line) => line.end,
                     getSubstationOffset: (line) => line.substationIndexStart,
@@ -837,7 +835,7 @@ export class LineLayer extends CompositeLayer {
                     visible:
                         !this.props.filteredNominalVoltages ||
                         this.props.filteredNominalVoltages.includes(
-                            compositeData.nominalVoltage
+                            compositeData.nominalV
                         ),
                     updateTriggers: {
                         getLineParallelIndex: linePathUpdateTriggers,
@@ -858,7 +856,7 @@ export class LineLayer extends CompositeLayer {
 
             const endFork = new ForkLineLayer(
                 this.getSubLayerProps({
-                    id: 'LineForkEnd' + compositeData.nominalVoltage,
+                    id: 'LineForkEnd' + compositeData.nominalV,
                     getSourcePosition: (line) => line.end,
                     getTargetPosition: (line) => line.origin,
                     getSubstationOffset: (line) => line.substationIndexEnd,
@@ -887,7 +885,7 @@ export class LineLayer extends CompositeLayer {
                     visible:
                         !this.props.filteredNominalVoltages ||
                         this.props.filteredNominalVoltages.includes(
-                            compositeData.nominalVoltage
+                            compositeData.nominalV
                         ),
                     updateTriggers: {
                         getLineParallelIndex: [this.props.lineParallelPath],
@@ -909,7 +907,7 @@ export class LineLayer extends CompositeLayer {
             // lines active power
             const lineActivePowerLabelsLayer = new TextLayer(
                 this.getSubLayerProps({
-                    id: 'ActivePower' + compositeData.nominalVoltage,
+                    id: 'ActivePower' + compositeData.nominalV,
                     data: compositeData.activePower,
                     getText: (activePower) =>
                         activePower.p !== undefined
@@ -930,20 +928,19 @@ export class LineLayer extends CompositeLayer {
                     visible:
                         (!this.props.filteredNominalVoltages ||
                             this.props.filteredNominalVoltages.includes(
-                                compositeData.nominalVoltage
+                                compositeData.nominalV
                             )) &&
                         this.props.labelsVisible,
-                    opacity:
-                        this.props.loadFlowStatus !== RunningStatus.SUCCEED
-                            ? INVALID_LOADFLOW_OPACITY
-                            : 1,
+                    opacity: this.props.areFlowsValid
+                        ? 1
+                        : INVALID_FLOW_OPACITY,
                     updateTriggers: {
                         getPosition: [
                             this.props.lineParallelPath,
                             linePathUpdateTriggers,
                         ],
                         getPixelOffset: linePathUpdateTriggers,
-                        opacity: [this.props.loadFlowStatus],
+                        opacity: [this.props.areFlowsValid],
                     },
                 })
             );
@@ -952,7 +949,7 @@ export class LineLayer extends CompositeLayer {
             // line status
             const lineStatusIconLayer = new IconLayer(
                 this.getSubLayerProps({
-                    id: 'BranchStatus' + compositeData.nominalVoltage,
+                    id: 'BranchStatus' + compositeData.nominalV,
                     data: compositeData.branchStatus,
                     // The position passed to this layer causes a bug when zooming and maxParallelOffset is reached:
                     // the icon is not correctly positioned on the lines, they are slightly off.
@@ -966,7 +963,7 @@ export class LineLayer extends CompositeLayer {
                     visible:
                         (!this.props.filteredNominalVoltages ||
                             this.props.filteredNominalVoltages.includes(
-                                compositeData.nominalVoltage
+                                compositeData.nominalV
                             )) &&
                         this.props.labelsVisible,
                     updateTriggers: {
