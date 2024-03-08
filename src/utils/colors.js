@@ -23,5 +23,5 @@ export function getNominalVoltageColor(nominalVoltage) {
     }
 }
 
-export const INVALID_LOADFLOW_OPACITY = 0.2;
-export const NAD_INVALID_LOADFLOW_OPACITY = 0.4;
+export const INVALID_FLOW_OPACITY = 0.2;
+export const NAD_INVALID_FLOW_OPACITY = 0.4;

@@ -14,5 +14,5 @@ export {
     LineLoadingZone,
     getLineLoadingZone,
 } from './components/network-map-viewer/network/line-layer';
-export { MapEquipmentsBase } from './components/network-map-viewer/network/map-equipments-base';
+export { MapEquipments } from './components/network-map-viewer/network/map-equipments';
 export { default as NetworkMap } from './components/network-map-viewer/network/network-map';

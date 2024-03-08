@@ -5,31 +5,56 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
+import React, {
+    useEffect,
+    useImperativeHandle,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 
-import {
-    _MapContext as MapContext,
-    NavigationControl,
-    StaticMap,
-} from 'react-map-gl';
-import { FlyToInterpolator } from '@deck.gl/core';
-import DeckGL from '@deck.gl/react';
-
-import { decomposeColor } from '@mui/system';
+import { Box, decomposeColor } from '@mui/system';
 import LoaderWithOverlay from '../utils/loader-with-overlay';
 
-import { GeoData } from './geo-data';
-import { LineLayer, LineFlowColorMode, LineFlowMode } from './line-layer';
-import { SubstationLayer } from './substation-layer';
-import { getNominalVoltageColor } from '../../../utils/colors';
-import { RunningStatus } from '../utils/running-status';
-import { FormattedMessage } from 'react-intl';
-import ReplayIcon from '@mui/icons-material/Replay';
+import { MapboxOverlay } from '@deck.gl/mapbox';
+import { Replay } from '@mui/icons-material';
 import { Button, useTheme } from '@mui/material';
-import { MapEquipmentsBase } from './map-equipments-base';
+import { FormattedMessage } from 'react-intl';
+import { Map, NavigationControl, useControl } from 'react-map-gl';
+import { getNominalVoltageColor } from '../../../utils/colors';
 import { useNameOrId } from '../utils/equipmentInfosHandler';
-import { Box } from '@mui/system';
+import { GeoData } from './geo-data';
+import { LineFlowColorMode, LineFlowMode, LineLayer } from './line-layer';
+import { MapEquipments } from './map-equipments';
+import { SubstationLayer } from './substation-layer';
+
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+
+// MouseEvent.button https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
+const MOUSE_EVENT_BUTTON_LEFT = 0;
+const MOUSE_EVENT_BUTTON_RIGHT = 2;
+
+// Small boilerplate recommended by deckgl, to bridge to a react-map-gl control declaratively
+// see https://deck.gl/docs/api-reference/mapbox/mapbox-overlay#using-with-react-map-gl
+const DeckGLOverlay = React.forwardRef((props, ref) => {
+    const overlay = useControl(() => new MapboxOverlay(props));
+    overlay.setProps(props);
+    useImperativeHandle(ref, () => overlay, [overlay]);
+    return null;
+});
+
+const PICKING_RADIUS = 5;
+
+const CARTO = 'carto';
+const CARTO_NOLABEL = 'cartonolabel';
+const MAPBOX = 'mapbox';
+
+const LIGHT = 'light';
+const DARK = 'dark';
 
 const styles = {
     mapManualRefreshBackdrop: {
@@ -52,17 +77,19 @@ const FALLBACK_MAPBOX_TOKEN =
 const SUBSTATION_LAYER_PREFIX = 'substationLayer';
 const LINE_LAYER_PREFIX = 'lineLayer';
 const LABEL_SIZE = 12;
+const INITIAL_CENTERED = {
+    lastCenteredSubstation: null,
+    centeredSubstationId: null,
+    centered: false,
+};
 
 const NetworkMap = (props) => {
     const [labelsVisible, setLabelsVisible] = useState(false);
     const [showLineFlow, setShowLineFlow] = useState(true);
     const [showTooltip, setShowTooltip] = useState(true);
-    const [deck, setDeck] = useState(null);
-    const [centered, setCentered] = useState({
-        lastCenteredSubstation: null,
-        centeredSubstationId: null,
-        centered: false,
-    });
+    const mapRef = useRef();
+    const deckRef = useRef();
+    const [centered, setCentered] = useState(INITIAL_CENTERED);
     const lastViewStateRef = useRef(null);
     const [tooltip, setTooltip] = useState({});
     const theme = useTheme();
@@ -72,17 +99,10 @@ const NetworkMap = (props) => {
         return labelColor;
     }, [theme]);
     const [cursorType, setCursorType] = useState('grab');
+    const [isDragging, setDragging] = useState(false);
     //NOTE these constants are moved to the component's parameters list
-    //const centerOnSubstation = useSelector((state) => state.centerOnSubstation);
-    //const mapManualRefresh = useSelector(
-    //    (state) => state[PARAM_MAP_MANUAL_REFRESH]
-    //);
-    //const reloadMapNeeded = useSelector((state) => state.reloadMap);
     //const currentNode = useSelector((state) => state.currentTreeNode);
     const centerOnSubstation = props.centerOnSubstation;
-    const mapManualRefresh = props.mapManualRefresh;
-    const reloadMapNeeded = props.reloadMapNeeded;
-    const currentNodeBuilt = props.currentNodeBuilt;
 
     const { getNameOrId } = useNameOrId(props.useName);
 
@@ -111,8 +131,9 @@ const NetworkMap = (props) => {
 
     const divRef = useRef();
 
-    const mToken =
-        props.mapBoxToken == null ? FALLBACK_MAPBOX_TOKEN : props.mapBoxToken;
+    const mToken = !props.mapBoxToken
+        ? FALLBACK_MAPBOX_TOKEN
+        : props.mapBoxToken;
 
     useEffect(() => {
         if (centerOnSubstation === null) {
@@ -125,10 +146,14 @@ const NetworkMap = (props) => {
         });
     }, [centerOnSubstation]);
 
+    // TODO simplify this, now we use Map as the camera controlling component
+    // so  we don't need the deckgl ref anymore. The following comments are
+    // probably outdated, cleanup everything:
     // Do this in onAfterRender because when doing it in useEffect (triggered by calling setDeck()),
     // it doesn't work in the case of using the browser backward/forward buttons (because in this particular case,
     // we get the ref to the deck and it has not yet initialized..)
     function onAfterRender() {
+        // TODO outdated comment
         //use centered and deck to execute this block only once when the data is ready and deckgl is initialized
         //TODO, replace the next lines with setProps( { initialViewState } ) when we upgrade to 8.1.0
         //see https://github.com/uber/deck.gl/pull/4038
@@ -138,8 +163,6 @@ const NetworkMap = (props) => {
                 (centered.centeredSubstationId &&
                     centered.centeredSubstationId !==
                         centered.lastCenteredSubstation)) &&
-            deck !== null &&
-            deck.viewManager != null &&
             props.geoData !== null
         ) {
             if (props.geoData.substationPositionsById.size > 0) {
@@ -150,25 +173,10 @@ const NetworkMap = (props) => {
                     if (!geodata) {
                         return;
                     } // can't center on substation if no coordinate.
-                    const copyViewState =
-                        lastViewStateRef.current || deck.viewState;
-                    const newViewState = {
-                        longitude: geodata.lon,
-                        latitude: geodata.lat,
-                        zoom: copyViewState.zoom,
-                        maxZoom: deck.viewState.maxZoom,
-                        pitch: copyViewState.pitch,
-                        bearing: copyViewState.bearing,
-                    };
-                    // if this is not the page load, use a fly to animation. On page load, we want to center directly
-                    if (centered.centered) {
-                        newViewState.transitionDuration = 2000;
-                        newViewState.transitionInterpolator =
-                            new FlyToInterpolator();
-                    }
-                    deck.viewState = newViewState;
-                    deck.setProps({});
-                    deck._onViewStateChange({ viewState: deck.viewState });
+                    mapRef.current?.flyTo({
+                        center: [geodata.lon, geodata.lat],
+                        duration: 2000,
+                    });
                     setCentered({
                         lastCenteredSubstation: centered.centeredSubstationId,
                         centeredSubstationId: centered.centeredSubstationId,
@@ -196,24 +204,13 @@ const NetworkMap = (props) => {
                     );
                     const marginlon = (maxlon - minlon) / 10;
                     const marginlat = (maxlat - minlat) / 10;
-                    const viewport = deck.getViewports()[0];
-                    const boundedViewport = viewport.fitBounds([
-                        [minlon - marginlon / 2, minlat - marginlat / 2],
-                        [maxlon + marginlon / 2, maxlat + marginlat / 2],
-                    ]);
-                    deck.viewState = {
-                        longitude: boundedViewport.longitude,
-                        latitude: boundedViewport.latitude,
-                        zoom: Math.min(
-                            deck.viewState.maxZoom,
-                            boundedViewport.zoom
-                        ),
-                        maxZoom: deck.viewState.maxZoom,
-                        pitch: deck.viewState.pitch,
-                        bearing: deck.viewState.bearing,
-                    };
-                    deck.setProps({});
-                    deck._onViewStateChange({ viewState: deck.viewState });
+                    mapRef.current?.fitBounds(
+                        [
+                            [minlon - marginlon / 2, minlat - marginlat / 2],
+                            [maxlon + marginlon / 2, maxlat + marginlat / 2],
+                        ],
+                        { animate: false }
+                    );
                     setCentered({
                         lastCenteredSubstation: null,
                         centered: true,
@@ -267,6 +264,10 @@ const NetworkMap = (props) => {
     }
 
     function onClickHandler(info, event, network) {
+        const leftButton =
+            event.originalEvent.button === MOUSE_EVENT_BUTTON_LEFT;
+        const rightButton =
+            event.originalEvent.button === MOUSE_EVENT_BUTTON_RIGHT;
         if (
             info.layer &&
             info.layer.id.startsWith(SUBSTATION_LAYER_PREFIX) &&
@@ -291,37 +292,34 @@ const NetworkMap = (props) => {
                 }
             }
             if (idVl !== undefined) {
-                if (props.onSubstationClick && event.leftButton) {
+                if (props.onSubstationClick && leftButton) {
                     props.onSubstationClick(idVl);
-                } else if (props.onVoltageLevelMenuClick && event.rightButton) {
+                } else if (props.onVoltageLevelMenuClick && rightButton) {
                     props.onVoltageLevelMenuClick(
                         network.getVoltageLevel(idVl),
-                        event.center.x,
-                        event.center.y
+                        event.originalEvent.x,
+                        event.originalEvent.y
                     );
                 }
             }
             if (idSubstation !== undefined) {
-                if (
-                    props.onSubstationClickChooseVoltageLevel &&
-                    event.leftButton
-                ) {
+                if (props.onSubstationClickChooseVoltageLevel && leftButton) {
                     props.onSubstationClickChooseVoltageLevel(
                         idSubstation,
-                        event.center.x,
-                        event.center.y
+                        event.originalEvent.x,
+                        event.originalEvent.y
                     );
-                } else if (props.onSubstationMenuClick && event.rightButton) {
+                } else if (props.onSubstationMenuClick && rightButton) {
                     props.onSubstationMenuClick(
                         network.getSubstation(idSubstation),
-                        event.center.x,
-                        event.center.y
+                        event.originalEvent.x,
+                        event.originalEvent.y
                     );
                 }
             }
         }
         if (
-            event.rightButton &&
+            rightButton &&
             info.layer &&
             info.layer.id.startsWith(LINE_LAYER_PREFIX) &&
             info.object &&
@@ -333,21 +331,36 @@ const NetworkMap = (props) => {
             // because pickable object infos might not be up to date
             let line = network.getLine(info.object.id);
             if (line) {
-                props.onLineMenuClick(line, event.center.x, event.center.y);
+                props.onLineMenuClick(
+                    line,
+                    event.originalEvent.x,
+                    event.originalEvent.y
+                );
             } else {
                 let hvdcLine = network.getHvdcLine(info.object.id);
                 if (hvdcLine) {
                     props.onHvdcLineMenuClick(
                         hvdcLine,
-                        event.center.x,
-                        event.center.y
+                        event.originalEvent.x,
+                        event.originalEvent.y
                     );
                 }
             }
         }
     }
 
-    function cursorHandler({ isDragging }) {
+    function onMapContextMenu(event) {
+        const info =
+            deckRef.current &&
+            deckRef.current.pickObject({
+                x: event.point.x,
+                y: event.point.y,
+                radius: PICKING_RADIUS,
+            });
+        info && onClickHandler(info, event, props.mapEquipments);
+    }
+
+    function cursorHandler() {
         return isDragging ? 'grabbing' : cursorType;
     }
 
@@ -377,6 +390,7 @@ const NetworkMap = (props) => {
     if (readyToDisplayLines) {
         layers.push(
             new LineLayer({
+                areFlowsValid: props.areFlowsValid,
                 id: LINE_LAYER_PREFIX,
                 data: mapEquipmentsLines,
                 network: props.mapEquipments,
@@ -389,7 +403,6 @@ const NetworkMap = (props) => {
                 showLineFlow: props.visible && showLineFlow,
                 lineFlowColorMode: props.lineFlowColorMode,
                 lineFlowAlertThreshold: props.lineFlowAlertThreshold,
-                loadFlowStatus: props?.loadFlowStatus,
                 lineFullPath:
                     props.geoData.linePositionsById.size > 0 &&
                     props.lineFullPath,
@@ -421,7 +434,7 @@ const NetworkMap = (props) => {
         longitude: props.initialPosition[0],
         latitude: props.initialPosition[1],
         zoom: props.initialZoom,
-        maxZoom: 12,
+        maxZoom: 14,
         pitch: 0,
         bearing: 0,
     };
@@ -435,83 +448,136 @@ const NetworkMap = (props) => {
         />
     );
 
+    useEffect(() => {
+        mapRef.current?.resize();
+    }, [props.triggerMapResizeOnChange]);
+
+    const getMapStyle = (mapLibrary, mapTheme) => {
+        switch (mapLibrary) {
+            case MAPBOX:
+                if (mapTheme === LIGHT) {
+                    return 'mapbox://styles/mapbox/light-v9';
+                } else {
+                    return 'mapbox://styles/mapbox/dark-v9';
+                }
+            case CARTO:
+                if (mapTheme === LIGHT) {
+                    return 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+                } else {
+                    return 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json';
+                }
+            case CARTO_NOLABEL:
+                if (mapTheme === LIGHT) {
+                    return 'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json';
+                } else {
+                    return 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+                }
+            default:
+                return 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+        }
+    };
+
+    const mapStyle = useMemo(
+        () => getMapStyle(props.mapLibrary, props.mapTheme),
+        [props.mapLibrary, props.mapTheme]
+    );
+
+    const mapLib =
+        props.mapLibrary === MAPBOX
+            ? mToken && {
+                  key: 'mapboxgl',
+                  mapLib: mapboxgl,
+                  mapboxAccessToken: mToken,
+              }
+            : {
+                  key: 'maplibregl',
+                  mapLib: maplibregl,
+              };
+
+    // because the mapLib prop of react-map-gl is not reactive, we need to
+    // unmount/mount the Map with 'key', so we need also to reset all state
+    // associated with uncontrolled state of the map
+    useEffect(() => {
+        setCentered(INITIAL_CENTERED);
+    }, [mapLib?.key]);
+
     return (
-        <>
-            <DeckGL
-                onViewStateChange={onViewStateChange}
-                ref={(ref) => {
-                    // save a reference to the Deck instance to be able to center in onAfterRender
-                    setDeck(ref && ref.deck);
-                }}
-                onClick={(info, event) => {
-                    onClickHandler(info, event, props.mapEquipments);
-                }}
-                onAfterRender={onAfterRender}
-                layers={layers}
+        mapLib && (
+            <Map
+                ref={mapRef}
+                style={{ zIndex: 0 }}
+                onMove={onViewStateChange}
+                doubleClickZoom={false}
+                mapStyle={mapStyle}
+                preventStyleDiffing={true}
+                {...mapLib}
                 initialViewState={initialViewState}
-                controller={{ doubleClickZoom: false }}
-                ContextProvider={MapContext.Provider}
-                getCursor={cursorHandler}
-                pickingRadius={5}
+                cursor={cursorHandler()} //TODO needed for pointer on our features, but forces us to reeimplement grabbing/grab for panning. Can we avoid reimplementing?
+                onDrag={() => setDragging(true)}
+                onDragEnd={() => setDragging(false)}
+                onContextMenu={onMapContextMenu}
             >
                 {props.displayOverlayLoader && renderOverlay()}
-                {mapManualRefresh && reloadMapNeeded && currentNodeBuilt && (
+                {props.isManualRefreshBackdropDisplayed && (
                     <Box sx={styles.mapManualRefreshBackdrop}>
                         <Button
-                            onClick={props.onReloadMapClick}
+                            onClick={props.onManualRefreshClick}
                             aria-label="reload"
                             color="inherit"
                             size="large"
                         >
-                            <ReplayIcon />
+                            <Replay />
                             <FormattedMessage id="ManuallyRefreshGeoData" />
                         </Button>
                     </Box>
                 )}
-
-                {mToken && (
-                    <StaticMap
-                        mapStyle={theme.mapboxStyle}
-                        preventStyleDiffing={true}
-                        mapboxApiAccessToken={mToken}
-                    >
-                        {showTooltip && renderTooltip()}
-                    </StaticMap>
-                )}
-                <NavigationControl style={{ right: 10, top: 10, zIndex: 1 }} />
-            </DeckGL>
-        </>
+                <DeckGLOverlay
+                    ref={deckRef}
+                    onClick={(info, event) => {
+                        onClickHandler(
+                            info,
+                            event.srcEvent,
+                            props.mapEquipments
+                        );
+                    }}
+                    onAfterRender={onAfterRender} // TODO simplify this
+                    layers={layers}
+                    pickingRadius={PICKING_RADIUS}
+                />
+                {showTooltip && renderTooltip()}
+                {/* visualizePitch true makes the compass reset the pitch when clicked in addition to visualizing it */}
+                <NavigationControl visualizePitch={true} />
+            </Map>
+        )
     );
 };
 
 NetworkMap.defaultProps = {
-    mapEquipments: null,
-    updatedLines: [],
-    geoData: null,
-    filteredNominalVoltages: null,
-    labelsZoomThreshold: 9,
+    areFlowsValid: true,
     arrowsZoomThreshold: 7,
-    tooltipZoomThreshold: 7,
-    initialZoom: 5,
+    centerOnSubstation: null,
+    disabled: false,
+    displayOverlayLoader: false,
+    filteredNominalVoltages: null,
+    geoData: null,
     initialPosition: [0, 0],
+    initialZoom: 5,
+    isManualRefreshBackdropDisplayed: false,
+    labelsZoomThreshold: 9,
+    lineFlowAlertThreshold: 100,
+    lineFlowColorMode: LineFlowColorMode.NOMINAL_VOLTAGE,
+    lineFlowHidden: true,
+    lineFlowMode: LineFlowMode.FEEDERS,
     lineFullPath: true,
     lineParallelPath: true,
-    lineFlowMode: LineFlowMode.FEEDERS,
-    lineFlowHidden: true,
-    lineFlowColorMode: LineFlowColorMode.NOMINAL_VOLTAGE,
-    lineFlowAlertThreshold: 100,
-    loadFlowStatus: RunningStatus.IDLE,
-    visible: true,
-    displayOverlayLoader: false,
-    disabled: false,
-
-    centerOnSubstation: null,
-    mapManualRefresh: false,
-    reloadMapNeeded: true,
-    currentNodeBuilt: false,
-    useName: true,
-
     mapBoxToken: null,
+    mapEquipments: null,
+    mapLibrary: CARTO,
+    tooltipZoomThreshold: 7,
+    mapTheme: DARK,
+    updatedLines: [],
+    useName: true,
+    visible: true,
 
     onSubstationClick: () => {},
     onSubstationClickChooseVoltageLevel: () => {},
@@ -519,47 +585,55 @@ NetworkMap.defaultProps = {
     onVoltageLevelMenuClick: () => {},
     onLineMenuClick: () => {},
     onHvdcLineMenuClick: () => {},
-    onReloadMapClick: () => {},
+    onManualRefreshClick: () => {},
     renderPopover: (eId) => {
         return eId;
     },
 };
 
 NetworkMap.propTypes = {
-    mapEquipments: PropTypes.instanceOf(MapEquipmentsBase),
+    disabled: PropTypes.bool,
     geoData: PropTypes.instanceOf(GeoData),
+    mapBoxToken: PropTypes.string,
+    mapEquipments: PropTypes.instanceOf(MapEquipments),
+    mapLibrary: PropTypes.oneOf(CARTO, CARTO_NOLABEL, MAPBOX),
+    mapTheme: PropTypes.oneOf(LIGHT, DARK),
+
+    areFlowsValid: PropTypes.bool,
+    arrowsZoomThreshold: PropTypes.number,
+    centerOnSubstation: PropTypes.any,
+    displayOverlayLoader: PropTypes.bool,
     filteredNominalVoltages: PropTypes.array,
-    labelsZoomThreshold: PropTypes.number.isRequired,
-    arrowsZoomThreshold: PropTypes.number.isRequired,
-    tooltipZoomThreshold: PropTypes.number.isRequired,
-    initialZoom: PropTypes.number.isRequired,
-    initialPosition: PropTypes.arrayOf(PropTypes.number).isRequired,
-    onSubstationClick: PropTypes.func,
-    onLineMenuClick: PropTypes.func,
+    initialPosition: PropTypes.arrayOf(PropTypes.number),
+    initialZoom: PropTypes.number,
+    isManualRefreshBackdropDisplayed: PropTypes.bool,
+    labelsZoomThreshold: PropTypes.number,
+    lineFlowAlertThreshold: PropTypes.number,
+    lineFlowColorMode: PropTypes.oneOf(Object.values(LineFlowColorMode)),
+    lineFlowHidden: PropTypes.bool,
+    lineFlowMode: PropTypes.oneOf(Object.values(LineFlowMode)),
+    lineFullPath: PropTypes.bool,
+    lineParallelPath: PropTypes.bool,
+    renderPopover: PropTypes.func,
+    tooltipZoomThreshold: PropTypes.number,
+    // With mapboxgl v2 (not a problem with maplibre), we need to call
+    // map.resize() when the parent size has changed, otherwise the map is not
+    // redrawn. It seems like this is autodetected when the browser window is
+    // resized, but not for programmatic resizes of the parent. For now in our
+    // app, only study display mode resizes programmatically
+    // use this prop to make the map resize when needed, each time this prop changes, map.resize() is trigged
+    triggerMapResizeOnChange: PropTypes.any,
+    updatedLines: PropTypes.array,
+    useName: PropTypes.bool,
+    visible: PropTypes.bool,
+
     onHvdcLineMenuClick: PropTypes.func,
+    onLineMenuClick: PropTypes.func,
+    onManualRefreshClick: PropTypes.func,
+    onSubstationClick: PropTypes.func,
     onSubstationClickChooseVoltageLevel: PropTypes.func,
     onSubstationMenuClick: PropTypes.func,
     onVoltageLevelMenuClick: PropTypes.func,
-    lineFullPath: PropTypes.bool,
-    lineParallelPath: PropTypes.bool,
-    lineFlowMode: PropTypes.oneOf(Object.values(LineFlowMode)),
-    lineFlowHidden: PropTypes.bool,
-    lineFlowColorMode: PropTypes.oneOf(Object.values(LineFlowColorMode)),
-    lineFlowAlertThreshold: PropTypes.number.isRequired,
-    loadFlowStatus: PropTypes.oneOf(Object.values(RunningStatus)),
-    visible: PropTypes.bool,
-    updatedLines: PropTypes.array,
-    displayOverlayLoader: PropTypes.bool,
-    disabled: PropTypes.bool,
-
-    centerOnSubstation: PropTypes.any,
-    mapManualRefresh: PropTypes.bool,
-    reloadMapNeeded: PropTypes.bool,
-    currentNodeBuilt: PropTypes.bool,
-    useName: PropTypes.bool,
-    mapBoxToken: PropTypes.string,
-    onReloadMapClick: PropTypes.func,
-    renderPopover: PropTypes.func,
 };
 
 export default React.memo(NetworkMap);

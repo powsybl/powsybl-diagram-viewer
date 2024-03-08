@@ -6,27 +6,25 @@
  */
 
 import React, { useEffect } from 'react';
-import { NetworkMap, GeoData } from '@powsybl/network-map-viewer';
+import { NetworkMap, GeoData } from '../../src/';
 import {
     createTheme,
     ThemeProvider,
     StyledEngineProvider,
 } from '@mui/material/styles';
 
-import MapEquipments from './map-equipments';
+import DemoMapEquipments from './map-viewer/demo-map-equipments';
 
-import sposdata from './data/spos.json';
-import lposdata from './data/lpos.json';
-import smapdata from './data/smap.json';
-import lmapdata from './data/lmap.json';
-import { addNadToDemo, addSldToDemo } from './add-diagrams';
+import sposdata from './map-viewer/data/spos.json';
+import lposdata from './map-viewer/data/lpos.json';
+import smapdata from './map-viewer/data/smap.json';
+import lmapdata from './map-viewer/data/lmap.json';
+import { addNadToDemo, addSldToDemo } from './diagram-viewers/add-diagrams';
 
 function App() {
-    const INITIAL_POSITION = [9.322, 45.255];
     const INITIAL_ZOOM = 9;
     const LABELS_ZOOM_THRESHOLD = 9;
     const ARROWS_ZOOM_THRESHOLD = 7;
-    const centerOnSubstation = { to: 'SUB1' };
     const useName = true;
 
     useEffect(() => {
@@ -68,7 +66,7 @@ function App() {
     geoData.setSubstationPositions(sposdata);
     geoData.setLinePositions(lposdata);
 
-    const mapEquipments = new MapEquipments(smapdata, lmapdata);
+    const mapEquipments = new DemoMapEquipments(smapdata, lmapdata);
 
     useEffect(() => {
         const handleContextmenu = (e) => {
@@ -97,9 +95,7 @@ function App() {
                             geoData={geoData}
                             labelsZoomThreshold={LABELS_ZOOM_THRESHOLD}
                             arrowsZoomThreshold={ARROWS_ZOOM_THRESHOLD}
-                            initialPosition={INITIAL_POSITION}
                             initialZoom={INITIAL_ZOOM}
-                            centerOnSubstation={centerOnSubstation}
                             useName={useName}
                             onSubstationClick={(vlId) => {
                                 console.log('# OpenVoltageLevel: ' + vlId);
@@ -126,6 +122,8 @@ function App() {
                                     )} at coordinates (${x}, ${y})`
                                 );
                             }}
+                            mapLibrary={'cartonolabel'}
+                            mapTheme={'dark'}
                         />
                     </div>
                 </ThemeProvider>
