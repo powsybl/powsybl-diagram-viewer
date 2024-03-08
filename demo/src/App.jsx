@@ -13,7 +13,7 @@ import {
     StyledEngineProvider,
 } from '@mui/material/styles';
 
-import DemoMapEquipments from './map-viewer/map-equipments';
+import DemoMapEquipments from './map-viewer/demo-map-equipments';
 
 import sposdata from './map-viewer/data/spos.json';
 import lposdata from './map-viewer/data/lpos.json';
