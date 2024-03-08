@@ -8,9 +8,17 @@ Installation using npm:
 
 #### For developers
 
-For development purpose, you can run 'npm run watch' for hot building (rebuild after a code save). 
-Your consumer project should point on the local distribution. Edit your package.json depedencies : 
-'"powsybl-diagram-viewer": "file: path/to/powsybl-diagram-viewer",'
+For development purpose, to install this library locally from an app, you should run these commands in the library project :
+- npm install
+- npm run build
+- npm pack
+
+Then in the app project :
+- npm install {PATH_TO_LIBRARY}/powsybl-diagram-viewer-{LIBRARY_VERSION}.tgz
+
+*Warning* : with Create React App, we realised the library was not updating correctly if you try to install the library multiple times.
+To fix this, run this command from the app **after** running "npm install"
+- rm -Rf node_modules/.cache
 
 #### For integrators
 

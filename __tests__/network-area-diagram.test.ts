@@ -1,4 +1,4 @@
-import { NetworkAreaDiagramViewer } from '../src/network-area-diagram-viewer';
+import { NetworkAreaDiagramViewer } from '../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
 
 describe('Test network-area-diagram-viewer.ts', () => {
     // SVG not loaded properly in DOM with Jest. Has to be enrich...

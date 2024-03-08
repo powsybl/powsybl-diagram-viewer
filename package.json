@@ -1,49 +1,76 @@
 {
-  "name": "@powsybl/diagram-viewer",
-  "version": "0.2.0",
-  "description": "Typescript library to integrate a powsybl svg diagram in a javascript project.",
-  "author": "powsybl team",
-  "homepage": "https://www.powsybl.org/",
-  "license": "MPL",
-  "repository": "git://github.com/powsybl/powsybl-diagram-viewer.git",
-  "type": "module",
-  "types": "./dist/index.d.ts",
-  "main": "./dist/powsybl-diagram-viewer.umd.cjs",
-  "module": "./dist/powsybl-diagram-viewer.js",
-  "exports": {
-    ".": {
-      "import": "./dist/powsybl-diagram-viewer.js",
-      "require": "./dist/powsybl-diagram-viewer.umd.cjs"
+    "name": "@powsybl/diagram-viewer",
+    "version": "0.2.0",
+    "description": "Typescript library to integrate a powsybl svg diagram in a javascript project.",
+    "author": "powsybl team",
+    "homepage": "https://www.powsybl.org/",
+    "license": "MPL",
+    "repository": "git://github.com/powsybl/powsybl-diagram-viewer.git",
+    "type": "module",
+    "types": "./dist/index.d.ts",
+    "main": "./dist/powsybl-diagram-viewer.umd.cjs",
+    "module": "./dist/powsybl-diagram-viewer.js",
+    "exports": {
+        ".": {
+            "import": "./dist/powsybl-diagram-viewer.js",
+            "require": "./dist/powsybl-diagram-viewer.umd.cjs"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "watch": "vite watch",
+        "build": "vite build",
+        "test": "jest",
+        "start": "vite demo/ --config vite.config.ts --open",
+        "lint": "eslint . --ext js,mjs,jsx,ts,mts,tsx --max-warnings 0"
+    },
+    "dependencies": {
+        "@svgdotjs/svg.js": "^3.0.12",
+        "@svgdotjs/svg.panzoom.js": "^2.1.2",
+        "cheap-ruler": "^3.0.0",
+        "deck.gl": "^8.9.18",
+        "geolib": "^3.3.4",
+        "mapbox-gl": "^3.0.0",
+        "maplibre-gl": "^3.0.0",
+        "react-map-gl": "^7.0.0"
+    },
+    "peerDependencies": {
+        "@emotion/styled": "^11.8.1",
+        "@mui/icons-material": "^5.5.1",
+        "@mui/material": "^5.5.3",
+        "@mui/system": "^5.5.3",
+        "react": "^18.0.0",
+        "react-dom": "^18.0.0",
+        "react-intl": "^6.0.0"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.17.10",
+        "@babel/preset-env": "^7.17.10",
+        "@babel/preset-typescript": "^7.16.7",
+        "@mui/icons-material": "^5.5.1",
+        "@mui/material": "^5.5.3",
+        "@mui/system": "^5.5.3",
+        "@types/jest": "^27.5.1",
+        "@typescript-eslint/eslint-plugin": "^6.0.0",
+        "@vitejs/plugin-react": "^4.2.1",
+        "babel-jest": "^28.1.0",
+        "eslint": "^8.45.0",
+        "eslint-config-prettier": "^8.5.0",
+        "eslint-plugin-prettier": "^4.0.0",
+        "eslint-plugin-react": "^7.32.2",
+        "eslint-plugin-react-hooks": "^4.6.0",
+        "eslint-plugin-react-refresh": "^0.4.3",
+        "jest": "^28.1.0",
+        "jest-environment-jsdom": "^28.1.0",
+        "prettier": "^2.0.0",
+        "ts-jest": "^28.0.2",
+        "ts-node": "^10.7.0",
+        "typescript": "^5.0.4",
+        "vite": "^5.0.11",
+        "vite-plugin-dts": "^3.7.1",
+        "vite-plugin-eslint": "^1.8.1",
+        "vite-plugin-externalize-deps": "^0.8.0"
     }
-  },
-  "files": ["dist"],
-  "scripts": {
-    "watch": "vite watch",
-    "build": "tsc && vite build",
-    "test": "jest",
-    "start": "vite demo/src/ --config vite.config.ts --open",
-    "lint": "eslint . --ext js,mjs,jsx,ts,mts,tsx --max-warnings 0"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.17.10",
-    "@babel/preset-env": "^7.17.10",
-    "@babel/preset-typescript": "^7.16.7",
-    "@types/jest": "^27.5.1",
-    "@typescript-eslint/eslint-plugin": "^5.23.0",
-    "babel-jest": "^28.1.0",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-plugin-prettier": "^4.0.0",
-    "jest": "^28.1.0",
-    "jest-environment-jsdom": "^28.1.0",
-    "ts-jest": "^28.0.2",
-    "ts-node": "^10.7.0",
-    "typescript": "^4.6.4",
-    "vite": "^5.0.11",
-    "vite-plugin-dts": "^3.7.1",
-    "vite-plugin-eslint": "^1.8.1"
-  },
-  "dependencies": {
-    "@svgdotjs/svg.js": "^3.0.12",
-    "@svgdotjs/svg.panzoom.js": "^2.1.2"
-  }
 }
