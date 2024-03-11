@@ -464,13 +464,13 @@ const NetworkMap = (props) => {
                 if (mapTheme === LIGHT) {
                     return 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
                 } else {
-                    return 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json';
+                    return 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
                 }
             case CARTO_NOLABEL:
                 if (mapTheme === LIGHT) {
-                    return 'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json';
+                    return 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json';
                 } else {
-                    return 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+                    return 'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json';
                 }
             default:
                 return 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
