@@ -25,6 +25,7 @@ import { Map, NavigationControl, useControl } from 'react-map-gl';
 import { getNominalVoltageColor } from '../../../utils/colors';
 import { useNameOrId } from '../utils/equipmentInfosHandler';
 import { GeoData } from './geo-data';
+import DrawControl from './draw-control.ts';
 import { LineFlowColorMode, LineFlowMode, LineLayer } from './line-layer';
 import { MapEquipments } from './map-equipments';
 import { SubstationLayer } from './substation-layer';
@@ -33,6 +34,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 
 // MouseEvent.button https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
 const MOUSE_EVENT_BUTTON_LEFT = 0;
@@ -547,6 +549,24 @@ const NetworkMap = (props) => {
                 {showTooltip && renderTooltip()}
                 {/* visualizePitch true makes the compass reset the pitch when clicked in addition to visualizing it */}
                 <NavigationControl visualizePitch={true} />
+                <DrawControl
+                    position="bottom-left"
+                    displayControlsDefault={false}
+                    controls={{
+                        polygon: true,
+                        trash: true,
+                    }}
+                    //
+                    // defaultMode="simple_select | draw_polygon | ...
+                    defaultMode="simple_select"
+                    readyToDisplay={readyToDisplay}
+                    geoData={props.geoData}
+                    mapEquipments={props.mapEquipments}
+                    onDrawModeChanged={(polygone_draw) => {
+                        console.log('debug', 'polygone_draw', polygone_draw);
+                    }}
+                    // styles: pour changer le style du polygone https://github.com/mapbox/mapbox-gl-draw/blob/main/docs/API.md#styling-draw
+                />
             </Map>
         )
     );
