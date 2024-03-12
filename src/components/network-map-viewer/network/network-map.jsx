@@ -563,7 +563,7 @@ const NetworkMap = (props) => {
                     geoData={props.geoData}
                     mapEquipments={props.mapEquipments}
                     onDrawModeChanged={(polygone_draw) => {
-                        console.log('debug', 'polygone_draw', polygone_draw);
+                        props.onDrawModeChanged(polygone_draw);
                     }}
                     // styles: pour changer le style du polygone https://github.com/mapbox/mapbox-gl-draw/blob/main/docs/API.md#styling-draw
                 />
@@ -609,6 +609,7 @@ NetworkMap.defaultProps = {
     renderPopover: (eId) => {
         return eId;
     },
+    onDrawModeChanged: () => {},
 };
 
 NetworkMap.propTypes = {
@@ -654,6 +655,7 @@ NetworkMap.propTypes = {
     onSubstationClickChooseVoltageLevel: PropTypes.func,
     onSubstationMenuClick: PropTypes.func,
     onVoltageLevelMenuClick: PropTypes.func,
+    onDrawModeChanged: PropTypes.func,
 };
 
 export default React.memo(NetworkMap);
