@@ -955,8 +955,10 @@ export class LineLayer extends CompositeLayer {
                     // the icon is not correctly positioned on the lines, they are slightly off.
                     // In the custom layers, we clamp the distanceBetweenLines. This is not done in the deck.gl TextLayer
                     // and IconLayer or in the position calculated here.
-                    getPosition: (operatingStatus) => operatingStatus.printPosition,
-                    getIcon: (operatingStatus) => getLineIcon(operatingStatus.status),
+                    getPosition: (operatingStatus) =>
+                        operatingStatus.printPosition,
+                    getIcon: (operatingStatus) =>
+                        getLineIcon(operatingStatus.status),
                     getSize: this.props.iconSize,
                     getColor: () => this.props.labelColor,
                     getPixelOffset: (operatingStatus) => operatingStatus.offset,
