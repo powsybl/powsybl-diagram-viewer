@@ -949,7 +949,7 @@ export class LineLayer extends CompositeLayer {
             // line status
             const lineStatusIconLayer = new IconLayer(
                 this.getSubLayerProps({
-                    id: 'OperatingStatus' + compositeData.nominalV,
+                    id: 'operatingStatus' + compositeData.nominalV,
                     data: compositeData.operatingStatus,
                     // The position passed to this layer causes a bug when zooming and maxParallelOffset is reached:
                     // the icon is not correctly positioned on the lines, they are slightly off.
