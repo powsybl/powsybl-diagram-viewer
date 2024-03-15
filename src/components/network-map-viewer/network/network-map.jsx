@@ -266,11 +266,7 @@ const NetworkMap = (props) => {
                         top: tooltip.pointerY,
                     }}
                 >
-                    {props.renderPopover(
-                        tooltip.equipmentId,
-                        tooltip.equipmentType,
-                        divRef.current
-                    )}
+                    {props.renderPopover(tooltip.equipmentId, divRef.current)}
                 </div>
             )
         );
