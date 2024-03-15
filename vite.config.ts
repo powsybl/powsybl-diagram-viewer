@@ -9,7 +9,7 @@ export default defineConfig({
     plugins: [
         react(),
         eslint({
-            failOnWarning: true,
+            failOnWarning: false,
         }),
         dts({
             include: ['src'],

@@ -12,6 +12,7 @@ import React, {
     useMemo,
     useRef,
     useState,
+    useCallback,
 } from 'react';
 
 import { Box, decomposeColor } from '@mui/system';
@@ -503,6 +504,31 @@ const NetworkMap = (props) => {
         setCentered(INITIAL_CENTERED);
     }, [mapLib?.key]);
 
+    const [features, setFeatures] = useState({});
+
+    const onUpdate = useCallback((e) => {
+        setFeatures((currFeatures) => {
+            const newFeatures = { ...currFeatures };
+            for (const f of e.features) {
+                newFeatures[f.id] = f;
+            }
+
+            return newFeatures;
+        });
+        console.log('debug', 'layer', deckRef.current?.SubstationLayer);
+    }, []);
+
+    const onDelete = useCallback((e) => {
+        setFeatures((currFeatures) => {
+            const newFeatures = { ...currFeatures };
+            for (const f of e.features) {
+                delete newFeatures[f.id];
+            }
+            return newFeatures;
+        });
+    }, []);
+
+    console.log('features', features);
     return (
         mapLib && (
             <Map
@@ -565,6 +591,8 @@ const NetworkMap = (props) => {
                     onDrawModeChanged={(polygone_draw) => {
                         props.onDrawModeChanged(polygone_draw);
                     }}
+                    onUpdate={onUpdate}
+                    onDelete={onDelete}
                     // styles: pour changer le style du polygone https://github.com/mapbox/mapbox-gl-draw/blob/main/docs/API.md#styling-draw
                 />
             </Map>

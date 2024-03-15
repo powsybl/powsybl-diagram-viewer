@@ -24,7 +24,8 @@
         "build": "vite build",
         "test": "jest",
         "start": "vite demo/ --config vite.config.ts --open",
-        "lint": "eslint . --ext js,mjs,jsx,ts,mts,tsx --max-warnings 0"
+        "lint": "eslint . --ext js,mjs,jsx,ts,mts,tsx --max-warnings 0",
+        "clear-cache": "rm -rf node_modules/.vite"
     },
     "dependencies": {
         "@svgdotjs/svg.js": "^3.0.12",
