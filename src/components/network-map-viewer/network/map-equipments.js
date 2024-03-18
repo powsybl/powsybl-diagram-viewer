@@ -21,6 +21,10 @@ export class MapEquipments {
 
     linesById = new Map();
 
+    tieLines = [];
+
+    tieLinesById = new Map();
+
     hvdcLines = [];
 
     hvdcLinesById = new Map();
@@ -152,6 +156,19 @@ export class MapEquipments {
         }
     }
 
+    completeTieLinesInfos(equipementsToIndex) {
+        if (equipementsToIndex?.length > 0) {
+            equipementsToIndex.forEach((tieLine) => {
+                this.tieLinesById?.set(tieLine.id, tieLine);
+            });
+        } else {
+            this.tieLinesById = this.tieLines.reduce(
+                elementIdIndexer,
+                new Map()
+            );
+        }
+    }
+
     updateLines(lines, fullReload) {
         if (fullReload) {
             this.lines = [];
@@ -162,6 +179,18 @@ export class MapEquipments {
             EQUIPMENT_TYPES.LINE
         );
         this.completeLinesInfos(fullReload ? [] : lines);
+    }
+
+    updateTieLines(tieLines, fullReload) {
+        if (fullReload) {
+            this.tieLines = [];
+        }
+        this.tieLines = this.updateEquipments(
+            this.tieLines,
+            tieLines,
+            EQUIPMENT_TYPES.TIE_LINE
+        );
+        this.completeTieLinesInfos(fullReload ? [] : tieLines);
     }
 
     updateHvdcLines(hvdcLines, fullReload) {
@@ -275,5 +304,13 @@ export class MapEquipments {
 
     getHvdcLine(id) {
         return this.hvdcLinesById.get(id);
+    }
+
+    gettieLLines() {
+        return this.tieLines;
+    }
+
+    getTieLine(id) {
+        return this.tieLinesById.get(id);
     }
 }
