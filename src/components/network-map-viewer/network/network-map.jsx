@@ -367,6 +367,48 @@ const NetworkMap = (props) => {
         return isDragging ? 'grabbing' : cursorType;
     }
 
+    let geojsonData = {
+        type: 'FeatureCollection',
+        features: [
+            {
+                type: 'Feature',
+                geometry: {
+                    type: 'Point',
+                    coordinates: [9.147230811929688, 45.202750610674286],
+                },
+                properties: {
+                    prop0: 'value0',
+                },
+            },
+            {
+                type: 'Feature',
+                geometry: {
+                    type: 'Point',
+                    coordinates: [[9.112986755929825, 45.157098376229555]],
+                },
+                properties: {
+                    prop1: 'value1',
+                },
+            },
+        ],
+    };
+    const mysource = {
+        id: 'my-points-source',
+        type: 'geojson',
+        data: geojsonData,
+    };
+
+    const mylayer = {
+        id: 'my-points-layer', // Unique ID for the layer
+        type: 'circle', // Choose a layer type (e.g., circle, symbol, line)
+        source: 'my-points-source', // Reference the data source
+        paint: {
+            // Customize the visual appearance of the points (circle in this example)
+            'circle-color': '#f8504e', // Adjust color as desired
+            'circle-radius': 5, // Set marker size
+            'circle-opacity': 0.7, // Adjust transparency
+        },
+    };
     const layers = [];
 
     if (readyToDisplaySubstations) {
@@ -504,7 +546,7 @@ const NetworkMap = (props) => {
         setCentered(INITIAL_CENTERED);
     }, [mapLib?.key]);
 
-    const [features, setFeatures] = useState({});
+    const [, setFeatures] = useState({});
 
     const onUpdate = useCallback((e) => {
         setFeatures((currFeatures) => {
@@ -515,7 +557,13 @@ const NetworkMap = (props) => {
 
             return newFeatures;
         });
-        console.log('debug', 'layer', deckRef.current?.SubstationLayer);
+        // console.log('debug', 'layer', deckRef.current?.SubstationLayer);
+        console.log('debug', 'layers', mapRef.current.getStyle());
+        console.log(
+            'debug',
+            'myData',
+            mapRef.current.getLayer('my-points-layer')
+        );
     }, []);
 
     const onDelete = useCallback((e) => {
@@ -528,7 +576,19 @@ const NetworkMap = (props) => {
         });
     }, []);
 
-    console.log('features', features);
+    // const mapLibreLayers = [
+    //     {
+    //         id: 'myLayer',
+    //         source: 'maplibre',
+    //         'source-layer': 'contries',
+    //         type: 'line',
+    //         paint: {
+    //             'line-color': '#198EC8',
+    //         },
+    //     },
+    // ];
+
+    // console.log('features', features);
     return (
         mapLib && (
             <Map
@@ -544,6 +604,35 @@ const NetworkMap = (props) => {
                 onDrag={() => setDragging(true)}
                 onDragEnd={() => setDragging(false)}
                 onContextMenu={onMapContextMenu}
+                //add a layer with 2 elements in the map
+                // layers={mapLibreLayers}
+                // sources={[mysource]}
+                // layers={[mylayer]}
+                onLoad={() => {
+                    if (mapRef.current) {
+                        console.log('debug', 'mapRef', mapRef.current.getMap());
+                        console.log('debug', 'adding source and layer');
+                        console.log('debug', 'mapRef', mysource);
+                        console.log('debug', 'mapRef', mylayer);
+                        mapRef.current
+                            ?.getMap()
+                            ?.addSource('my-points-source', {
+                                type: 'geojson',
+                                data: geojsonData,
+                            });
+                        mapRef.current?.getMap()?.addLayer({
+                            id: 'my-points-layer', // Unique ID for the layer
+                            type: 'circle', // Choose a layer type (e.g., circle, symbol, line)
+                            source: 'my-points-source', // Reference the data source
+                            paint: {
+                                // Customize the visual appearance of the points (circle in this example)
+                                'circle-color': '#f8504e', // Adjust color as desired
+                                'circle-radius': 5, // Set marker size
+                                'circle-opacity': 0.7, // Adjust transparency
+                            },
+                        });
+                    }
+                }}
             >
                 {props.displayOverlayLoader && renderOverlay()}
                 {props.isManualRefreshBackdropDisplayed && (
