@@ -548,7 +548,11 @@ const NetworkMap = (props) => {
         setCentered(INITIAL_CENTERED);
     }, [mapLib?.key]);
 
-    const [, setFeatures] = useState({});
+    const [features, setFeatures] = useState({});
+
+    useEffect(() => {
+        props.onFeaturesChanged(features);
+    }, [features]);
 
     const onUpdate = useCallback((e) => {
         setFeatures((currFeatures) => {
@@ -600,10 +604,6 @@ const NetworkMap = (props) => {
 
                 // onLoad={() => {
                 // if (mapRef.current) {
-                //     console.log('debug', 'mapRef', mapRef.current.getMap());
-                //     console.log('debug', 'adding source and layer');
-                //     console.log('debug', 'mapRef', mysource);
-                //     console.log('debug', 'mapRef', mylayer);
                 //     mapRef.current
                 //         ?.getMap()
                 //         ?.addSource('my-points-source', {
@@ -716,6 +716,7 @@ NetworkMap.defaultProps = {
         return eId;
     },
     onDrawModeChanged: () => {},
+    onFeaturesChanged: () => {},
 };
 
 NetworkMap.propTypes = {
@@ -762,6 +763,7 @@ NetworkMap.propTypes = {
     onSubstationMenuClick: PropTypes.func,
     onVoltageLevelMenuClick: PropTypes.func,
     onDrawModeChanged: PropTypes.func,
+    onFeaturesChanged: PropTypes.func,
 };
 
 export default React.memo(NetworkMap);

@@ -124,6 +124,9 @@ function App() {
                             }}
                             mapLibrary={'cartonolabel'}
                             mapTheme={'dark'}
+                            onFeaturesChanged={(features) =>
+                                console.log('polygon features:', features)
+                            }
                         />
                     </div>
                 </ThemeProvider>
