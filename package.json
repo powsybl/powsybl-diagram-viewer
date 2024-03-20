@@ -28,18 +28,18 @@
         "clear-cache": "rm -rf node_modules/.vite"
     },
     "dependencies": {
+        "@mapbox/mapbox-gl-draw": "^1.4.3",
         "@svgdotjs/svg.js": "^3.0.12",
         "@svgdotjs/svg.panzoom.js": "^2.1.2",
+        "@turf/area": "^6.5.0",
+        "@turf/boolean-point-in-polygon": "^6.5.0",
+        "@types/mapbox__mapbox-gl-draw": "^1.4.6",
         "cheap-ruler": "^3.0.0",
         "deck.gl": "^8.9.18",
         "geolib": "^3.3.4",
         "mapbox-gl": "^3.0.0",
         "maplibre-gl": "^3.0.0",
-        "react-map-gl": "^7.0.0",
-        "@mapbox/mapbox-gl-draw": "^1.4.3",
-        "@turf/area": "^6.5.0",
-        "@turf/boolean-point-in-polygon": "^6.5.0",
-        "@types/mapbox__mapbox-gl-draw": "^1.4.6"
+        "react-map-gl": "^7.0.0"
     },
     "peerDependencies": {
         "@emotion/styled": "^11.8.1",

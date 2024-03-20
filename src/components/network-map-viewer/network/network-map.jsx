@@ -13,6 +13,7 @@ import React, {
     useRef,
     useState,
     useCallback,
+    forwardRef,
 } from 'react';
 
 import { Box, decomposeColor } from '@mui/system';
@@ -30,6 +31,8 @@ import DrawControl from './draw-control.ts';
 import { LineFlowColorMode, LineFlowMode, LineLayer } from './line-layer';
 import { MapEquipments } from './map-equipments';
 import { SubstationLayer } from './substation-layer';
+
+import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 // import { getBoundingRectangle } from './mapUtils.ts';
 
 import mapboxgl from 'mapbox-gl';
@@ -87,7 +90,7 @@ const INITIAL_CENTERED = {
     centered: false,
 };
 
-const NetworkMap = (props) => {
+const NetworkMap = forwardRef((props, ref) => {
     const [labelsVisible, setLabelsVisible] = useState(false);
     const [showLineFlow, setShowLineFlow] = useState(true);
     const [showTooltip, setShowTooltip] = useState(true);
@@ -549,6 +552,7 @@ const NetworkMap = (props) => {
     }, [mapLib?.key]);
 
     const [features, setFeatures] = useState({});
+    const [selectedSubstation, setSelectedSubstation] = useState();
 
     useEffect(() => {
         props.onFeaturesChanged(features);
@@ -574,6 +578,60 @@ const NetworkMap = (props) => {
         // );
         // console.log('debug', 'queriedDataSource', queriedDataSource);
     }, []);
+
+    const getPolygonFeatures = () => {
+        console.log('debug', 'getPolygonFeatures', features);
+        return features;
+    };
+    const getSelectedSubstation = () => {
+        return selectedSubstation ?? [];
+    };
+
+    const computeSelectedSubstation = () => {
+        const substations = getSubstationsInPolygone(
+            features,
+            props.mapEquipments,
+            props.geoData
+        );
+        setSelectedSubstation(substations);
+    };
+
+    const getSelectedVoltageLevel = () => {
+        const selectedVL = getVoltageLevelFromSubstation(
+            getSelectedSubstation()
+        );
+        return selectedVL;
+    };
+
+    function getLayerById(layers, layerId) {
+        return layers.find((layer) => layer.id === layerId);
+    }
+
+    const getSelectedLines = () => {
+        console.log('debug', 'getSelectedLines');
+        console.log('debug', 'lines', props.mapEquipments?.lines);
+        console.log('debug', 'layer', getLayerById(layers, LINE_LAYER_PREFIX));
+        console.log(
+            'debug',
+            'getLinesFromSubstation',
+            getLinesFromSubstation(selectedSubstation)
+        );
+        return props.mapEquipments?.lines ?? [];
+    };
+    const getSelectedHVDCLines = () => {
+        console.log('debug', 'getSelectedHVDCLines');
+        console.log('debug', 'hvdcLines', props.mapEquipments?.hvdcLines);
+        return props.mapEquipments?.hvdcLines ?? [];
+    };
+
+    useImperativeHandle(ref, () => ({
+        getPolygonFeatures,
+        computeSelectedSubstation,
+        getSelectedSubstation,
+        getSelectedVoltageLevel,
+        getSelectedLines,
+        getSelectedHVDCLines,
+    }));
 
     const onDelete = useCallback((e) => {
         setFeatures((currFeatures) => {
@@ -676,7 +734,7 @@ const NetworkMap = (props) => {
             </Map>
         )
     );
-};
+});
 
 NetworkMap.defaultProps = {
     areFlowsValid: true,
@@ -767,3 +825,50 @@ NetworkMap.propTypes = {
 };
 
 export default React.memo(NetworkMap);
+
+function getSubstationsInPolygone(features, mapEquipments, geoData) {
+    const firstPolygonFeatures = Object.values(features)[0];
+    const polygonCoordinates = firstPolygonFeatures?.geometry;
+    if (!polygonCoordinates || polygonCoordinates.coordinates < 3) {
+        return [];
+    }
+    //get the list of substation
+    const substationsList = mapEquipments?.substations ?? [];
+
+    const positions = substationsList // we need a list of substation and their positions
+        .map((substation) => {
+            return {
+                substation: substation,
+                pos: geoData.getSubstationPosition(substation.id),
+            };
+        });
+    if (!positions) {
+        return [];
+    }
+
+    return positions.filter((substation) => {
+        return booleanPointInPolygon(substation.pos, polygonCoordinates);
+    });
+}
+
+function getVoltageLevelFromSubstation(substations) {
+    if (!substations) {
+        return [];
+    }
+    return substations
+        .map((substation) => {
+            return substation.substation.voltageLevels;
+        })
+        .flat();
+}
+
+function getLinesFromSubstation(substations) {
+    if (!substations) {
+        return [];
+    }
+    return substations
+        .map((substation) => {
+            return substation.substation.lines;
+        })
+        .flat();
+}

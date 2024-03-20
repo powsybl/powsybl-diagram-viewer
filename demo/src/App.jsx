@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { NetworkMap, GeoData } from '../../src/';
 import {
     createTheme,
@@ -78,6 +78,16 @@ function App() {
         };
     }, []);
 
+    const networkMapRef = useRef();
+    useEffect(() => {
+        // Call the function
+        // networkMapRef.current.getPolygonFeatures();
+        // networkMapRef.current.getSelectedSubstation();
+        // networkMapRef.current.getSelectedVoltageLevel();
+        // networkMapRef.current.getSelectedLines();
+        // networkMapRef.current.getSelectedHVDCLines();
+    }, []);
+
     return (
         <div className="App">
             <header className="App-header"></header>
@@ -91,6 +101,7 @@ function App() {
                         }}
                     >
                         <NetworkMap
+                            ref={networkMapRef}
                             mapEquipments={mapEquipments}
                             geoData={geoData}
                             labelsZoomThreshold={LABELS_ZOOM_THRESHOLD}
@@ -124,9 +135,29 @@ function App() {
                             }}
                             mapLibrary={'cartonolabel'}
                             mapTheme={'dark'}
-                            onFeaturesChanged={(features) =>
-                                console.log('polygon features:', features)
-                            }
+                            onFeaturesChanged={(features) => {
+                                console.log(
+                                    'debug',
+                                    'polygon features:',
+                                    features
+                                );
+                                networkMapRef.current.computeSelectedSubstation();
+                                // console.log(
+                                //     'debug',
+                                //     'selected substation:',
+                                //     networkMapRef.current.getSelectedSubstation()
+                                // );
+                                // console.log(
+                                //     'debug',
+                                //     'selected voltage level:',
+                                //     networkMapRef.current.getSelectedVoltageLevel()
+                                // );
+                                console.log(
+                                    'debug',
+                                    'selected lines:',
+                                    networkMapRef.current.getSelectedLines()
+                                );
+                            }}
                         />
                     </div>
                 </ThemeProvider>

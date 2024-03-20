@@ -27,3 +27,4 @@ export function getBoundingRectangle(coords: Coordinate[]): Rectangle {
         height: maxY - minY,
     };
 }
+
