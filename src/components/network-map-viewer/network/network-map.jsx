@@ -33,6 +33,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { EQUIPMENT_TYPES } from '../utils/equipment-types.js';
 
 // MouseEvent.button https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
 const MOUSE_EVENT_BUTTON_LEFT = 0;
@@ -126,9 +127,18 @@ const NetworkMap = (props) => {
 
     const mapEquipmentsLines = useMemo(() => {
         return [
-            ...(props.mapEquipments?.lines ?? []),
-            ...(props.mapEquipments?.hvdcLines ?? []),
-            ...(props.mapEquipments?.tieLines ?? []),
+            ...(props.mapEquipments?.lines.map((line) => ({
+                ...line,
+                equipmentType: EQUIPMENT_TYPES.LINE,
+            })) ?? []),
+            ...(props.mapEquipments?.tieLines.map((tieLine) => ({
+                ...tieLine,
+                equipmentType: EQUIPMENT_TYPES.TIE_LINE,
+            })) ?? []),
+            ...(props.mapEquipments?.hvdcLines.map((hvdcLine) => ({
+                ...hvdcLine,
+                equipmentType: EQUIPMENT_TYPES.HVDC_LINE,
+            })) ?? []),
         ];
     }, [
         props.mapEquipments?.hvdcLines,
@@ -252,7 +262,9 @@ const NetworkMap = (props) => {
     function renderTooltip() {
         return (
             tooltip &&
-            tooltip.visible && (
+            tooltip.visible &&
+            //As of now only LINE tooltip is implemented, the following condition is to be removed or tweaked once other types of line tooltip are implemented
+            tooltip.equipmentType === EQUIPMENT_TYPES.LINE && (
                 <div
                     ref={divRef}
                     style={{
@@ -426,6 +438,7 @@ const NetworkMap = (props) => {
                         const lineObject = object?.line ?? object;
                         setTooltip({
                             equipmentId: lineObject?.id,
+                            equipmentType: lineObject?.equipmentType,
                             pointerX: x,
                             pointerY: y,
                             visible: showTooltip,
