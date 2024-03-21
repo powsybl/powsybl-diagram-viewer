@@ -79,14 +79,6 @@ function App() {
     }, []);
 
     const networkMapRef = useRef();
-    useEffect(() => {
-        // Call the function
-        // networkMapRef.current.getPolygonFeatures();
-        // networkMapRef.current.getSelectedSubstation();
-        // networkMapRef.current.getSelectedVoltageLevel();
-        // networkMapRef.current.getSelectedLines();
-        // networkMapRef.current.getSelectedHVDCLines();
-    }, []);
 
     return (
         <div className="App">
@@ -135,23 +127,9 @@ function App() {
                             }}
                             mapLibrary={'cartonolabel'}
                             mapTheme={'dark'}
-                            onFeaturesChanged={(features) => {
-                                console.log(
-                                    'debug',
-                                    'polygon features:',
-                                    features
-                                );
+                            filtredNominalVoltages={[380.0, 225.0, 110.0]}
+                            onFeaturesChanged={() => {
                                 networkMapRef.current.computeSelectedSubstation();
-                                // console.log(
-                                //     'debug',
-                                //     'selected substation:',
-                                //     networkMapRef.current.getSelectedSubstation()
-                                // );
-                                // console.log(
-                                //     'debug',
-                                //     'selected voltage level:',
-                                //     networkMapRef.current.getSelectedVoltageLevel()
-                                // );
                                 console.log(
                                     'debug',
                                     'selected lines:',

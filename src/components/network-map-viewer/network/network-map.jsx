@@ -617,21 +617,46 @@ const NetworkMap = forwardRef((props, ref) => {
         return layers.find((layer) => layer.id === layerId);
     }
 
+    function getSelectedLinesInPolygon(
+        network,
+        lines,
+        geoData,
+        polygonCoordinates
+    ) {
+        const selectedLines = lines.filter((line) => {
+            try {
+                const linePos = geoData.getLinePositions(network, line);
+                if (!linePos) {
+                    return false;
+                }
+
+                return (
+                    booleanPointInPolygon(linePos[0], polygonCoordinates) &&
+                    booleanPointInPolygon(linePos[1], polygonCoordinates)
+                );
+            } catch (error) {
+                console.error('debug', 'error', error);
+                return false;
+            }
+        });
+
+        return selectedLines;
+    }
     const getSelectedLines = () => {
-        console.log('debug', 'getSelectedLines');
-        console.log('debug', 'lines', props.mapEquipments?.lines);
         console.log('debug', 'layer', getLayerById(layers, LINE_LAYER_PREFIX));
-        console.log(
-            'debug',
-            'getLinesFromSubstation',
-            getLinesFromSubstation(selectedSubstation)
+        //check if polygon is defined correctly
+        const firstPolygonFeatures = Object.values(features)[0];
+        const polygonCoordinates = firstPolygonFeatures?.geometry;
+        if (!polygonCoordinates || polygonCoordinates.coordinates < 3) {
+            return [];
+        }
+        //for each line, check if it is in the polygon
+        return getSelectedLinesInPolygon(
+            props.mapEquipments,
+            mapEquipmentsLines,
+            props.geoData,
+            polygonCoordinates
         );
-        return props.mapEquipments?.lines ?? [];
-    };
-    const getSelectedHVDCLines = () => {
-        console.log('debug', 'getSelectedHVDCLines');
-        console.log('debug', 'hvdcLines', props.mapEquipments?.hvdcLines);
-        return props.mapEquipments?.hvdcLines ?? [];
     };
 
     useImperativeHandle(ref, () => ({
@@ -640,7 +665,6 @@ const NetworkMap = forwardRef((props, ref) => {
         getSelectedSubstation,
         getSelectedVoltageLevel,
         getSelectedLines,
-        getSelectedHVDCLines,
     }));
 
     const onDelete = useCallback((e) => {
@@ -868,17 +892,6 @@ function getVoltageLevelFromSubstation(substations) {
     return substations
         .map((substation) => {
             return substation.substation.voltageLevels;
-        })
-        .flat();
-}
-
-function getLinesFromSubstation(substations) {
-    if (!substations) {
-        return [];
-    }
-    return substations
-        .map((substation) => {
-            return substation.substation.lines;
         })
         .flat();
 }
