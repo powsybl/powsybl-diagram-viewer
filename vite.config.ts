@@ -5,11 +5,12 @@ import dts from 'vite-plugin-dts';
 import react from '@vitejs/plugin-react';
 import { externalizeDeps } from 'vite-plugin-externalize-deps';
 
-export default defineConfig({
+export default defineConfig((config) => ({
     plugins: [
         react(),
         eslint({
-            failOnWarning: true,
+            failOnWarning: config.mode !== 'development',
+            lintOnStart: true,
         }),
         dts({
             include: ['src'],
@@ -69,4 +70,4 @@ export default defineConfig({
             },
         },
     },
-});
+}));
