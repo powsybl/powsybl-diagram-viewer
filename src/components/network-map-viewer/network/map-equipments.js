@@ -306,7 +306,7 @@ export class MapEquipments {
         return this.hvdcLinesById.get(id);
     }
 
-    gettieLLines() {
+    getTieLines() {
         return this.tieLines;
     }
 
