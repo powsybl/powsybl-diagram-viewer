@@ -79,8 +79,8 @@ function App() {
     }, []);
 
     const networkMapRef = useRef();
-    // const filtredNominalVoltage = [380.0, 225.0, 110.0];
-    const filtredNominalVoltage = [500];
+    const filtredNominalVoltage = [380.0, 225.0, 110.0];
+    // const filtredNominalVoltage = [500];
 
     return (
         <div className="App">
@@ -135,7 +135,7 @@ function App() {
                                 console.log(
                                     'debug',
                                     'filtredByVoltage',
-                                    networkMapRef.current.getSelectedSubstation()
+                                    networkMapRef.current.getSelectedLines()
                                 );
                             }}
                         />

@@ -610,10 +610,9 @@ const NetworkMap = forwardRef((props, ref) => {
         const selectedVL = getVoltageLevelFromSubstation(
             getSelectedSubstation()
         );
-        return selectedVL;
-        // return selectedVL.filter((vl) =>{
-        //
-        // };
+        return selectedVL.filter((vl) => {
+            return props.filtredNominalVoltages.includes(vl.nominalVoltage);
+        });
     };
 
     function getLayerById(layers, layerId) {
@@ -661,10 +660,10 @@ const NetworkMap = forwardRef((props, ref) => {
             props.geoData,
             polygonCoordinates
         );
-        return filterByNominalVoltages(selectedLines);
+        return filterLinesByNominalVoltages(selectedLines);
     };
 
-    const filterByNominalVoltages = (equipements) => {
+    const filterLinesByNominalVoltages = (equipements) => {
         return equipements.filter((equipement) => {
             const isVL1 = props.filtredNominalVoltages.includes(
                 props.mapEquipments.getVoltageLevel(equipement.voltageLevelId1)
@@ -684,7 +683,7 @@ const NetworkMap = forwardRef((props, ref) => {
         getSelectedSubstation,
         getSelectedVoltageLevel,
         getSelectedLines,
-        filterByNominalVoltages,
+        filterLinesByNominalVoltages,
     }));
 
     const onDelete = useCallback((e) => {
@@ -886,7 +885,7 @@ function getVoltageLevelFromSubstation(substations) {
     }
     return substations
         .map((substation) => {
-            return substation.substation.voltageLevels;
+            return substation.voltageLevels;
         })
         .flat();
 }
