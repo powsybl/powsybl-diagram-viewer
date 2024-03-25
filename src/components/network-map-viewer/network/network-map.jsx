@@ -611,6 +611,9 @@ const NetworkMap = forwardRef((props, ref) => {
             getSelectedSubstation()
         );
         return selectedVL;
+        // return selectedVL.filter((vl) =>{
+        //
+        // };
     };
 
     function getLayerById(layers, layerId) {
@@ -651,12 +654,28 @@ const NetworkMap = forwardRef((props, ref) => {
             return [];
         }
         //for each line, check if it is in the polygon
-        return getSelectedLinesInPolygon(
+
+        const selectedLines = getSelectedLinesInPolygon(
             props.mapEquipments,
             mapEquipmentsLines,
             props.geoData,
             polygonCoordinates
         );
+        return filterByNominalVoltages(selectedLines);
+    };
+
+    const filterByNominalVoltages = (equipements) => {
+        return equipements.filter((equipement) => {
+            const isVL1 = props.filtredNominalVoltages.includes(
+                props.mapEquipments.getVoltageLevel(equipement.voltageLevelId1)
+                    .nominalVoltage
+            );
+            const isVL2 = props.filtredNominalVoltages.includes(
+                props.mapEquipments.getVoltageLevel(equipement.voltageLevelId2)
+                    .nominalVoltage
+            );
+            return isVL1 || isVL2;
+        });
     };
 
     useImperativeHandle(ref, () => ({
@@ -665,6 +684,7 @@ const NetworkMap = forwardRef((props, ref) => {
         getSelectedSubstation,
         getSelectedVoltageLevel,
         getSelectedLines,
+        filterByNominalVoltages,
     }));
 
     const onDelete = useCallback((e) => {
@@ -692,28 +712,6 @@ const NetworkMap = forwardRef((props, ref) => {
                 onDrag={() => setDragging(true)}
                 onDragEnd={() => setDragging(false)}
                 onContextMenu={onMapContextMenu}
-                //add a layer with 2 elements in the map
-
-                // onLoad={() => {
-                // if (mapRef.current) {
-                //     mapRef.current
-                //         ?.getMap()
-                //         ?.addSource('my-points-source', {
-                //             type: 'geojson',
-                //             data: geojsonData,
-                //         });
-                //     mapRef.current?.getMap()?.addLayer({
-                //         id: 'my-points-layer', // Unique ID for the layer
-                //         type: 'circle', // Choose a layer type (e.g., circle, symbol, line)
-                //         source: 'my-points-source', // Reference the data source
-                //         paint: {
-                //             // Customize the visual appearance of the points (circle in this example)
-                //             'circle-color': '#f8504e', // Adjust color as desired
-                //             'circle-radius': 5, // Set marker size
-                //             'circle-opacity': 0.7, // Adjust transparency
-                //         },
-                //     });
-                // }
             >
                 {props.displayOverlayLoader && renderOverlay()}
                 {props.isManualRefreshBackdropDisplayed && (
@@ -869,20 +867,17 @@ function getSubstationsInPolygone(features, mapEquipments, geoData) {
     //get the list of substation
     const substationsList = mapEquipments?.substations ?? [];
 
-    const positions = substationsList // we need a list of substation and their positions
-        .map((substation) => {
-            return {
-                substation: substation,
-                pos: geoData.getSubstationPosition(substation.id),
-            };
+    const filtredByPosistions = substationsList // we need a list of substation and their positions
+        .filter((substation) => {
+            const pos = geoData.getSubstationPosition(substation.id);
+            return booleanPointInPolygon(pos, polygonCoordinates);
         });
-    if (!positions) {
+
+    if (!filtredByPosistions) {
         return [];
     }
 
-    return positions.filter((substation) => {
-        return booleanPointInPolygon(substation.pos, polygonCoordinates);
-    });
+    return filtredByPosistions;
 }
 
 function getVoltageLevelFromSubstation(substations) {
