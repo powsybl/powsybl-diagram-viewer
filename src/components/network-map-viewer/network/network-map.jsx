@@ -596,7 +596,7 @@ const NetworkMap = forwardRef((props, ref) => {
         return (
             selectedSubstation.filter((substation) => {
                 return substation.voltageLevels.some((vl) => {
-                    return filteredNominalVoltages.includes(vl.nominalVoltage);
+                    return filteredNominalVoltages.includes(vl.nominalV);
                 });
             }) ?? []
         );
@@ -616,7 +616,7 @@ const NetworkMap = forwardRef((props, ref) => {
             getSelectedSubstation(filteredNominalVoltages)
         );
         return selectedVL.filter((vl) => {
-            return filteredNominalVoltages.includes(vl.nominalVoltage);
+            return filteredNominalVoltages.includes(vl.nominalV);
         });
     };
 
@@ -678,11 +678,11 @@ const NetworkMap = forwardRef((props, ref) => {
         return equipements.filter((equipement) => {
             const isVL1 = filteredNominalVoltages.includes(
                 props.mapEquipments.getVoltageLevel(equipement.voltageLevelId1)
-                    .nominalVoltage
+                    .nominalV
             );
             const isVL2 = filteredNominalVoltages.includes(
                 props.mapEquipments.getVoltageLevel(equipement.voltageLevelId2)
-                    .nominalVoltage
+                    .nominalV
             );
             return isVL1 || isVL2;
         });
