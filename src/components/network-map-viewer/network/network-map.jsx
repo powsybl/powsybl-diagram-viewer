@@ -7,13 +7,13 @@
 
 import PropTypes from 'prop-types';
 import React, {
+    forwardRef,
+    useCallback,
     useEffect,
     useImperativeHandle,
     useMemo,
     useRef,
     useState,
-    useCallback,
-    forwardRef,
 } from 'react';
 
 import { Box, decomposeColor } from '@mui/system';
@@ -34,7 +34,6 @@ import { SubstationLayer } from './substation-layer';
 
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 // import { getBoundingRectangle } from './mapUtils.ts';
-
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import maplibregl from 'maplibre-gl';
@@ -381,48 +380,6 @@ const NetworkMap = forwardRef((props, ref) => {
         return isDragging ? 'grabbing' : cursorType;
     }
 
-    // let geojsonData = {
-    //     type: 'FeatureCollection',
-    //     features: [
-    //         {
-    //             type: 'Feature',
-    //             geometry: {
-    //                 type: 'Point',
-    //                 coordinates: [9.147230811929688, 45.202750610674286],
-    //             },
-    //             properties: {
-    //                 prop0: 'value0',
-    //             },
-    //         },
-    //         {
-    //             type: 'Feature',
-    //             geometry: {
-    //                 type: 'Point',
-    //                 coordinates: [[9.112986755929825, 45.157098376229555]],
-    //             },
-    //             properties: {
-    //                 prop1: 'value1',
-    //             },
-    //         },
-    //     ],
-    // };
-    // const mysource = {
-    //     id: 'my-points-source',
-    //     type: 'geojson',
-    //     data: geojsonData,
-    // };
-    //
-    // const mylayer = {
-    //     id: 'my-points-layer', // Unique ID for the layer
-    //     type: 'circle', // Choose a layer type (e.g., circle, symbol, line)
-    //     source: 'my-points-source', // Reference the data source
-    //     paint: {
-    //         // Customize the visual appearance of the points (circle in this example)
-    //         'circle-color': '#f8504e', // Adjust color as desired
-    //         'circle-radius': 5, // Set marker size
-    //         'circle-opacity': 0.7, // Adjust transparency
-    //     },æ
-    // };
     const layers = [];
 
     if (readyToDisplaySubstations) {
@@ -562,7 +519,6 @@ const NetworkMap = forwardRef((props, ref) => {
     }, [mapLib?.key]);
 
     const [features, setFeatures] = useState({});
-    const [selectedSubstation, setSelectedSubstation] = useState([]);
 
     useEffect(() => {
         props.onFeaturesChanged(features);
@@ -576,53 +532,34 @@ const NetworkMap = forwardRef((props, ref) => {
             }
             return newFeatures;
         });
-
-        // const bounds = getBoundingRectangle(
-        //     e.features[0].geometry.coordinates[0]
-        // );
-        // https://docs.mapbox.com/help/tutorials/analysis-with-turf/
-        //
-        // const queriedDataSource = map.current.queryRenderedFeatures(
-        //     'my-points-source',
-        //     {}
-        // );
-        // console.log('debug', 'queriedDataSource', queriedDataSource);
     }, []);
 
     const getPolygonFeatures = () => {
         return features;
     };
-    const getSelectedSubstation = (filteredNominalVoltages) => {
-        return (
-            selectedSubstation.filter((substation) => {
-                return substation.voltageLevels.some((vl) => {
-                    return filteredNominalVoltages.includes(vl.nominalV);
-                });
-            }) ?? []
-        );
-    };
-
-    const computeSelectedSubstation = () => {
+    const getSelectedSubstation = () => {
         const substations = getSubstationsInPolygone(
             features,
             props.mapEquipments,
             props.geoData
         );
-        setSelectedSubstation(substations);
+        return (
+            substations.filter((substation) => {
+                return substation.voltageLevels.some((vl) => {
+                    return props.filteredNominalVoltages.includes(vl.nominalV);
+                });
+            }) ?? []
+        );
     };
 
-    const getSelectedVoltageLevel = (filteredNominalVoltages) => {
+    const getSelectedVoltageLevel = () => {
         const selectedVL = getVoltageLevelFromSubstation(
-            getSelectedSubstation(filteredNominalVoltages)
+            getSelectedSubstation()
         );
         return selectedVL.filter((vl) => {
-            return filteredNominalVoltages.includes(vl.nominalV);
+            return props.filteredNominalVoltages.includes(vl.nominalV);
         });
     };
-
-    function getLayerById(layers, layerId) {
-        return layers.find((layer) => layer.id === layerId);
-    }
 
     function getSelectedLinesInPolygon(
         network,
@@ -630,7 +567,7 @@ const NetworkMap = forwardRef((props, ref) => {
         geoData,
         polygonCoordinates
     ) {
-        const selectedLines = lines.filter((line) => {
+        return lines.filter((line) => {
             try {
                 const linePos = geoData.getLinePositions(network, line);
                 if (!linePos) {
@@ -642,15 +579,11 @@ const NetworkMap = forwardRef((props, ref) => {
                     booleanPointInPolygon(linePos[1], polygonCoordinates)
                 );
             } catch (error) {
-                console.error('debug', 'error', error);
                 return false;
             }
         });
-
-        return selectedLines;
     }
-    const getSelectedLines = (filteredNominalVoltages) => {
-        console.log('debug', 'layer', getLayerById(layers, LINE_LAYER_PREFIX));
+    const getSelectedLines = () => {
         //check if polygon is defined correctly
         const firstPolygonFeatures = Object.values(features)[0];
         const polygonCoordinates = firstPolygonFeatures?.geometry;
@@ -658,29 +591,22 @@ const NetworkMap = forwardRef((props, ref) => {
             return [];
         }
         //for each line, check if it is in the polygon
-
         const selectedLines = getSelectedLinesInPolygon(
             props.mapEquipments,
             mapEquipmentsLines,
             props.geoData,
             polygonCoordinates
         );
-        return filterLinesByNominalVoltages(
-            selectedLines,
-            filteredNominalVoltages
-        );
+        return filterLinesByNominalVoltages(selectedLines);
     };
 
-    const filterLinesByNominalVoltages = (
-        equipements,
-        filteredNominalVoltages
-    ) => {
+    const filterLinesByNominalVoltages = (equipements) => {
         return equipements.filter((equipement) => {
-            const isVL1 = filteredNominalVoltages.includes(
+            const isVL1 = props.filteredNominalVoltages.includes(
                 props.mapEquipments.getVoltageLevel(equipement.voltageLevelId1)
                     .nominalV
             );
-            const isVL2 = filteredNominalVoltages.includes(
+            const isVL2 = props.filteredNominalVoltages.includes(
                 props.mapEquipments.getVoltageLevel(equipement.voltageLevelId2)
                     .nominalV
             );
@@ -690,7 +616,6 @@ const NetworkMap = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         getPolygonFeatures,
-        computeSelectedSubstation,
         getSelectedSubstation,
         getSelectedVoltageLevel,
         getSelectedLines,
@@ -882,7 +807,6 @@ function getSubstationsInPolygone(features, mapEquipments, geoData) {
             const pos = geoData.getSubstationPosition(substation.id);
             return booleanPointInPolygon(pos, polygonCoordinates);
         });
-
     if (!filtredByPosistions) {
         return [];
     }

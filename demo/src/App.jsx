@@ -79,8 +79,7 @@ function App() {
     }, []);
 
     const networkMapRef = useRef();
-    const filtredNominalVoltage = [380.0, 225.0, 110.0];
-    // const filtredNominalVoltage = [500];
+    const filteredNominalVoltages = [380.0, 225.0, 110.0];
 
     return (
         <div className="App">
@@ -129,19 +128,12 @@ function App() {
                             }}
                             mapLibrary={'cartonolabel'}
                             mapTheme={'dark'}
-                            filtredNominalVoltages={filtredNominalVoltage}
+                            filteredNominalVoltages={filteredNominalVoltages}
                             onFeaturesChanged={() => {
-                                networkMapRef.current.computeSelectedSubstation();
                                 console.log(
-                                    'debug',
-                                    'filtredByVoltage',
-                                    networkMapRef.current.getSelectedSubstation(
-                                        filtredNominalVoltage
-                                    )
-
-                                    // getSelectedSubstation,
-                                    //     getSelectedVoltageLevel,
-                                    //     getSelectedLines,
+                                    'Selected Substations: ',
+                                    networkMapRef.current.getSelectedSubstation()
+                                        .length
                                 );
                             }}
                         />
