@@ -135,7 +135,13 @@ function App() {
                                 console.log(
                                     'debug',
                                     'filtredByVoltage',
-                                    networkMapRef.current.getSelectedLines()
+                                    networkMapRef.current.getSelectedSubstation(
+                                        filtredNominalVoltage
+                                    )
+
+                                    // getSelectedSubstation,
+                                    //     getSelectedVoltageLevel,
+                                    //     getSelectedLines,
                                 );
                             }}
                         />

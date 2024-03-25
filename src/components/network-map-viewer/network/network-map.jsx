@@ -562,7 +562,7 @@ const NetworkMap = forwardRef((props, ref) => {
     }, [mapLib?.key]);
 
     const [features, setFeatures] = useState({});
-    const [selectedSubstation, setSelectedSubstation] = useState();
+    const [selectedSubstation, setSelectedSubstation] = useState([]);
 
     useEffect(() => {
         props.onFeaturesChanged(features);
@@ -590,11 +590,16 @@ const NetworkMap = forwardRef((props, ref) => {
     }, []);
 
     const getPolygonFeatures = () => {
-        console.log('debug', 'getPolygonFeatures', features);
         return features;
     };
-    const getSelectedSubstation = () => {
-        return selectedSubstation ?? [];
+    const getSelectedSubstation = (filteredNominalVoltages) => {
+        return (
+            selectedSubstation.filter((substation) => {
+                return substation.voltageLevels.some((vl) => {
+                    return filteredNominalVoltages.includes(vl.nominalVoltage);
+                });
+            }) ?? []
+        );
     };
 
     const computeSelectedSubstation = () => {
@@ -606,12 +611,12 @@ const NetworkMap = forwardRef((props, ref) => {
         setSelectedSubstation(substations);
     };
 
-    const getSelectedVoltageLevel = () => {
+    const getSelectedVoltageLevel = (filteredNominalVoltages) => {
         const selectedVL = getVoltageLevelFromSubstation(
-            getSelectedSubstation()
+            getSelectedSubstation(filteredNominalVoltages)
         );
         return selectedVL.filter((vl) => {
-            return props.filtredNominalVoltages.includes(vl.nominalVoltage);
+            return filteredNominalVoltages.includes(vl.nominalVoltage);
         });
     };
 
@@ -644,7 +649,7 @@ const NetworkMap = forwardRef((props, ref) => {
 
         return selectedLines;
     }
-    const getSelectedLines = () => {
+    const getSelectedLines = (filteredNominalVoltages) => {
         console.log('debug', 'layer', getLayerById(layers, LINE_LAYER_PREFIX));
         //check if polygon is defined correctly
         const firstPolygonFeatures = Object.values(features)[0];
@@ -660,16 +665,22 @@ const NetworkMap = forwardRef((props, ref) => {
             props.geoData,
             polygonCoordinates
         );
-        return filterLinesByNominalVoltages(selectedLines);
+        return filterLinesByNominalVoltages(
+            selectedLines,
+            filteredNominalVoltages
+        );
     };
 
-    const filterLinesByNominalVoltages = (equipements) => {
+    const filterLinesByNominalVoltages = (
+        equipements,
+        filteredNominalVoltages
+    ) => {
         return equipements.filter((equipement) => {
-            const isVL1 = props.filtredNominalVoltages.includes(
+            const isVL1 = filteredNominalVoltages.includes(
                 props.mapEquipments.getVoltageLevel(equipement.voltageLevelId1)
                     .nominalVoltage
             );
-            const isVL2 = props.filtredNominalVoltages.includes(
+            const isVL2 = filteredNominalVoltages.includes(
                 props.mapEquipments.getVoltageLevel(equipement.voltageLevelId2)
                     .nominalVoltage
             );
