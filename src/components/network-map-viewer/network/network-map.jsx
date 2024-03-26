@@ -119,7 +119,9 @@ const NetworkMap = (props) => {
 
     const readyToDisplayLines =
         readyToDisplay &&
-        (props.mapEquipments?.lines || props.mapEquipments?.hvdcLines) &&
+        (props.mapEquipments?.lines ||
+            props.mapEquipments?.hvdcLines ||
+            props.mapEquipments?.tieLines) &&
         props.mapEquipments.voltageLevels &&
         props.geoData.substationPositionsById.size > 0;
 
@@ -129,12 +131,20 @@ const NetworkMap = (props) => {
                 ...line,
                 equipmentType: EQUIPMENT_TYPES.LINE,
             })) ?? []),
+            ...(props.mapEquipments?.tieLines.map((tieLine) => ({
+                ...tieLine,
+                equipmentType: EQUIPMENT_TYPES.TIE_LINE,
+            })) ?? []),
             ...(props.mapEquipments?.hvdcLines.map((hvdcLine) => ({
                 ...hvdcLine,
                 equipmentType: EQUIPMENT_TYPES.HVDC_LINE,
             })) ?? []),
         ];
-    }, [props.mapEquipments?.hvdcLines, props.mapEquipments?.lines]);
+    }, [
+        props.mapEquipments?.hvdcLines,
+        props.mapEquipments?.tieLines,
+        props.mapEquipments?.lines,
+    ]);
 
     const divRef = useRef();
 
@@ -338,22 +348,24 @@ const NetworkMap = (props) => {
         ) {
             // picked line properties are retrieved from network data and not from pickable object infos,
             // because pickable object infos might not be up to date
-            let line = network.getLine(info.object.id);
-            if (line) {
-                props.onLineMenuClick(
-                    line,
+            const line = network.getLine(info.object.id);
+            const tieLine = network.getTieLine(info.object.id);
+            const hvdcLine = network.getHvdcLine(info.object.id);
+
+            const equipment = line || tieLine || hvdcLine;
+            if (equipment) {
+                const menuClickFunction =
+                    equipment === line
+                        ? props.onLineMenuClick
+                        : equipment === tieLine
+                        ? props.onTieLineMenuClick
+                        : props.onHvdcLineMenuClick;
+
+                menuClickFunction(
+                    equipment,
                     event.originalEvent.x,
                     event.originalEvent.y
                 );
-            } else {
-                let hvdcLine = network.getHvdcLine(info.object.id);
-                if (hvdcLine) {
-                    props.onHvdcLineMenuClick(
-                        hvdcLine,
-                        event.originalEvent.x,
-                        event.originalEvent.y
-                    );
-                }
             }
         }
     }
@@ -594,6 +606,7 @@ NetworkMap.defaultProps = {
     onSubstationMenuClick: () => {},
     onVoltageLevelMenuClick: () => {},
     onLineMenuClick: () => {},
+    onTieLineMenuClick: () => {},
     onHvdcLineMenuClick: () => {},
     onManualRefreshClick: () => {},
     renderPopover: (eId) => {
@@ -639,6 +652,7 @@ NetworkMap.propTypes = {
 
     onHvdcLineMenuClick: PropTypes.func,
     onLineMenuClick: PropTypes.func,
+    onTieLineMenuClick: PropTypes.func,
     onManualRefreshClick: PropTypes.func,
     onSubstationClick: PropTypes.func,
     onSubstationClickChooseVoltageLevel: PropTypes.func,
