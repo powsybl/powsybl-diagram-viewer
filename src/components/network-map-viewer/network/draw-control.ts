@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// import { useSnackMessage } from '@gridsuite/commons-ui';
+/**
+ * Copyright (c) 2024, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
-// import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
-// import { EQUIPMENT_TYPES } from 'components/utils/equipment-types';
 import { UUID } from 'crypto';
 import { useCallback } from 'react';
 import { useControl } from 'react-map-gl';
 
 import type { ControlPosition } from 'react-map-gl';
-// import { GeoData } from './geo-data';
 
-// FIXME: to speed up the development, i skiped the type definitions
 // eslint-disable-next-line no-var
 var draw: MapboxDraw | undefined = undefined;
 
@@ -26,45 +27,6 @@ type DrawControlProps = ConstructorParameters<typeof MapboxDraw>[0] & {
     onDelete: (e: any) => void;
 };
 
-// function getVoltageLevelInPolygone(
-//     features: any,
-//     mapEquipments: any,
-//     geoData: GeoData,
-//     readyToDisplay: boolean
-// ) {
-//     // in case we want to handle multiple polygons drawing, we need to handle the features as an array
-//     const firstPolygonFeatures: any = Object.values(features)[0];
-//     const polygoneCoordinates = firstPolygonFeatures?.geometry;
-//     if (!polygoneCoordinates || polygoneCoordinates.coordinates < 3) {
-//         return null;
-//     }
-//     //get the list of substation
-//     const substationsList = readyToDisplay ? mapEquipments?.substations : [];
-
-//     const positions = substationsList // we need a list of substation and their positions
-//         .map((substation: any) => {
-//             return {
-//                 substation: substation,
-//                 pos: geoData.getSubstationPosition(substation.id),
-//             };
-//         });
-//     if (!positions) {
-//         return null;
-//     }
-
-//     const substationsInsidePolygone = positions.filter((substation: any) => {
-//         return booleanPointInPolygon(substation.pos, polygoneCoordinates);
-//     });
-
-//     const voltageLevels = substationsInsidePolygone
-//         .map((substation: any) => {
-//             return substation.substation.voltageLevels;
-//         })
-//         .flat();
-
-//     return voltageLevels;
-// }
-
 export default function DrawControl(props: DrawControlProps | any) {
     const onModeChange = useCallback((e: any) => {
         if (e.mode === 'draw_polygon') {
@@ -75,18 +37,6 @@ export default function DrawControl(props: DrawControlProps | any) {
             props.onDrawModeChanged(false);
         }
     }, []);
-
-    // useEffect(() => {
-    //     const voltageLevels = getVoltageLevelInPolygone(
-    //         features,
-    //         props.mapEquipments,
-    //         props.geoData,
-    //         props.readyToDisplay
-    //     );
-    //     if (!voltageLevels) {
-    //         return;
-    //     }
-    // }, [features]);
 
     useControl<MapboxDraw>(
         //onCreate

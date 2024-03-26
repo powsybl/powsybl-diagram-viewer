@@ -33,7 +33,6 @@ import { MapEquipments } from './map-equipments';
 import { SubstationLayer } from './substation-layer';
 
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
-// import { getBoundingRectangle } from './mapUtils.ts';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import maplibregl from 'maplibre-gl';
@@ -107,7 +106,6 @@ const NetworkMap = forwardRef((props, ref) => {
     }, [theme]);
     const [cursorType, setCursorType] = useState('grab');
     const [isDragging, setDragging] = useState(false);
-    // const map = useMap();
     //NOTE these constants are moved to the component's parameters list
     //const currentNode = useSelector((state) => state.currentTreeNode);
     const centerOnSubstation = props.centerOnSubstation;
