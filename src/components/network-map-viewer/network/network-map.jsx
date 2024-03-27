@@ -27,7 +27,7 @@ import { Map, NavigationControl, useControl } from 'react-map-gl'; // useMap
 import { getNominalVoltageColor } from '../../../utils/colors';
 import { useNameOrId } from '../utils/equipmentInfosHandler';
 import { GeoData } from './geo-data';
-import DrawControl from './draw-control.ts';
+import DrawControl, { getMapDrawer } from './draw-control.ts';
 import { LineFlowColorMode, LineFlowMode, LineLayer } from './line-layer';
 import { MapEquipments } from './map-equipments';
 import { SubstationLayer } from './substation-layer';
@@ -617,7 +617,7 @@ const NetworkMap = forwardRef((props, ref) => {
         getSelectedSubstation,
         getSelectedVoltageLevel,
         getSelectedLines,
-        filterLinesByNominalVoltages,
+        getMapDrawer,
     }));
 
     const onDelete = useCallback((e) => {

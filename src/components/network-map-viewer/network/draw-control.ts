@@ -13,7 +13,12 @@ import { useControl } from 'react-map-gl';
 import type { ControlPosition } from 'react-map-gl';
 
 // eslint-disable-next-line no-var
-var draw: MapboxDraw | undefined = undefined;
+var MapDrawerController: MapboxDraw | undefined = undefined;
+
+export function getMapDrawer() {
+    // Add your custom logic here
+    return MapDrawerController;
+}
 
 //source: https://github.com/visgl/react-map-gl/blob/master/examples/draw-polygon/src/
 type DrawControlProps = ConstructorParameters<typeof MapboxDraw>[0] & {
@@ -41,8 +46,8 @@ export default function DrawControl(props: DrawControlProps | any) {
     useControl<MapboxDraw>(
         //onCreate
         () => {
-            draw = new MapboxDraw({ ...props });
-            return draw;
+            MapDrawerController = new MapboxDraw({ ...props });
+            return MapDrawerController;
         },
         //on add
         ({ map }) => {
