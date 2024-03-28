@@ -16,7 +16,6 @@ import type { ControlPosition } from 'react-map-gl';
 var MapDrawerController: MapboxDraw | undefined = undefined;
 
 export function getMapDrawer() {
-    // Add your custom logic here
     return MapDrawerController;
 }
 

@@ -24,8 +24,7 @@
         "build": "vite build",
         "test": "jest",
         "start": "vite demo/ --config vite.config.ts --open",
-        "lint": "eslint . --ext js,mjs,jsx,ts,mts,tsx --max-warnings 0",
-        "clear-cache": "rm -rf node_modules/.vite"
+        "lint": "eslint . --ext js,mjs,jsx,ts,mts,tsx --max-warnings 0"
     },
     "dependencies": {
         "@mapbox/mapbox-gl-draw": "^1.4.3",
