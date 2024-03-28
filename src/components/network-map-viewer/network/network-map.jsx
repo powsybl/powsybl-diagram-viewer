@@ -7,6 +7,8 @@
 
 import PropTypes from 'prop-types';
 import React, {
+    forwardRef,
+    useCallback,
     useEffect,
     useImperativeHandle,
     useMemo,
@@ -21,18 +23,21 @@ import { MapboxOverlay } from '@deck.gl/mapbox';
 import { Replay } from '@mui/icons-material';
 import { Button, useTheme } from '@mui/material';
 import { FormattedMessage } from 'react-intl';
-import { Map, NavigationControl, useControl } from 'react-map-gl';
+import { Map, NavigationControl, useControl } from 'react-map-gl'; // useMap
 import { getNominalVoltageColor } from '../../../utils/colors';
 import { useNameOrId } from '../utils/equipmentInfosHandler';
 import { GeoData } from './geo-data';
+import DrawControl, { getMapDrawer } from './draw-control.ts';
 import { LineFlowColorMode, LineFlowMode, LineLayer } from './line-layer';
 import { MapEquipments } from './map-equipments';
 import { SubstationLayer } from './substation-layer';
 
+import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import { EQUIPMENT_TYPES } from '../utils/equipment-types.js';
 
 // MouseEvent.button https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
@@ -84,7 +89,7 @@ const INITIAL_CENTERED = {
     centered: false,
 };
 
-const NetworkMap = (props) => {
+const NetworkMap = forwardRef((props, ref) => {
     const [labelsVisible, setLabelsVisible] = useState(false);
     const [showLineFlow, setShowLineFlow] = useState(true);
     const [showTooltip, setShowTooltip] = useState(true);
@@ -523,6 +528,120 @@ const NetworkMap = (props) => {
         setCentered(INITIAL_CENTERED);
     }, [mapLib?.key]);
 
+    const [features, setFeatures] = useState({});
+
+    useEffect(() => {
+        props.onFeaturesChanged(features);
+    }, [features]);
+
+    const onUpdate = useCallback((e) => {
+        setFeatures((currFeatures) => {
+            const newFeatures = { ...currFeatures };
+            for (const f of e.features) {
+                newFeatures[f.id] = f;
+            }
+            return newFeatures;
+        });
+    }, []);
+
+    const getPolygonFeatures = () => {
+        return features;
+    };
+    const getSelectedSubstation = () => {
+        const substations = getSubstationsInPolygone(
+            features,
+            props.mapEquipments,
+            props.geoData
+        );
+        return (
+            substations.filter((substation) => {
+                return substation.voltageLevels.some((vl) => {
+                    return props.filteredNominalVoltages.includes(vl.nominalV);
+                });
+            }) ?? []
+        );
+    };
+
+    const getSelectedVoltageLevel = () => {
+        const selectedVL = getVoltageLevelFromSubstation(
+            getSelectedSubstation()
+        );
+        return selectedVL.filter((vl) => {
+            return props.filteredNominalVoltages.includes(vl.nominalV);
+        });
+    };
+
+    function getSelectedLinesInPolygon(
+        network,
+        lines,
+        geoData,
+        polygonCoordinates
+    ) {
+        return lines.filter((line) => {
+            try {
+                const linePos = geoData.getLinePositions(network, line);
+                if (!linePos) {
+                    return false;
+                }
+
+                return (
+                    booleanPointInPolygon(linePos[0], polygonCoordinates) &&
+                    booleanPointInPolygon(linePos[1], polygonCoordinates)
+                );
+            } catch (error) {
+                return false;
+            }
+        });
+    }
+    const getSelectedLines = () => {
+        //check if polygon is defined correctly
+        const firstPolygonFeatures = Object.values(features)[0];
+        const polygonCoordinates = firstPolygonFeatures?.geometry;
+        if (!polygonCoordinates || polygonCoordinates.coordinates < 3) {
+            return [];
+        }
+        //for each line, check if it is in the polygon
+        const selectedLines = getSelectedLinesInPolygon(
+            props.mapEquipments,
+            mapEquipmentsLines,
+            props.geoData,
+            polygonCoordinates
+        );
+        return filterLinesByNominalVoltages(selectedLines);
+    };
+
+    const filterLinesByNominalVoltages = (equipements) => {
+        return equipements.filter((equipement) => {
+            const isVL1 = props.filteredNominalVoltages.includes(
+                props.mapEquipments.getVoltageLevel(equipement.voltageLevelId1)
+                    .nominalV
+            );
+            const isVL2 = props.filteredNominalVoltages.includes(
+                props.mapEquipments.getVoltageLevel(equipement.voltageLevelId2)
+                    .nominalV
+            );
+            return isVL1 || isVL2;
+        });
+    };
+
+    useImperativeHandle(ref, () => ({
+        getPolygonFeatures,
+        getSelectedSubstation,
+        getSelectedVoltageLevel,
+        getSelectedLines,
+        getMapDrawer,
+    }));
+
+    const onDelete = useCallback((e) => {
+        setFeatures((currFeatures) => {
+            const newFeatures = { ...currFeatures };
+            for (const f of e.features) {
+                delete newFeatures[f.id];
+            }
+            return newFeatures;
+        });
+    }, []);
+
     return (
         mapLib && (
             <Map
@@ -569,10 +688,30 @@ const NetworkMap = (props) => {
                 {showTooltip && renderTooltip()}
                 {/* visualizePitch true makes the compass reset the pitch when clicked in addition to visualizing it */}
                 <NavigationControl visualizePitch={true} />
+                <DrawControl
+                    position="bottom-left"
+                    displayControlsDefault={false}
+                    controls={{
+                        polygon: true,
+                        trash: true,
+                    }}
+                    //
+                    // defaultMode="simple_select | draw_polygon | ...
+                    defaultMode="simple_select"
+                    readyToDisplay={readyToDisplay}
+                    geoData={props.geoData}
+                    mapEquipments={props.mapEquipments}
+                    onDrawModeChanged={(polygone_draw) => {
+                        props.onDrawModeChanged(polygone_draw);
+                    }}
+                    onUpdate={onUpdate}
+                    onDelete={onDelete}
+                    // styles: pour changer le style du polygone https://github.com/mapbox/mapbox-gl-draw/blob/main/docs/API.md#styling-draw
+                />
             </Map>
         )
     );
-};
+});
 
 NetworkMap.defaultProps = {
     areFlowsValid: true,
@@ -612,6 +751,8 @@ NetworkMap.defaultProps = {
     renderPopover: (eId) => {
         return eId;
     },
+    onDrawModeChanged: () => {},
+    onFeaturesChanged: () => {},
 };
 
 NetworkMap.propTypes = {
@@ -658,6 +799,40 @@ NetworkMap.propTypes = {
     onSubstationClickChooseVoltageLevel: PropTypes.func,
     onSubstationMenuClick: PropTypes.func,
     onVoltageLevelMenuClick: PropTypes.func,
+    onDrawModeChanged: PropTypes.func,
+    onFeaturesChanged: PropTypes.func,
 };
 
 export default React.memo(NetworkMap);
+
+function getSubstationsInPolygone(features, mapEquipments, geoData) {
+    const firstPolygonFeatures = Object.values(features)[0];
+    const polygonCoordinates = firstPolygonFeatures?.geometry;
+    if (!polygonCoordinates || polygonCoordinates.coordinates < 3) {
+        return [];
+    }
+    //get the list of substation
+    const substationsList = mapEquipments?.substations ?? [];
+
+    const filtredByPosistions = substationsList // we need a list of substation and their positions
+        .filter((substation) => {
+            const pos = geoData.getSubstationPosition(substation.id);
+            return booleanPointInPolygon(pos, polygonCoordinates);
+        });
+    if (!filtredByPosistions) {
+        return [];
+    }
+
+    return filtredByPosistions;
+}
+
+function getVoltageLevelFromSubstation(substations) {
+    if (!substations) {
+        return [];
+    }
+    return substations
+        .map((substation) => {
+            return substation.voltageLevels;
+        })
+        .flat();
+}
