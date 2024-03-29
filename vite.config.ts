@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2024, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import eslint from 'vite-plugin-eslint';
@@ -5,11 +12,12 @@ import dts from 'vite-plugin-dts';
 import react from '@vitejs/plugin-react';
 import { externalizeDeps } from 'vite-plugin-externalize-deps';
 
-export default defineConfig({
+export default defineConfig((config) => ({
     plugins: [
         react(),
         eslint({
-            failOnWarning: true,
+            failOnWarning: config.mode !== 'development',
+            lintOnStart: true,
         }),
         dts({
             include: ['src'],
@@ -69,4 +77,4 @@ export default defineConfig({
             },
         },
     },
-});
+}));
