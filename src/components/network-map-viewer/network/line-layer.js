@@ -133,8 +133,8 @@ function getLineIcon(lineStatus) {
             lineStatus === 'PLANNED_OUTAGE'
                 ? PadlockIcon
                 : lineStatus === 'FORCED_OUTAGE'
-                  ? BoltIcon
-                  : undefined,
+                ? BoltIcon
+                : undefined,
         height: 24,
         width: 24,
         mask: true,
