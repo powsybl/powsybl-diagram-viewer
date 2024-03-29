@@ -24,7 +24,8 @@
         "build": "vite build",
         "test": "jest",
         "start": "vite demo/ --config vite.config.ts --open",
-        "lint": "eslint . --ext js,mjs,jsx,ts,mts,tsx --max-warnings 0"
+        "lint": "eslint . --ext js,mjs,jsx,ts,mts,tsx --max-warnings 0",
+        "licenses-check": "license-checker --summary --excludePrivatePackages --production --onlyAllow \"$( jq -r .onlyAllow[] license-checker-config.json | tr '\n' ';')\" --excludePackages \"$( jq -r .excludePackages[] license-checker-config.json | tr '\n' ';')\"",
     },
     "dependencies": {
         "@svgdotjs/svg.js": "^3.2.0",
