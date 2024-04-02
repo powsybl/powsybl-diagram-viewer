@@ -40,10 +40,7 @@ export function getPosition(element: SVGGraphicsElement | null): Point {
 
 // get the middle position between two points
 export function getMidPosition(point1: Point, point2: Point): Point {
-    return {
-        x: 0.5 * (point1.x + point2.x),
-        y: 0.5 * (point1.y + point2.y),
-    };
+    return new Point(0.5 * (point1.x + point2.x), 0.5 * (point1.y + point2.y));
 }
 
 // get the distance between two points
@@ -97,10 +94,10 @@ export function getEdgeFork(
     edgeForkLength: number,
     angleFork: number
 ) {
-    return {
-        x: point.x + edgeForkLength * Math.cos(angleFork),
-        y: point.y + edgeForkLength * Math.sin(angleFork),
-    };
+    return new Point(
+        point.x + edgeForkLength * Math.cos(angleFork),
+        point.y + edgeForkLength * Math.sin(angleFork)
+    );
 }
 
 // check if it is a transformer edge, it uses the edge children

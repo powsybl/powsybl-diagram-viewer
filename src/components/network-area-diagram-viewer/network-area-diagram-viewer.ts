@@ -21,12 +21,13 @@ export class NetworkAreaDiagramViewer {
     originalWidth: number;
     originalHeight: number;
     svgDraw: Svg | undefined;
-    ratio: number;
+    ratio = 1;
     selectedElement: SVGGraphicsElement | null = null;
     transform: SVGTransform | undefined;
-    ctm: DOMMatrix | null = null;
+    ctm: DOMMatrix | null | undefined = null;
     initialPosition: Point = new Point(0, 0);
     svgParameters: SvgParameters;
+    //node: HTMLElement | null = null;
 
     constructor(
         container: HTMLElement,
@@ -43,6 +44,10 @@ export class NetworkAreaDiagramViewer {
         this.originalWidth = 0;
         this.originalHeight = 0;
         this.init(minWidth, minHeight, maxWidth, maxHeight);
+        // get the SVG parameters
+        // so far, they are hardcoded in the class
+        // the idea is to read them from the metadata included in the SVG
+        this.svgParameters = new SvgParameters();
     }
 
     public setWidth(width: number): void {
@@ -178,17 +183,6 @@ export class NetworkAreaDiagramViewer {
         this.svgDraw.on('mouseleave', (e: Event) => {
             this.endDrag(e);
         });
-        this.svgDraw.on('panStart', function () {
-            this.node.style.cursor = 'move';
-        });
-        this.svgDraw.on('panEnd', function () {
-            this.node.style.cursor = 'default';
-        });
-
-        // get the SVG parameters
-        // so far, they are hardcoded in the class
-        // the idea is to read them from the metadata included in the SVG
-        this.svgParameters = new SvgParameters();
     }
 
     public getDimensionsFromSvg(): DIMENSIONS | null {
@@ -208,7 +202,7 @@ export class NetworkAreaDiagramViewer {
     }
 
     private enablePanzoom() {
-        this.svgDraw.panZoom({
+        this.svgDraw?.panZoom({
             panning: true,
             zoomMin: 0.5 / this.ratio,
             zoomMax: 30 * this.ratio,
@@ -218,7 +212,7 @@ export class NetworkAreaDiagramViewer {
     }
 
     private disablePanzoom() {
-        this.svgDraw.panZoom({
+        this.svgDraw?.panZoom({
             panning: false,
         });
     }
@@ -231,7 +225,7 @@ export class NetworkAreaDiagramViewer {
             return;
         }
         this.disablePanzoom(); // to avoid panning the whole SVG when moving a node
-        this.ctm = this.svgDraw.node.getScreenCTM(); // used to compute mouse movement
+        this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute mouse movement
         this.selectedElement = draggableElem as SVGGraphicsElement; // element to be moved
         this.selectedElement.style.cursor = 'grabbing';
         this.initialPosition = DiagramUtils.getPosition(this.selectedElement); // used for the offset
