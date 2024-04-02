@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import NadSvgExample from './data/nad-example.svg';
+import NadSvgExample from './data/nad-eurostag-tutorial-example1.svg';
 import SldSvgExample from './data/sld-example.svg';
 import SldSvgExampleMeta from './data/sld-example-meta.json';
 import SldSvgSubExample from './data/sld-sub-example.svg';
