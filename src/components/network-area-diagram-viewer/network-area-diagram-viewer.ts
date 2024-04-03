@@ -183,6 +183,16 @@ export class NetworkAreaDiagramViewer {
         this.svgDraw.on('mouseleave', (e: Event) => {
             this.endDrag(e);
         });
+        this.svgDraw.on('panStart', function () {
+            if (drawnSvg.parentElement != undefined) {
+                drawnSvg.parentElement.style.cursor = 'move';
+            }
+        });
+        this.svgDraw.on('panEnd', function () {
+            if (drawnSvg.parentElement != undefined) {
+                drawnSvg.parentElement.style.cursor = 'default';
+            }
+        });
     }
 
     public getDimensionsFromSvg(): DIMENSIONS | null {
