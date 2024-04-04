@@ -50,7 +50,9 @@ export const addSldToDemo = () => {
                 null, //callback on the next voltage arrows
                 null, //callback on the breakers
                 null, //callback on the feeders
-                null //arrows color
+                null, //callback on the buses
+                null, //arrows color
+                null //hovers on equipments callback
             );
 
             document
@@ -74,7 +76,9 @@ export const addSldToDemo = () => {
                 handleNextVL, //callback on the next voltage arrows
                 handleSwitch, //callback on the breakers
                 handleFeeder, //callback on the feeders
-                'lightblue' //arrows color
+                handleBus, //callback on the buses
+                'lightblue', //arrows color
+                handleTogglePopover //hovers on equipments callback
             );
 
             document
@@ -98,7 +102,9 @@ export const addSldToDemo = () => {
                 handleNextVL, //callback on the next voltage arrows
                 handleSwitch, //callback on the breakers
                 handleFeeder, //callback on the feeders
-                'lightblue' //arrows color
+                handleBus, //callback on the buses
+                'lightblue', //arrows color
+                handleTogglePopover //hovers on equipments callback
             );
 
             document
@@ -137,4 +143,26 @@ const handleFeeder = (id, feederType, svgId, x, y) => {
         ', y: ' +
         y;
     console.log(msg);
+};
+
+const handleBus = (id, svgId, x, y) => {
+    const msg =
+        'Clicked on bus: ' + id + ', svgId: ' + svgId + 'x: ' + x + ', y: ' + y;
+    console.log(msg);
+};
+
+const handleTogglePopover = (
+    shouldDisplay,
+    anchorEl,
+    equipmentId,
+    equipmentType
+) => {
+    if (shouldDisplay) {
+        const msg =
+            'Hovers on equipment: ' +
+            equipmentId +
+            ', equipmentType: ' +
+            equipmentType;
+        console.log(msg);
+    }
 };
