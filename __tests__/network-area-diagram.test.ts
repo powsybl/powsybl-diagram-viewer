@@ -1,4 +1,11 @@
-import { NetworkAreaDiagramViewer } from '../src/network-area-diagram-viewer';
+/**
+ * Copyright (c) 2024, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+import { NetworkAreaDiagramViewer } from '../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
 
 describe('Test network-area-diagram-viewer.ts', () => {
     // SVG not loaded properly in DOM with Jest. Has to be enrich...
