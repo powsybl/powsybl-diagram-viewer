@@ -28,8 +28,11 @@
         "licenses-check": "license-checker --summary --excludePrivatePackages --production --onlyAllow \"$( jq -r .onlyAllow[] license-checker-config.json | tr '\n' ';')\" --excludePackages \"$( jq -r .excludePackages[] license-checker-config.json | tr '\n' ';')\""
     },
     "dependencies": {
+        "@mapbox/mapbox-gl-draw": "^1.4.3",
         "@svgdotjs/svg.js": "^3.2.0",
         "@svgdotjs/svg.panzoom.js": "^2.1.2",
+        "@turf/boolean-point-in-polygon": "^6.5.0",
+        "@types/mapbox__mapbox-gl-draw": "^1.4.6",
         "cheap-ruler": "^3.0.2",
         "deck.gl": "^8.9.35",
         "geolib": "^3.3.4",
