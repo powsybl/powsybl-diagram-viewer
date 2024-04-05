@@ -156,20 +156,6 @@ export class NetworkAreaDiagramViewer {
         drawnSvg.style.overflow = 'visible';
         this.svgDraw = draw;
 
-        // add pan and zoom to the SVG
-        // we check if there is an "initial zoom" by checking ratio of width and height of the nad compared with viewBox sizes
-        const widthRatio = dimensions.viewbox.width / this.getWidth();
-        const heightRatio = dimensions.viewbox.height / this.getHeight();
-        this.ratio = Math.max(widthRatio, heightRatio);
-        this.enablePanzoom();
-        // PowSyBl NAD introduced server side calculated SVG viewbox. This viewBox attribute can be removed as it is copied in the panzoom svg tag.
-        const firstChild: HTMLElement = <HTMLElement>(
-            this.svgDraw.node.firstChild
-        );
-        firstChild.removeAttribute('viewBox');
-        firstChild.removeAttribute('width');
-        firstChild.removeAttribute('height');
-
         // add events
         this.svgDraw.on('mousedown', (e: Event) => {
             this.startDrag(e);
@@ -193,6 +179,20 @@ export class NetworkAreaDiagramViewer {
                 drawnSvg.parentElement.style.cursor = 'default';
             }
         });
+
+        // add pan and zoom to the SVG
+        // we check if there is an "initial zoom" by checking ratio of width and height of the nad compared with viewBox sizes
+        const widthRatio = dimensions.viewbox.width / this.getWidth();
+        const heightRatio = dimensions.viewbox.height / this.getHeight();
+        this.ratio = Math.max(widthRatio, heightRatio);
+        this.enablePanzoom();
+        // PowSyBl NAD introduced server side calculated SVG viewbox. This viewBox attribute can be removed as it is copied in the panzoom svg tag.
+        const firstChild: HTMLElement = <HTMLElement>(
+            this.svgDraw.node.firstChild
+        );
+        firstChild.removeAttribute('viewBox');
+        firstChild.removeAttribute('width');
+        firstChild.removeAttribute('height');
     }
 
     public getDimensionsFromSvg(): DIMENSIONS | null {
