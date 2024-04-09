@@ -815,8 +815,13 @@ function getSelectedLinesInPolygon(
             if (!linePos) {
                 return false;
             }
-
-            return linePos.some((pos) =>
+            if (linePos.length < 2) {
+                return false;
+            }
+            //TODO : in the future, we could check if the line is fully in the polygon ( instead of just one point)
+            // we need to have a boolean that checks if detailed line is displayed
+            const linesExtremity = [linePos[0], linePos[linePos.length - 1]];
+            return linesExtremity.some((pos) =>
                 booleanPointInPolygon(pos, polygonCoordinates)
             ); // at least one point in polygon then OK
         } catch (error) {
