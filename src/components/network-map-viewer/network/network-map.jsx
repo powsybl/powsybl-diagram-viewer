@@ -821,19 +821,13 @@ function getSelectedLinesInPolygon(
             if (linePos.length < 2) {
                 return false;
             }
-            if (lineFullPath) {
-                return linePos.some((pos) =>
-                    booleanPointInPolygon(pos, polygonCoordinates)
-                );
-            } else {
-                const linesExtremity = [
-                    linePos[0],
-                    linePos[linePos.length - 1],
-                ];
-                return linesExtremity.some((pos) =>
-                    booleanPointInPolygon(pos, polygonCoordinates)
-                );
-            }
+            const displayedPath = lineFullPath
+                ? linePos
+                : [linePos[0], linePos[linePos.length - 1]];
+
+            return displayedPath.some((pos) =>
+                booleanPointInPolygon(pos, polygonCoordinates)
+            );
         } catch (error) {
             console.error(error);
             return false;
