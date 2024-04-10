@@ -581,7 +581,7 @@ const NetworkMap = forwardRef((props, ref) => {
         mapEquipmentsLines,
         props.geoData,
         props.filteredNominalVoltages,
-        props.fullPath,
+        lineFullPath,
     ]);
 
     const getSelectedSubstations = useCallback(() => {
@@ -821,13 +821,9 @@ function getSelectedLinesInPolygon(
             if (linePos.length < 2) {
                 return false;
             }
-            console.log('debug', 'lineFullPath', lineFullPath);
-            console.log('debug', 'linePos', linePos);
             const displayedPath = lineFullPath
                 ? linePos
                 : [linePos[0], linePos[linePos.length - 1]];
-            console.log('debug', 'displayedPath', displayedPath);
-
             return displayedPath.some((pos) =>
                 booleanPointInPolygon(pos, polygonCoordinates)
             );
