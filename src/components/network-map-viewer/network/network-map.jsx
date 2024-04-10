@@ -558,7 +558,8 @@ const NetworkMap = forwardRef((props, ref) => {
             props.mapEquipments,
             mapEquipmentsLines,
             props.geoData,
-            polygonCoordinates
+            polygonCoordinates,
+            props.fullPath
         );
         return selectedLines.filter((line) => {
             return props.filteredNominalVoltages.some((nv) => {
@@ -580,6 +581,7 @@ const NetworkMap = forwardRef((props, ref) => {
         mapEquipmentsLines,
         props.geoData,
         props.filteredNominalVoltages,
+        props.fullPath,
     ]);
 
     const getSelectedSubstations = useCallback(() => {
@@ -807,7 +809,8 @@ function getSelectedLinesInPolygon(
     network,
     lines,
     geoData,
-    polygonCoordinates
+    polygonCoordinates,
+    lineFullPath
 ) {
     return lines.filter((line) => {
         try {
@@ -818,12 +821,19 @@ function getSelectedLinesInPolygon(
             if (linePos.length < 2) {
                 return false;
             }
-            //TODO : in the future, we could check if the line is fully in the polygon ( instead of just one point)
-            // we need to have a boolean that checks if detailed line is displayed
-            const linesExtremity = [linePos[0], linePos[linePos.length - 1]];
-            return linesExtremity.some((pos) =>
-                booleanPointInPolygon(pos, polygonCoordinates)
-            ); // at least one point in polygon then OK
+            if (lineFullPath) {
+                return linePos.some((pos) =>
+                    booleanPointInPolygon(pos, polygonCoordinates)
+                );
+            } else {
+                const linesExtremity = [
+                    linePos[0],
+                    linePos[linePos.length - 1],
+                ];
+                return linesExtremity.some((pos) =>
+                    booleanPointInPolygon(pos, polygonCoordinates)
+                );
+            }
         } catch (error) {
             console.error(error);
             return false;
