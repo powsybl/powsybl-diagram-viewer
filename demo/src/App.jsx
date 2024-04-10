@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { NetworkMap, GeoData } from '../../src/';
 import {
     createTheme,
@@ -78,6 +78,9 @@ function App() {
         };
     }, []);
 
+    const networkMapRef = useRef();
+    const filteredNominalVoltages = [380.0, 225.0, 110.0];
+
     return (
         <div className="App">
             <header className="App-header"></header>
@@ -91,6 +94,7 @@ function App() {
                         }}
                     >
                         <NetworkMap
+                            ref={networkMapRef}
                             mapEquipments={mapEquipments}
                             geoData={geoData}
                             labelsZoomThreshold={LABELS_ZOOM_THRESHOLD}
@@ -124,6 +128,25 @@ function App() {
                             }}
                             mapLibrary={'cartonolabel'}
                             mapTheme={'dark'}
+                            filteredNominalVoltages={filteredNominalVoltages}
+                            onDrawPolygonModeActive={(active) => {
+                                console.log(
+                                    'polygon drawing mode active: ',
+                                    active ? 'active' : 'inactive'
+                                );
+                            }}
+                            onPolygonChanged={() => {
+                                console.log(
+                                    'Selected Substations: ',
+                                    networkMapRef.current.getSelectedSubstations()
+                                        .length
+                                );
+                                console.log(
+                                    'Selected Lines: ',
+                                    networkMapRef.current.getSelectedLines()
+                                        .length
+                                );
+                            }}
                         />
                     </div>
                 </ThemeProvider>
