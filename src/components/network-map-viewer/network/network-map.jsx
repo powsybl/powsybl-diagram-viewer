@@ -109,7 +109,7 @@ const NetworkMap = forwardRef((props, ref) => {
     const [isPolygonDrawingStarted, setPolygonDrawingStarted] = useState(false);
     //NOTE these constants are moved to the component's parameters list
     //const currentNode = useSelector((state) => state.currentTreeNode);
-    const { onPolygonChanged, centerOnSubstation } = props;
+    const { onPolygonChanged, centerOnSubstation, lineFullPath } = props;
 
     const { getNameOrId } = useNameOrId(props.useName);
 
@@ -559,7 +559,7 @@ const NetworkMap = forwardRef((props, ref) => {
             mapEquipmentsLines,
             props.geoData,
             polygonCoordinates,
-            props.fullPath
+            lineFullPath
         );
         return selectedLines.filter((line) => {
             return props.filteredNominalVoltages.some((nv) => {
@@ -821,9 +821,12 @@ function getSelectedLinesInPolygon(
             if (linePos.length < 2) {
                 return false;
             }
+            console.log('debug', 'lineFullPath', lineFullPath);
+            console.log('debug', 'linePos', linePos);
             const displayedPath = lineFullPath
                 ? linePos
                 : [linePos[0], linePos[linePos.length - 1]];
+            console.log('debug', 'displayedPath', displayedPath);
 
             return displayedPath.some((pos) =>
                 booleanPointInPolygon(pos, polygonCoordinates)
