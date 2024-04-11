@@ -147,7 +147,7 @@ const NetworkMap = forwardRef((props, ref) => {
             })) ?? []),
         ];
     }, [
-        // I changed this deps array to fix an issue with lines updates when switching of tab (ex : trip a line -> go to results tab -> come back to map)
+        // I changed this deps array to fix an issue with lines updates (ex : trip a line -> disable the map -> enable the map)
         // Can't really explain why because it does not trigger this useMemo more or less but it seems to fix the problem
         props.mapEquipments,
         // props.mapEquipments?.hvdcLines,
