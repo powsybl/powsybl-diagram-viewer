@@ -744,8 +744,8 @@ NetworkMap.propTypes = {
     geoData: PropTypes.instanceOf(GeoData),
     mapBoxToken: PropTypes.string,
     mapEquipments: PropTypes.instanceOf(MapEquipments),
-    mapLibrary: PropTypes.oneOf(CARTO, CARTO_NOLABEL, MAPBOX),
-    mapTheme: PropTypes.oneOf(LIGHT, DARK),
+    mapLibrary: PropTypes.oneOf([CARTO, CARTO_NOLABEL, MAPBOX]),
+    mapTheme: PropTypes.oneOf([LIGHT, DARK]),
 
     areFlowsValid: PropTypes.bool,
     arrowsZoomThreshold: PropTypes.number,
