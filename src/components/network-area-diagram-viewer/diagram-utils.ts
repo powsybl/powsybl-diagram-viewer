@@ -7,6 +7,13 @@
 
 import { Point } from '@svgdotjs/svg.js';
 
+export enum EdgeType {
+    LINE,
+    TWO_WINDINGS_TRANSFORMER,
+    PHASE_SHIFT_TRANSFORMER,
+    HVDC_LINE,
+}
+
 // transform angle degrees to radians
 export function degToRad(deg: number): number {
     return deg * (Math.PI / 180.0);
@@ -43,7 +50,7 @@ export function getMidPosition(point1: Point, point2: Point): Point {
     return new Point(0.5 * (point1.x + point2.x), 0.5 * (point1.y + point2.y));
 }
 
-// get the distance between two points
+// get a point at a distance between two points
 export function getDistance(
     point1: Point,
     point2: Point,
@@ -100,10 +107,53 @@ export function getEdgeFork(
     );
 }
 
-// check if it is a transformer edge, it uses the edge children
+// get the type of edge, it uses the edge children number
 // it would be better to have the information in the metadata
-export function isTransformerEdge(edgeNode: SVGGraphicsElement): boolean {
-    return edgeNode.childElementCount == 3;
+export function getEdgeType(edgeNode: SVGGraphicsElement): EdgeType {
+    if (edgeNode.childElementCount == 2) {
+        return EdgeType.LINE;
+    }
+    const transformerElement: SVGGraphicsElement =
+        edgeNode.lastElementChild as SVGGraphicsElement;
+    if (transformerElement.childElementCount == 1) {
+        return EdgeType.HVDC_LINE;
+    } else if (transformerElement.childElementCount == 2) {
+        return EdgeType.TWO_WINDINGS_TRANSFORMER;
+    } else {
+        return EdgeType.PHASE_SHIFT_TRANSFORMER;
+    }
+}
+
+// get the matrix used for the position of the arrow drawn in a PS transformer
+export function getTransformerArrowMatrix(
+    startPolyline: Point,
+    endPolyline: Point,
+    middle: Point,
+    transfomerCircleRadius: number
+): number[] {
+    const arrowSize = 3 * transfomerCircleRadius;
+    const rotationAngle = getAngle(startPolyline, endPolyline);
+    const cosRo = Math.cos(rotationAngle);
+    const sinRo = Math.sin(rotationAngle);
+    const cdx = arrowSize / 2;
+    const cdy = arrowSize / 2;
+    const e1 = middle.x - cdx * cosRo + cdy * sinRo;
+    const f1 = middle.y - cdx * sinRo - cdy * cosRo;
+    return [+cosRo, sinRo, -sinRo, cosRo, e1, f1];
+}
+
+// get the points of a converter station of an HVDC line edge
+export function getConverterStationPoints(
+    startPolyline1: Point,
+    endPolyline1: Point,
+    startPolyline2: Point,
+    endPolyline2: Point,
+    converterStationWidth: number
+): [Point, Point] {
+    const halfWidth = converterStationWidth / 2;
+    const point1: Point = getDistance(endPolyline1, startPolyline1, halfWidth);
+    const point2: Point = getDistance(endPolyline2, startPolyline2, halfWidth);
+    return [point1, point2];
 }
 
 // get the drabbable element, if present,

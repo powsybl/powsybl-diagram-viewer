@@ -14,6 +14,7 @@ export class SvgParameters {
     edgeForkLength = 80.0;
     arrowShift = 30.0;
     arrowLabelShift = 19.0;
+    converterStationWidth = 70;
 
     public getBusAnnulusOuterRadius(): number {
         return this.busAnnulusOuterRadius;
@@ -37,5 +38,9 @@ export class SvgParameters {
 
     public getArrowLabelShift(): number {
         return this.arrowLabelShift;
+    }
+
+    public getConverterStationWidth(): number {
+        return this.converterStationWidth;
     }
 }
