@@ -6,12 +6,12 @@
       {
         "id": "VL1_1",
         "substationId": "SUB1",
-        "nominalVoltage": 225.0
+        "nominalV": 225.0
       },
       {
         "id": "VL1_2",
         "substationId": "SUB1",
-        "nominalVoltage": 110.0
+        "nominalV": 110.0
       }
 
     ]
@@ -23,17 +23,17 @@
       {
         "id": "VL2_1",
         "substationId": "SUB2",
-        "nominalVoltage": 110.0
+        "nominalV": 110.0
       },
       {
         "id": "VL2_2",
         "substationId": "SUB2",
-        "nominalVoltage": 380.0
+        "nominalV": 380.0
       },
       {
         "id": "VL2_3",
         "substationId": "SUB2",
-        "nominalVoltage": 225.0
+        "nominalV": 225.0
       }
     ]
   }
