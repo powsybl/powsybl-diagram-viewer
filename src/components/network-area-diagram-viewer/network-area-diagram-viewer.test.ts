@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { NetworkAreaDiagramViewer } from '../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
+import { NetworkAreaDiagramViewer } from './network-area-diagram-viewer';
 
 describe('Test network-area-diagram-viewer.ts', () => {
-    // SVG not loaded properly in DOM with Jest. Has to be enrich...
+    // SVG aren't loaded properly in DOM with Jest. Has to be enriched...
     test('nad creation', () => {
         const container: HTMLDivElement = document.createElement('div');
 

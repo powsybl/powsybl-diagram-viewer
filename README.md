@@ -39,3 +39,11 @@ you need to follow the steps below:
 -   [Login on the command line to the npm registry](https://docs.npmjs.com/logging-in-to-an-npm-enterprise-registry-from-the-command-line): `npm login`
 -   [Publish the package](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages#publishing-scoped-public-packages): `npm publish`
 
+Notes :
+* Check [license-checker-config.json](license-checker-config.json) for license white list and exclusion.
+  If you need to update this list, please inform organization's owners.
+* We need to exclude some packages for now :
+    * `@mapbox/jsonlint-lines-primitives@2.0.2` is a special license
+    * `cartocolor@4.0.2` is Creative Commons but not correctly described in the package
+    * `rw@0.1.4` is BSD-3-Clause but not correctly described in the package
+    
