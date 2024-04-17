@@ -113,6 +113,13 @@ export function getEdgeType(edgeNode: SVGGraphicsElement): EdgeType {
     if (edgeNode.childElementCount == 2) {
         return EdgeType.LINE;
     }
+    if (edgeNode.childElementCount == 3) {
+        const descElement: SVGGraphicsElement =
+            edgeNode.firstElementChild as SVGGraphicsElement;
+        if (descElement.tagName == 'desc') {
+            return EdgeType.LINE;
+        }
+    }
     const transformerElement: SVGGraphicsElement =
         edgeNode.lastElementChild as SVGGraphicsElement;
     if (transformerElement.childElementCount == 1) {
