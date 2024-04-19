@@ -426,7 +426,7 @@ export class NetworkAreaDiagramViewer {
 
     private getNodeRadius(busNodeId: number): [number, number, number] {
         const busNode: SVGGraphicsElement | null = this.container.querySelector(
-            'nad\\:busNode[svgId="' + busNodeId + '"]'
+            'nad\\:busnode[svgid="' + busNodeId + '"]'
         );
         const nbNeighbours = busNode?.getAttribute('nbneighbours');
         const busIndex = busNode?.getAttribute('index');
@@ -912,7 +912,7 @@ export class NetworkAreaDiagramViewer {
             // get buses belonging to voltage level
             const busNodes: NodeListOf<SVGGraphicsElement> =
                 this.container.querySelectorAll(
-                    'nad\\:busNode[vlNode="' + node.id + '"]'
+                    'nad\\:busnode[vlnode="' + node.id + '"]'
                 );
             // if single bus voltage level -> do not redraw anything
             if (busNodes.length <= 1) {
