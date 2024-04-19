@@ -8,16 +8,22 @@
 export class SvgParameters {
     // the SVG parameters values are now hardcoded in this class
     // the idea is to read them from the metadata included in the SVG
-    busAnnulusOuterRadius = 27.5;
+    voltageLevelCircleRadius = 30.0;
+    interAnnulusSpace = 5.0;
     transfomerCircleRadius = 20;
     edgeForkAperture = 60;
     edgeForkLength = 80.0;
     arrowShift = 30.0;
     arrowLabelShift = 19.0;
-    converterStationWidth = 70;
+    converterStationWidth = 70.0;
+    nodeHollowWidth = 15.0;
 
-    public getBusAnnulusOuterRadius(): number {
-        return this.busAnnulusOuterRadius;
+    public getVoltageLevelCircleRadius(): number {
+        return this.voltageLevelCircleRadius;
+    }
+
+    public getInterAnnulusSpace(): number {
+        return this.interAnnulusSpace;
     }
 
     public getTransfomerCircleRadius(): number {
@@ -42,5 +48,9 @@ export class SvgParameters {
 
     public getConverterStationWidth(): number {
         return this.converterStationWidth;
+    }
+
+    public getNodeHollowWidth(): number {
+        return this.nodeHollowWidth;
     }
 }
