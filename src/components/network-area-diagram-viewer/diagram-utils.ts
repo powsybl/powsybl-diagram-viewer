@@ -252,7 +252,7 @@ export function getNodeRadius(
         Math.min(Math.max(nbNeighbours + 1, 1), 2) * voltageLevelCircleRadius;
     const unitaryRadius = vlCircleRadius / (nbNeighbours + 1);
     return [
-        busIndex * unitaryRadius + interAnnulusSpace / 2,
+        busIndex == 0 ? 0 : busIndex * unitaryRadius + interAnnulusSpace / 2,
         (busIndex + 1) * unitaryRadius - interAnnulusSpace / 2,
         vlCircleRadius,
     ];
@@ -403,4 +403,15 @@ export function getSortedBusNodes(
         }
     });
     return sortedBusNodes;
+}
+
+export function getBoundarySemicircle(
+    edgeStartAngle: number,
+    busOuterRadius: number
+): string {
+    const startAngle = -Math.PI / 2 + edgeStartAngle;
+    return (
+        'M' +
+        getCirclePath(busOuterRadius, startAngle, startAngle + Math.PI, true)
+    );
 }
