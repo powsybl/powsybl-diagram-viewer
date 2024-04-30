@@ -132,15 +132,15 @@
                 <nad:node svgId="12" equipmentId="VL6" x="247.51" y="268.96"/>
             </nad:nodes>
             <nad:edges>
-                <nad:edge svgId="14" equipmentId="L5-4-0" node1="10" node2="0" busNode1="11" busNode2="2"/>
-                <nad:edge svgId="15" equipmentId="L6-4-0" node1="12" node2="0" busNode1="13" busNode2="2"/>
-                <nad:edge svgId="16" equipmentId="T4-1-0" node1="0" node2="0" busNode1="2" busNode2="1"/>
-                <nad:edge svgId="17" equipmentId="L7-8-0" node1="3" node2="3" busNode1="5" busNode2="6"/>
-                <nad:edge svgId="18" equipmentId="L7-5-0" node1="3" node2="10" busNode1="5" busNode2="11"/>
-                <nad:edge svgId="19" equipmentId="L9-8-0" node1="7" node2="3" busNode1="9" busNode2="6"/>
-                <nad:edge svgId="20" equipmentId="T7-2-0" node1="3" node2="3" busNode1="5" busNode2="4"/>
-                <nad:edge svgId="21" equipmentId="L9-6-0" node1="7" node2="12" busNode1="9" busNode2="13"/>
-                <nad:edge svgId="22" equipmentId="T9-3-0" node1="7" node2="7" busNode1="9" busNode2="8"/>
+                <nad:edge svgId="14" equipmentId="L5-4-0" node1="10" node2="0" busNode1="11" busNode2="2" type="LineEdge"/>
+                <nad:edge svgId="15" equipmentId="L6-4-0" node1="12" node2="0" busNode1="13" busNode2="2" type="LineEdge"/>
+                <nad:edge svgId="16" equipmentId="T4-1-0" node1="0" node2="0" busNode1="2" busNode2="1" type="TwoWtEdge"/>
+                <nad:edge svgId="17" equipmentId="L7-8-0" node1="3" node2="3" busNode1="5" busNode2="6" type="LineEdge"/>
+                <nad:edge svgId="18" equipmentId="L7-5-0" node1="3" node2="10" busNode1="5" busNode2="11" type="LineEdge"/>
+                <nad:edge svgId="19" equipmentId="L9-8-0" node1="7" node2="3" busNode1="9" busNode2="6" type="LineEdge"/>
+                <nad:edge svgId="20" equipmentId="T7-2-0" node1="3" node2="3" busNode1="5" busNode2="4" type="TwoWtEdge"/>
+                <nad:edge svgId="21" equipmentId="L9-6-0" node1="7" node2="12" busNode1="9" busNode2="13" type="LineEdge"/>
+                <nad:edge svgId="22" equipmentId="T9-3-0" node1="7" node2="7" busNode1="9" busNode2="8" type="TwoWtEdge"/>
             </nad:edges>
         </nad:nad>
     </metadata>

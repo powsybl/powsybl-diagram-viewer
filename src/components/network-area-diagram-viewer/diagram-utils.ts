@@ -12,7 +12,20 @@ export enum EdgeType {
     TWO_WINDINGS_TRANSFORMER,
     PHASE_SHIFT_TRANSFORMER,
     HVDC_LINE,
+    DANGLING_LINE,
+    TIE_LINE,
+    THREE_WINDINGS_TRANSFORMER,
 }
+
+const EdgeTypeMapping: { [key: string]: EdgeType } = {
+    LineEdge: EdgeType.LINE,
+    TwoWtEdge: EdgeType.TWO_WINDINGS_TRANSFORMER,
+    PstEdge: EdgeType.PHASE_SHIFT_TRANSFORMER,
+    HvdcLineEdge: EdgeType.HVDC_LINE,
+    DanglingLineEdge: EdgeType.DANGLING_LINE,
+    TieLineEdge: EdgeType.TIE_LINE,
+    ThreeWtEdge: EdgeType.THREE_WINDINGS_TRANSFORMER,
+};
 
 // transform angle degrees to radians
 export function degToRad(deg: number): number {
@@ -107,28 +120,13 @@ export function getEdgeFork(
     );
 }
 
-// get the type of edge, it uses the edge children number
-// it would be better to have the information in the metadata
-export function getEdgeType(edgeNode: SVGGraphicsElement): EdgeType {
-    if (edgeNode.childElementCount == 2) {
-        return EdgeType.LINE;
+// get the type of edge
+export function getEdgeType(edge: SVGGraphicsElement): EdgeType | null {
+    const edgeType = edge.getAttribute('type');
+    if (edgeType == null) {
+        return null;
     }
-    if (edgeNode.childElementCount == 3) {
-        const descElement: SVGGraphicsElement =
-            edgeNode.firstElementChild as SVGGraphicsElement;
-        if (descElement.tagName == 'desc') {
-            return EdgeType.LINE;
-        }
-    }
-    const transformerElement: SVGGraphicsElement =
-        edgeNode.lastElementChild as SVGGraphicsElement;
-    if (transformerElement.childElementCount == 1) {
-        return EdgeType.HVDC_LINE;
-    } else if (transformerElement.childElementCount == 2) {
-        return EdgeType.TWO_WINDINGS_TRANSFORMER;
-    } else {
-        return EdgeType.PHASE_SHIFT_TRANSFORMER;
-    }
+    return EdgeTypeMapping[edgeType];
 }
 
 // get the matrix used for the position of the arrow drawn in a PS transformer
@@ -331,13 +329,14 @@ export function getFragmentedAnnulusPath(
     return path;
 }
 
-function getPolylinePoints(polylinePoints: string): Point[] | null {
+// get points of a polyline
+export function getPolylinePoints(polylinePoints: string): Point[] | null {
     const coordinates: string[] = polylinePoints.split(/,| /);
     if (coordinates.length < 4) {
         return null;
     }
     const points: Point[] = [];
-    for (let index = 0; index < 4; index = index + 2) {
+    for (let index = 0; index < coordinates.length; index = index + 2) {
         const point = new Point(+coordinates[index], +coordinates[index + 1]);
         points.push(point);
     }

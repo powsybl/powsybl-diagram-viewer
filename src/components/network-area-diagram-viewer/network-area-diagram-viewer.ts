@@ -378,7 +378,7 @@ export class NetworkAreaDiagramViewer {
         });
         // move grouped edges
         for (const edgeGroup of groupedEdges.values()) {
-            this.moveEdgeGroup(edgeGroup);
+            this.moveEdgeGroup(edgeGroup, mousePosition);
         }
         // move loop edges
         for (const edgeGroup of loopEdges.values()) {
@@ -446,9 +446,9 @@ export class NetworkAreaDiagramViewer {
         );
     }
 
-    private moveEdgeGroup(edges: SVGGraphicsElement[]) {
+    private moveEdgeGroup(edges: SVGGraphicsElement[], offset: Point) {
         if (edges.length == 1) {
-            this.moveStraightEdge(edges[0]); // 1 edge in the group -> straight line
+            this.moveStraightEdge(edges[0], offset); // 1 edge in the group -> straight line
         } else {
             const edgeNodes = this.getEdgeNodes(edges[0]);
             const point1 = DiagramUtils.getPosition(edgeNodes[0]);
@@ -463,8 +463,13 @@ export class NetworkAreaDiagramViewer {
             let i = 0;
             edges.forEach((edge) => {
                 if (2 * i + 1 == nbForks) {
-                    this.moveStraightEdge(edge); // central edge, if present -> straight line
+                    this.moveStraightEdge(edge, offset); // central edge, if present -> straight line
                 } else {
+                    // get edge type
+                    const edgeType = DiagramUtils.getEdgeType(edge);
+                    if (edgeType == null) {
+                        return;
+                    }
                     // get edge element
                     const edgeNode: SVGGraphicsElement | null =
                         this.container.querySelector(
@@ -523,7 +528,8 @@ export class NetworkAreaDiagramViewer {
                         edgeFork2,
                         edgeMiddle,
                         nodeRadius1,
-                        nodeRadius2
+                        nodeRadius2,
+                        edgeType
                     );
                 }
                 i++;
@@ -535,13 +541,22 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private moveStraightEdge(edge: SVGGraphicsElement) {
+    private moveStraightEdge(edge: SVGGraphicsElement, offset: Point) {
+        // get edge type
+        const edgeType = DiagramUtils.getEdgeType(edge);
+        if (edgeType == null) {
+            return;
+        }
         // get edge element
         const edgeNode: SVGGraphicsElement | null =
             this.container.querySelector(
                 "[id='" + edge.getAttribute('svgid') + "']"
             );
         if (!edgeNode) {
+            return;
+        }
+        if (edgeType == DiagramUtils.EdgeType.THREE_WINDINGS_TRANSFORMER) {
+            this.moveThreeWtEdge(edge, edgeNode, offset);
             return;
         }
         // compute moved edge data: polyline points
@@ -574,7 +589,8 @@ export class NetworkAreaDiagramViewer {
             null,
             edgeMiddle,
             nodeRadius1,
-            nodeRadius2
+            nodeRadius2,
+            edgeType
         );
         // redraw other voltage level node
         const otherNode: SVGGraphicsElement | null =
@@ -590,10 +606,9 @@ export class NetworkAreaDiagramViewer {
         edgeFork2: Point | null, // if null -> straight line
         edgeMiddle: Point,
         nodeRadius1: [number, number, number],
-        nodeRadius2: [number, number, number]
+        nodeRadius2: [number, number, number],
+        edgeType: DiagramUtils.EdgeType
     ) {
-        const edgeType: DiagramUtils.EdgeType =
-            DiagramUtils.getEdgeType(edgeNode);
         const isTransformerEdge =
             edgeType == DiagramUtils.EdgeType.TWO_WINDINGS_TRANSFORMER ||
             edgeType == DiagramUtils.EdgeType.PHASE_SHIFT_TRANSFORMER;
@@ -687,6 +702,25 @@ export class NetworkAreaDiagramViewer {
         polylinePoints +=
             ' ' + endPolyline.x.toFixed(2) + ',' + endPolyline.y.toFixed(2);
         polyline?.setAttribute('points', polylinePoints);
+        // move edge arrow and label
+        if (halfEdge != null) {
+            this.moveEdgeArroWAndLabel(
+                halfEdge,
+                startPolyline,
+                middlePolyline,
+                endPolyline,
+                nodeRadius
+            );
+        }
+    }
+
+    private moveEdgeArroWAndLabel(
+        edgeNode: SVGGraphicsElement,
+        startPolyline: Point,
+        middlePolyline: Point | null, // if null -> straight line
+        endPolyline: Point,
+        nodeRadius: [number, number, number]
+    ) {
         // move edge arrow
         const arrowCenter = DiagramUtils.getPointAtDistance(
             middlePolyline == null ? startPolyline : middlePolyline,
@@ -696,7 +730,7 @@ export class NetworkAreaDiagramViewer {
                       (nodeRadius[2] - nodeRadius[1])
                 : this.svgParameters.getArrowShift()
         );
-        const arrowElement = halfEdge?.lastElementChild as SVGGraphicsElement;
+        const arrowElement = edgeNode.lastElementChild as SVGGraphicsElement;
         arrowElement?.setAttribute(
             'transform',
             'translate(' +
@@ -1019,6 +1053,72 @@ export class NetworkAreaDiagramViewer {
             });
             // redraw other voltage level node
             this.redrawVoltageLevelNode(otherNode, busNodeEdges, movedEdges);
+        }
+    }
+
+    private moveThreeWtEdge(
+        edge: SVGGraphicsElement,
+        edgeNode: SVGGraphicsElement,
+        offset: Point
+    ) {
+        const twtEdge: HTMLElement = <HTMLElement>edgeNode.firstElementChild;
+        if (twtEdge != null && twtEdge.tagName == 'polyline') {
+            const pointsAttributes = twtEdge.getAttribute('points');
+            if (pointsAttributes != null) {
+                const points = DiagramUtils.getPolylinePoints(pointsAttributes);
+                if (points != null) {
+                    // compute polyline points
+                    const edgeNodes = this.getEdgeNodes(edge);
+                    const ThreeWtMoved =
+                        edgeNodes[1]?.id == this.selectedElement?.id;
+                    const busNodeId1 = edge.getAttribute('busnode1');
+                    const nodeRadius1 = this.getNodeRadius(
+                        busNodeId1 != null ? +busNodeId1 : -1
+                    );
+                    const edgeStart = DiagramUtils.getPointAtDistance(
+                        DiagramUtils.getPosition(edgeNodes[0]),
+                        DiagramUtils.getPosition(edgeNodes[1]),
+                        nodeRadius1[1]
+                    );
+                    const translation = new Point(
+                        offset.x - this.initialPosition.x,
+                        offset.y - this.initialPosition.y
+                    );
+                    const edgeEnd = ThreeWtMoved
+                        ? new Point(
+                              points[points.length - 1].x + translation.x,
+                              points[points.length - 1].y + translation.y
+                          )
+                        : points[points.length - 1];
+                    // move polyline
+                    const polylinePoints: string =
+                        edgeStart.x.toFixed(2) +
+                        ',' +
+                        edgeStart.y.toFixed(2) +
+                        ' ' +
+                        edgeEnd.x.toFixed(2) +
+                        ',' +
+                        edgeEnd.y.toFixed(2);
+                    twtEdge.setAttribute('points', polylinePoints);
+                    // move edge arrow and label
+                    this.moveEdgeArroWAndLabel(
+                        edgeNode,
+                        edgeStart,
+                        null,
+                        edgeEnd,
+                        nodeRadius1
+                    );
+                    // store edge angles, to use them for bus node redrawing
+                    this.edgeAngles.set(
+                        edgeNode.id + '.1',
+                        DiagramUtils.getAngle(edgeStart, edgeEnd)
+                    );
+                    // redraw voltage level node connected to three winding transformer
+                    if (ThreeWtMoved) {
+                        this.redrawOtherVoltageLevelNode(edgeNodes[0], [edge]);
+                    }
+                }
+            }
         }
     }
 }
