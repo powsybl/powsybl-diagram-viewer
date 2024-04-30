@@ -568,7 +568,13 @@ const NetworkMap = forwardRef((props, ref) => {
             lineFullPath
         );
         return selectedLines.filter((line) => {
-            return props.filteredNominalVoltages.some((nv) => {
+            const extremities = [
+                props.filteredNominalVoltages[0],
+                props.filteredNominalVoltages[
+                    props.filteredNominalVoltages.length - 1
+                ],
+            ];
+            return extremities.some((nv) => {
                 return (
                     nv ===
                         props.mapEquipments.getVoltageLevel(
