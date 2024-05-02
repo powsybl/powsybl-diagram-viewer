@@ -698,11 +698,6 @@ const NetworkMap = forwardRef((props, ref) => {
                     defaultMode="simple_select"
                     readyToDisplay={readyToDisplay}
                     onDrawPolygonModeActive={(polygon_draw) => {
-                        console.log(
-                            'debug',
-                            'onDrawPolygonModeActive',
-                            polygon_draw
-                        );
                         setPolygonDrawingStarted(polygon_draw);
                         props.onDrawPolygonModeActive(polygon_draw);
                     }}
