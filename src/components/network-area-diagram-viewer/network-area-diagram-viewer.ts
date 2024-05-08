@@ -489,6 +489,15 @@ export class NetworkAreaDiagramViewer {
                     if (!edgeNode) {
                         return;
                     }
+                    if (edgeNodes[0] == null || edgeNodes[1] == null) {
+                        // only 1 side of the edge is in the SVG
+                        this.translateEdge(
+                            edgeNode,
+                            offset,
+                            edgeNodes[0] == null ? 2 : 1
+                        );
+                        return;
+                    }
                     // compute moved edge data: polyline points
                     const alpha =
                         -DiagramUtils.degToRad(
@@ -582,6 +591,11 @@ export class NetworkAreaDiagramViewer {
         }
         // compute moved edge data: polyline points
         const edgeNodes = this.getEdgeNodes(edge);
+        if (edgeNodes[0] == null || edgeNodes[1] == null) {
+            // only 1 side of the edge is in the SVG
+            this.translateEdge(edgeNode, offset, edgeNodes[0] == null ? 2 : 1);
+            return;
+        }
         const busNodeId1 = edge.getAttribute('busnode1');
         const nodeRadius1 = this.getNodeRadius(
             busNodeId1 != null ? +busNodeId1 : -1
@@ -1191,6 +1205,40 @@ export class NetworkAreaDiagramViewer {
             );
             if (pathElement != null && pathElement.tagName == 'path') {
                 pathElement.setAttribute('d', path);
+            }
+        }
+    }
+
+    private translateEdge(
+        edgeNode: SVGGraphicsElement,
+        offset: Point,
+        side: number
+    ) {
+        const translation = new Point(
+            offset.x - this.initialPosition.x,
+            offset.y - this.initialPosition.y
+        );
+        const transform = DiagramUtils.getTransform(edgeNode);
+        const totalTranslation = new Point(
+            (transform?.matrix.e ?? 0) + translation.x,
+            (transform?.matrix.f ?? 0) + translation.y
+        );
+        edgeNode.setAttribute(
+            'transform',
+            'translate(' +
+                totalTranslation.x.toFixed(2) +
+                ',' +
+                totalTranslation.y.toFixed(2) +
+                ')'
+        );
+        // store edge angles, to use them for bus node redrawing
+        if (!this.edgeAngles.has(edgeNode.id + '.' + side)) {
+            if (edgeNode != null) {
+                this.storeHalfEdgeAngle(
+                    edgeNode,
+                    edgeNode.id + '.' + side,
+                    side - 1
+                );
             }
         }
     }
