@@ -44,7 +44,11 @@ import { EQUIPMENT_TYPES } from '../utils/equipment-types.js';
 const MOUSE_EVENT_BUTTON_LEFT = 0;
 const MOUSE_EVENT_BUTTON_RIGHT = 2;
 
-//create an enum for 3 events of the draw control
+/**
+ * Represents the draw event types for the network map.
+ * when a draw event is triggered, the event type is passed to the onDrawEvent callback
+ * On create, when the user create a new polygon (shape finished)
+ */
 export const DRAW_EVENT = {
     CREATE: 1,
     UPDATE: 2,
