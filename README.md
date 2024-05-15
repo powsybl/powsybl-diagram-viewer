@@ -8,9 +8,17 @@ Installation using npm:
 
 #### For developers
 
-For development purpose, you can run 'npm run watch' for hot building (rebuild after a code save). 
-Your consumer project should point on the local distribution. Edit your package.json depedencies : 
-'"powsybl-diagram-viewer": "file: path/to/powsybl-diagram-viewer",'
+For development purpose, to install this library locally from an app, you should run these commands in the library project :
+- npm install
+- npm run build
+- npm pack
+
+Then in the app project :
+- npm install {PATH_TO_LIBRARY}/powsybl-diagram-viewer-{LIBRARY_VERSION}.tgz
+
+*Warning* : with Create React App, we realised the library was not updating correctly if you try to install the library multiple times.
+To fix this, run this command from the app **after** running "npm install"
+- rm -Rf node_modules/.cache
 
 #### For integrators
 
@@ -31,3 +39,11 @@ you need to follow the steps below:
 -   [Login on the command line to the npm registry](https://docs.npmjs.com/logging-in-to-an-npm-enterprise-registry-from-the-command-line): `npm login`
 -   [Publish the package](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages#publishing-scoped-public-packages): `npm publish`
 
+Notes :
+* Check [license-checker-config.json](license-checker-config.json) for license white list and exclusion.
+  If you need to update this list, please inform organization's owners.
+* We need to exclude some packages for now :
+    * `@mapbox/jsonlint-lines-primitives@2.0.2` is a special license
+    * `cartocolor@4.0.2` is Creative Commons but not correctly described in the package
+    * `rw@0.1.4` is BSD-3-Clause but not correctly described in the package
+    

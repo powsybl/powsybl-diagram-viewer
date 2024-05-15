@@ -2,6 +2,22 @@ name: CI
 on: [push]
 
 jobs:
+    license-headers:
+        name: Check licenses headers
+        runs-on: ubuntu-latest
+
+        steps:
+          - uses: actions/setup-node@v3
+          - name: Checkout sources
+            uses: actions/checkout@v2
+            with:
+                persist-credentials: false
+
+          - name: Check License Header (Check Mode)
+            uses: apache/skywalking-eyes/header@v0.5.0
+            with:
+              config: .github/config/.licenserc.yaml
+
     build:
         runs-on: ubuntu-latest
         steps:
@@ -17,13 +33,7 @@ jobs:
             - name: Build
               run: |
                   npm install
+                  npm run licenses-check
+                  npm run lint
                   npm run test
-                  npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=0
                   npm run build
-
-            - name: Broadcast update event
-              if: github.ref == 'refs/heads/main'
-              uses: gridsuite/broadcast-event@main
-              with:
-                  token: ${{ secrets.REPO_ACCESS_TOKEN }}
-                  event-type: powsybl-diagram-viewer-updated

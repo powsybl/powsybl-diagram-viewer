@@ -13,4 +13,9 @@
 # parcel
 /.parcel-cache
 
+# demo
+/demo/node_modules
+/demo/build
+/demo/dist
+
 

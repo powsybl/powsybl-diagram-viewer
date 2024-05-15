@@ -24,6 +24,7 @@ const FEEDER_COMPONENT_TYPES = new Set([
     'LOAD',
     'BATTERY',
     'DANGLING_LINE',
+    'TIE_LINE',
     'GENERATOR',
     'VSC_CONVERTER_STATION',
     'LCC_CONVERTER_STATION',
@@ -61,9 +62,23 @@ export interface SLDMetadataNode {
     equipmentId: string;
 }
 
+export interface SLDMetadataComponentSize {
+    width: number;
+    height: number;
+}
+
+export interface SLDMetadataComponent {
+    type: string;
+    vid: string;
+    anchorPoints: unknown[];
+    size: SLDMetadataComponentSize;
+    transformations: unknown;
+    styleClass: string;
+}
+
 //models just the metadata subelements that are actually used(nodes)
 export interface SLDMetadata {
-    components: unknown[];
+    components: SLDMetadataComponent[];
     nodes: SLDMetadataNode[];
     wires: unknown[];
     lines: unknown[];
@@ -400,7 +415,7 @@ export class SingleLineDiagramViewer {
                         const feederWidth =
                             this.svgMetadata?.components.find(
                                 (comp) => comp.type === element.componentType
-                            ).size.width || 0;
+                            )?.size.width || 0;
                         this.createSvgArrow(
                             elementById,
                             element.direction,
@@ -661,7 +676,11 @@ export class SingleLineDiagramViewer {
     }
 
     private addEquipmentsPopover() {
-        const equipmentsWithPopover = ['LINE', 'TWO_WINDINGS_TRANSFORMER'];
+        const equipmentsWithPopover = [
+            'LINE',
+            'TWO_WINDINGS_TRANSFORMER',
+            'PHASE_SHIFT_TRANSFORMER',
+        ];
 
         // handling the hover on the equipments
         const svgEquipments = this.svgMetadata?.nodes.filter((node) =>
@@ -672,11 +691,15 @@ export class SingleLineDiagramViewer {
                 '#' + equipment.id
             );
             svgEquipment?.addEventListener('mouseover', (event) => {
+                const equipmentType =
+                    equipment.componentType === 'PHASE_SHIFT_TRANSFORMER'
+                        ? 'TWO_WINDINGS_TRANSFORMER'
+                        : equipment.componentType;
                 this.handleTogglePopover?.(
                     true,
                     event.currentTarget,
                     equipment.equipmentId,
-                    equipment.componentType
+                    equipmentType
                 );
             });
             svgEquipment?.addEventListener('mouseout', () => {
