@@ -27,7 +27,6 @@ export class NetworkAreaDiagramViewer {
     ctm: DOMMatrix | null | undefined = null;
     initialPosition: Point = new Point(0, 0);
     svgParameters: SvgParameters;
-    //node: HTMLElement | null = null;
 
     constructor(
         container: HTMLElement,
@@ -141,7 +140,7 @@ export class NetworkAreaDiagramViewer {
         );
 
         // set the SVG
-        const draw = SVG()
+        this.svgDraw = SVG()
             .addTo(this.container)
             .size(this.width, this.height)
             .viewbox(
@@ -151,10 +150,9 @@ export class NetworkAreaDiagramViewer {
                 dimensions.viewbox.height
             );
         const drawnSvg: HTMLElement = <HTMLElement>(
-            draw.svg(this.svgContent).node.firstElementChild
+            this.svgDraw.svg(this.svgContent).node.firstElementChild
         );
         drawnSvg.style.overflow = 'visible';
-        this.svgDraw = draw;
 
         // add events
         this.svgDraw.on('mousedown', (e: Event) => {
@@ -176,7 +174,6 @@ export class NetworkAreaDiagramViewer {
         });
         this.svgDraw.on('panEnd', function () {
             if (drawnSvg.parentElement != undefined) {
-                //drawnSvg.parentElement.style.cursor = 'default';
                 drawnSvg.parentElement.style.removeProperty('cursor');
             }
         });
@@ -255,7 +252,6 @@ export class NetworkAreaDiagramViewer {
     private endDrag(event: Event) {
         if (this.selectedElement) {
             this.updateGraph(event);
-            //this.selectedElement.style.cursor = 'grab';
             this.selectedElement.removeAttribute('style');
             this.selectedElement = null;
             this.initialPosition = new Point(0, 0);
@@ -272,43 +268,50 @@ export class NetworkAreaDiagramViewer {
     }
 
     private updateGraph(event: Event) {
-        const offset = this.getMousePosition(event as MouseEvent);
-        this.moveNode(offset);
-        this.moveNodeText(offset);
+        const mousePosition = this.getMousePosition(event as MouseEvent);
+        this.moveNode(mousePosition);
+        this.moveText(mousePosition);
         this.moveEdges();
     }
 
-    private moveNode(offset: Point) {
-        //this.transform = DiagramUtils.getTransform(this.selectedElement);
-        //this.transform?.setTranslate(offset.x, offset.y);
+    private moveNode(mousePosition: Point) {
         this.selectedElement?.setAttribute(
             'transform',
-            'translate(' + offset.x.toFixed(2) + ',' + offset.y.toFixed(2) + ')'
+            'translate(' +
+                mousePosition.x.toFixed(2) +
+                ',' +
+                mousePosition.y.toFixed(2) +
+                ')'
         );
     }
 
-    private moveNodeText(offset: Point) {
+    private moveText(mousePosition: Point) {
         const translation = new Point(
-            offset.x - this.initialPosition.x,
-            offset.y - this.initialPosition.y
+            mousePosition.x - this.initialPosition.x,
+            mousePosition.y - this.initialPosition.y
         );
         // move node text
-        this.moveTextNode(this.selectedElement?.id + '-textnode', translation);
+        this.moveSvgElement(
+            this.selectedElement?.id + '-textnode',
+            translation
+        );
         // move edge connecting node and node text
-        this.moveTextNode(this.selectedElement?.id + '-textedge', translation);
+        this.moveSvgElement(
+            this.selectedElement?.id + '-textedge',
+            translation
+        );
     }
 
-    private moveTextNode(textNodeId: string, translation: Point) {
-        const textNode: SVGGraphicsElement | null =
-            this.container.querySelector("[id='" + textNodeId + "']");
-        if (textNode) {
-            const transform = DiagramUtils.getTransform(textNode);
+    private moveSvgElement(svgElementId: string, translation: Point) {
+        const svgElement: SVGGraphicsElement | null =
+            this.container.querySelector("[id='" + svgElementId + "']");
+        if (svgElement) {
+            const transform = DiagramUtils.getTransform(svgElement);
             const totalTranslation = new Point(
                 (transform?.matrix.e ?? 0) + translation.x,
                 (transform?.matrix.f ?? 0) + translation.y
             );
-            //transform?.setTranslate(totalTranslation.x, totalTranslation.y);
-            textNode?.setAttribute(
+            svgElement?.setAttribute(
                 'transform',
                 'translate(' +
                     totalTranslation.x.toFixed(2) +
@@ -337,12 +340,13 @@ export class NetworkAreaDiagramViewer {
         edges.forEach((edge) => {
             const node1 = edge.getAttribute('node1') ?? '-1';
             const node2 = edge.getAttribute('node2') ?? '-1';
+            const edgeGroupId = node1.concat('_', node2);
             let edgeGroup: SVGGraphicsElement[] = [];
-            if (groupedEdges.has(node1.concat(node2))) {
-                edgeGroup = groupedEdges.get(node1.concat(node2)) ?? [];
+            if (groupedEdges.has(edgeGroupId)) {
+                edgeGroup = groupedEdges.get(edgeGroupId) ?? [];
             }
             edgeGroup.push(edge);
-            groupedEdges.set(node1.concat(node2), edgeGroup);
+            groupedEdges.set(edgeGroupId, edgeGroup);
         });
         // move grouped edges
         for (const edgeGroup of groupedEdges.values()) {
@@ -417,12 +421,12 @@ export class NetworkAreaDiagramViewer {
                         this.svgParameters.getEdgeForkLength(),
                         angleFork2
                     );
-                    const edgeStart1 = DiagramUtils.getDistance(
+                    const edgeStart1 = DiagramUtils.getPointAtDistance(
                         DiagramUtils.getPosition(edgeNodes[0]),
                         edgeFork1,
                         this.svgParameters.getBusAnnulusOuterRadius()
                     );
-                    const edgeStart2 = DiagramUtils.getDistance(
+                    const edgeStart2 = DiagramUtils.getPointAtDistance(
                         DiagramUtils.getPosition(edgeNodes[1]),
                         edgeFork2,
                         this.svgParameters.getBusAnnulusOuterRadius()
@@ -457,12 +461,12 @@ export class NetworkAreaDiagramViewer {
         }
         // compute moved edge data: polyline points
         const edgeNodes = this.getEdgeNodes(edge);
-        const edgeStart1 = DiagramUtils.getDistance(
+        const edgeStart1 = DiagramUtils.getPointAtDistance(
             DiagramUtils.getPosition(edgeNodes[0]),
             DiagramUtils.getPosition(edgeNodes[1]),
             this.svgParameters.getBusAnnulusOuterRadius()
         );
-        const edgeStart2 = DiagramUtils.getDistance(
+        const edgeStart2 = DiagramUtils.getPointAtDistance(
             DiagramUtils.getPosition(edgeNodes[1]),
             DiagramUtils.getPosition(edgeNodes[0]),
             this.svgParameters.getBusAnnulusOuterRadius()
@@ -539,35 +543,26 @@ export class NetworkAreaDiagramViewer {
             halfEdge?.querySelector('polyline');
         // if transformer edge reduce edge polyline, leaving space for the transformer
         endPolyline = transformerEdge
-            ? DiagramUtils.getDistance(
+            ? DiagramUtils.getPointAtDistance(
                   endPolyline,
                   middlePolyline == null ? startPolyline : middlePolyline,
                   1.5 * this.svgParameters.getTransfomerCircleRadius()
               )
             : endPolyline;
-        const polylinePoints: string =
-            middlePolyline == null
-                ? startPolyline.x.toFixed(2) +
-                  ',' +
-                  startPolyline.y.toFixed(2) +
-                  ' ' +
-                  endPolyline.x.toFixed(2) +
-                  ',' +
-                  endPolyline.y.toFixed(2)
-                : startPolyline.x.toFixed(2) +
-                  ',' +
-                  startPolyline.y.toFixed(2) +
-                  ' ' +
-                  middlePolyline.x.toFixed(2) +
-                  ',' +
-                  middlePolyline.y.toFixed(2) +
-                  ' ' +
-                  endPolyline.x.toFixed(2) +
-                  ',' +
-                  endPolyline.y;
+        let polylinePoints: string =
+            startPolyline.x.toFixed(2) + ',' + startPolyline.y.toFixed(2);
+        if (middlePolyline != null) {
+            polylinePoints +=
+                ' ' +
+                middlePolyline.x.toFixed(2) +
+                ',' +
+                middlePolyline.y.toFixed(2);
+        }
+        polylinePoints +=
+            ' ' + endPolyline.x.toFixed(2) + ',' + endPolyline.y.toFixed(2);
         polyline?.setAttribute('points', polylinePoints);
         // move edge arrow
-        const arrowCenter = DiagramUtils.getDistance(
+        const arrowCenter = DiagramUtils.getPointAtDistance(
             middlePolyline == null ? startPolyline : middlePolyline,
             endPolyline,
             middlePolyline == null
@@ -575,8 +570,6 @@ export class NetworkAreaDiagramViewer {
                 : this.svgParameters.getArrowShift() - 2.5
         );
         const arrowElement = halfEdge?.lastElementChild as SVGGraphicsElement;
-        //const arrowTransform = DiagramUtils.getTransform(arrowElement);
-        //arrowTransform?.setTranslate(arrowCenter.x, arrowCenter.y);
         arrowElement?.setAttribute(
             'transform',
             'translate(' +
@@ -631,7 +624,7 @@ export class NetworkAreaDiagramViewer {
         this.moveTransformerCircle(
             transformerCircles.item(0),
             startPolyline1,
-            DiagramUtils.getDistance(
+            DiagramUtils.getPointAtDistance(
                 endPolyline1,
                 startPolyline1,
                 1.5 * this.svgParameters.getTransfomerCircleRadius()
@@ -640,7 +633,7 @@ export class NetworkAreaDiagramViewer {
         this.moveTransformerCircle(
             transformerCircles.item(1),
             startPolyline2,
-            DiagramUtils.getDistance(
+            DiagramUtils.getPointAtDistance(
                 endPolyline2,
                 startPolyline2,
                 1.5 * this.svgParameters.getTransfomerCircleRadius()
@@ -664,7 +657,7 @@ export class NetworkAreaDiagramViewer {
         startPolyline: Point,
         endPolyline: Point
     ) {
-        const circleCenter: Point = DiagramUtils.getDistance(
+        const circleCenter: Point = DiagramUtils.getPointAtDistance(
             endPolyline,
             startPolyline,
             -this.svgParameters.getTransfomerCircleRadius()
@@ -677,32 +670,17 @@ export class NetworkAreaDiagramViewer {
         transformerElement: SVGGraphicsElement,
         startPolyline: Point,
         endPolyline: Point,
-        middle: Point
+        transformerCenter: Point
     ) {
         const arrowPath: SVGGraphicsElement | null =
             transformerElement.querySelector('path');
-        const matrix: number[] = DiagramUtils.getTransformerArrowMatrix(
+        const matrix: string = DiagramUtils.getTransformerArrowMatrixString(
             startPolyline,
             endPolyline,
-            middle,
+            transformerCenter,
             this.svgParameters.getTransfomerCircleRadius()
         );
-        arrowPath?.setAttribute(
-            'transform',
-            'matrix(' +
-                matrix[0].toFixed(2) +
-                ',' +
-                matrix[1].toFixed(2) +
-                ',' +
-                matrix[2].toFixed(2) +
-                ',' +
-                matrix[3].toFixed(2) +
-                ',' +
-                matrix[4].toFixed(2) +
-                ',' +
-                matrix[5].toFixed(2) +
-                ')'
-        );
+        arrowPath?.setAttribute('transform', 'matrix(' + matrix + ')');
     }
 
     private moveConverterStation(
@@ -714,7 +692,7 @@ export class NetworkAreaDiagramViewer {
     ) {
         const converterStationElement: SVGGraphicsElement =
             edgeNode.lastElementChild as SVGGraphicsElement;
-        const points: [Point, Point] = DiagramUtils.getConverterStationPoints(
+        const polylinePoints: string = DiagramUtils.getConverterStationPolyline(
             startPolyline1,
             endPolyline1,
             startPolyline2,
@@ -723,14 +701,6 @@ export class NetworkAreaDiagramViewer {
         );
         const polyline: SVGGraphicsElement | null =
             converterStationElement.querySelector('polyline');
-        const polylinePoints: string =
-            points[0].x.toFixed(2) +
-            ',' +
-            points[0].y.toFixed(2) +
-            ' ' +
-            points[1].x.toFixed(2) +
-            ',' +
-            points[1].y.toFixed(2);
         polyline?.setAttribute('points', polylinePoints);
     }
 }
