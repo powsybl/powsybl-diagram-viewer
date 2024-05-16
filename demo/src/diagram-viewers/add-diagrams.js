@@ -5,7 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import NadSvgExample from './data/nad-example.svg';
+import NadSvgExample from './data/nad-eurostag-tutorial-example1.svg';
+import NadSvgPstHvdcExample from './data/nad-four-substations.svg';
 import SldSvgExample from './data/sld-example.svg';
 import SldSvgExampleMeta from './data/sld-example-meta.json';
 import SldSvgSubExample from './data/sld-sub-example.svg';
@@ -19,7 +20,7 @@ export const addNadToDemo = () => {
         .then((response) => response.text())
         .then((svgContent) => {
             new NetworkAreaDiagramViewer(
-                document.getElementById('svg-container'),
+                document.getElementById('svg-container-nad'),
                 svgContent,
                 500,
                 600,
@@ -28,7 +29,25 @@ export const addNadToDemo = () => {
             );
 
             document
-                .getElementById('svg-container')
+                .getElementById('svg-container-nad')
+                .getElementsByTagName('svg')[0]
+                .setAttribute('style', 'border:2px; border-style:solid;');
+        });
+
+    fetch(NadSvgPstHvdcExample)
+        .then((response) => response.text())
+        .then((svgContent) => {
+            new NetworkAreaDiagramViewer(
+                document.getElementById('svg-container-nad-pst-hvdc'),
+                svgContent,
+                500,
+                600,
+                1000,
+                1200
+            );
+
+            document
+                .getElementById('svg-container-nad-pst-hvdc')
                 .getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
         });
