@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 import { PathLayer } from 'deck.gl';
-import GL from '@luma.gl/constants';
 
 const defaultProps = {
     getLineParallelIndex: { type: 'accessor', value: 0 },
@@ -101,15 +100,15 @@ gl_Position += project_common_position_to_clipspace(trans) - project_uCenter;
         return shaders;
     }
 
-    initializeState(params) {
-        super.initializeState(params);
+    initializeState() {
+        super.initializeState();
 
         const attributeManager = this.getAttributeManager();
         attributeManager.addInstanced({
             // too much instances variables need to compact some...
             instanceExtraAttributes: {
                 size: 4,
-                type: GL.FLOAT,
+                type: 'float32',
                 accessor: 'getExtraAttributes',
             },
         });
