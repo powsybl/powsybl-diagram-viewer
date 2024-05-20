@@ -345,7 +345,14 @@ function getPolylinePoints(polylinePoints: string): Point[] | null {
 }
 
 // get angle of first 2 points of a polyline
-export function getPolylineAngle(polylinePoints: string): number | null {
+export function getPolylineAngle(polyline: HTMLElement): number | null {
+    if (polyline.tagName !== 'polyline') {
+        return null;
+    }
+    const polylinePoints = polyline.getAttribute('points');
+    if (polylinePoints == null) {
+        return null;
+    }
     const points: Point[] | null = getPolylinePoints(polylinePoints);
     if (points == null) {
         return null;
@@ -370,10 +377,31 @@ function getPathPoints(pathPoints: string): Point[] | null {
 }
 
 // get angle of first 2 points of a path
-export function getPathAngle(pathPoints: string): number | null {
+export function getPathAngle(path: HTMLElement): number | null {
+    if (path.tagName !== 'path') {
+        return null;
+    }
+    const pathPoints = path.getAttribute('d');
+    if (pathPoints == null) {
+        return null;
+    }
     const points: Point[] | null = getPathPoints(pathPoints);
     if (points == null) {
         return null;
     }
     return getAngle(points[0], points[1]);
+}
+
+// sort list of bus nodes by index
+export function getSortedBusNodes(
+    busNodes: NodeListOf<SVGGraphicsElement>
+): SVGGraphicsElement[] {
+    const sortedBusNodes: SVGGraphicsElement[] = [];
+    busNodes.forEach((busNode) => {
+        const index = busNode.getAttribute('index') ?? '-1';
+        if (+index >= 0) {
+            sortedBusNodes[+index] = busNode;
+        }
+    });
+    return sortedBusNodes;
 }

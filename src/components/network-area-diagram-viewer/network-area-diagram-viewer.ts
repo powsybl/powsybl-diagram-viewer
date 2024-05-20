@@ -304,7 +304,10 @@ export class NetworkAreaDiagramViewer {
         );
     }
 
-    private moveSvgElement(svgElementId: string, translation: Point) {
+    private moveSvgElement(
+        svgElementId: string,
+        translation: Point
+    ): SVGGraphicsElement | null {
         const svgElement: SVGGraphicsElement | null =
             this.container.querySelector("[id='" + svgElementId + "']");
         if (svgElement) {
@@ -321,10 +324,12 @@ export class NetworkAreaDiagramViewer {
                     totalTranslation.y.toFixed(2) +
                     ')'
             );
+            return svgElement;
         }
+        return null;
     }
 
-    private moveEdges(offset: Point) {
+    private moveEdges(mousePosition: Point) {
         // get edges connected to the the node we are moving
         const edges: NodeListOf<SVGGraphicsElement> =
             this.container.querySelectorAll(
@@ -382,7 +387,7 @@ export class NetworkAreaDiagramViewer {
         }
         // move loop edges
         for (const edgeGroup of loopEdges.values()) {
-            this.moveLoopEdgeGroup(edgeGroup, offset);
+            this.moveLoopEdgeGroup(edgeGroup, mousePosition);
         }
         // redraw node
         this.redrawVoltageLevelNode(this.selectedElement, busNodeEdges, null);
@@ -422,6 +427,14 @@ export class NetworkAreaDiagramViewer {
                 ? this.selectedElement
                 : otherNode;
         return [node1, node2];
+    }
+
+    private getOtherNode(
+        edgeNodes: [SVGGraphicsElement | null, SVGGraphicsElement | null]
+    ): SVGGraphicsElement | null {
+        return edgeNodes[0]?.id == this.selectedElement?.id
+            ? edgeNodes[1]
+            : edgeNodes[0];
     }
 
     private getNodeRadius(busNodeId: number): [number, number, number] {
@@ -522,9 +535,7 @@ export class NetworkAreaDiagramViewer {
             });
             // redraw other voltage level node
             const otherNode: SVGGraphicsElement | null =
-                edgeNodes[0]?.id == this.selectedElement?.id
-                    ? edgeNodes[1]
-                    : edgeNodes[0];
+                this.getOtherNode(edgeNodes);
             this.redrawOtherVoltageLevelNode(otherNode, edges);
         }
     }
@@ -572,9 +583,7 @@ export class NetworkAreaDiagramViewer {
         );
         // redraw other voltage level node
         const otherNode: SVGGraphicsElement | null =
-            edgeNodes[0]?.id == this.selectedElement?.id
-                ? edgeNodes[1]
-                : edgeNodes[0];
+            this.getOtherNode(edgeNodes);
         this.redrawOtherVoltageLevelNode(otherNode, [edge]);
     }
 
@@ -827,77 +836,57 @@ export class NetworkAreaDiagramViewer {
         polyline?.setAttribute('points', polylinePoints);
     }
 
-    private moveLoopEdgeGroup(edges: SVGGraphicsElement[], offset: Point) {
+    private moveLoopEdgeGroup(
+        edges: SVGGraphicsElement[],
+        mousePosition: Point
+    ) {
         edges.forEach((edge) => {
             // get edge element
-            const edgeNode: SVGGraphicsElement | null =
-                this.container.querySelector(
-                    "[id='" + edge.getAttribute('svgid') + "']"
-                );
-            if (!edgeNode) {
+            const edgeId = edge.getAttribute('svgid');
+            if (!edgeId) {
                 return;
             }
             const translation = new Point(
-                offset.x - this.initialPosition.x,
-                offset.y - this.initialPosition.y
+                mousePosition.x - this.initialPosition.x,
+                mousePosition.y - this.initialPosition.y
             );
-            const transform = DiagramUtils.getTransform(edgeNode);
-            const totalTranslation = new Point(
-                (transform?.matrix.e ?? 0) + translation.x,
-                (transform?.matrix.f ?? 0) + translation.y
+            const edgeNode: SVGGraphicsElement | null = this.moveSvgElement(
+                edgeId,
+                translation
             );
-            //transform?.setTranslate(totalTranslation.x, totalTranslation.y);
-            edgeNode?.setAttribute(
-                'transform',
-                'translate(' +
-                    totalTranslation.x.toFixed(2) +
-                    ',' +
-                    totalTranslation.y.toFixed(2) +
-                    ')'
-            );
-            // store edge angles, to use them for bus node redrawing
-            this.storeHalfLoopEdgeAngle(edgeNode, edgeNode.id + '.1', 0);
-            this.storeHalfLoopEdgeAngle(edgeNode, edgeNode.id + '.2', 1);
-        });
-    }
-
-    private storeHalfLoopEdgeAngle(
-        edgeNode: SVGGraphicsElement,
-        angleId: string,
-        sideIndex: number
-    ) {
-        if (!this.edgeAngles.has(angleId)) {
-            const halfEdge: HTMLElement = <HTMLElement>(
-                edgeNode.children.item(sideIndex)?.firstElementChild
-            );
-            if (halfEdge != null) {
-                const path = halfEdge.getAttribute('d');
-                if (path != null) {
-                    const angle = DiagramUtils.getPathAngle(path);
-                    if (angle != null) {
-                        this.edgeAngles.set(angleId, angle);
-                    }
-                }
+            if (!edgeNode) {
+                return;
             }
-        }
+            // store edge angles, to use them for bus node redrawing
+            this.storeHalfEdgeAngle(
+                edgeNode,
+                edgeNode.id + '.1',
+                0,
+                DiagramUtils.getPathAngle
+            );
+            this.storeHalfEdgeAngle(
+                edgeNode,
+                edgeNode.id + '.2',
+                1,
+                DiagramUtils.getPathAngle
+            );
+        });
     }
 
     private storeHalfEdgeAngle(
         edgeNode: SVGGraphicsElement,
         angleId: string,
-        sideIndex: number
+        sideIndex: number,
+        getAngle: (a: HTMLElement) => number | null
     ) {
         if (!this.edgeAngles.has(angleId)) {
             const halfEdge: HTMLElement = <HTMLElement>(
                 edgeNode.children.item(sideIndex)?.firstElementChild
             );
             if (halfEdge != null) {
-                const points = halfEdge.getAttribute('points');
-                if (points != null) {
-                    const angle = DiagramUtils.getPolylineAngle(points);
-                    if (angle != null) {
-                        this.edgeAngles.set(angleId, angle);
-                    }
+                const angle = getAngle(halfEdge);
+                if (angle != null) {
+                    this.edgeAngles.set(angleId, angle);
                 }
             }
         }
@@ -919,13 +908,8 @@ export class NetworkAreaDiagramViewer {
                 return;
             }
             // sort buses by index
-            const sortedBusNodes: SVGGraphicsElement[] = [];
-            busNodes.forEach((busNode) => {
-                const index = busNode.getAttribute('index') ?? '-1';
-                if (+index >= 0) {
-                    sortedBusNodes[+index] = busNode;
-                }
-            });
+            const sortedBusNodes: SVGGraphicsElement[] =
+                DiagramUtils.getSortedBusNodes(busNodes);
             const traversingBusEdgesAngles: number[] = [];
             let redraw = false;
             for (let index = 0; index < sortedBusNodes.length; index++) {
@@ -1047,15 +1031,17 @@ export class NetworkAreaDiagramViewer {
                                 "[id='" + edgeId + "']"
                             );
                         if (edgeNode != null) {
-                            this.storeHalfLoopEdgeAngle(
+                            this.storeHalfEdgeAngle(
                                 edgeNode,
                                 edgeNode.id + '.1',
-                                0
+                                0,
+                                DiagramUtils.getPathAngle
                             );
-                            this.storeHalfLoopEdgeAngle(
+                            this.storeHalfEdgeAngle(
                                 edgeNode,
                                 edgeNode.id + '.2',
-                                1
+                                1,
+                                DiagramUtils.getPathAngle
                             );
                         }
                     }
@@ -1076,7 +1062,8 @@ export class NetworkAreaDiagramViewer {
                             this.storeHalfEdgeAngle(
                                 edgeNode,
                                 edgeId + '.' + side,
-                                side - 1
+                                side - 1,
+                                DiagramUtils.getPolylineAngle
                             );
                         }
                     }
