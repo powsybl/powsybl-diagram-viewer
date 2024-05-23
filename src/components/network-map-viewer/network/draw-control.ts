@@ -22,9 +22,21 @@ type DrawControlProps = ConstructorParameters<typeof MapboxDraw>[0] & {
     position?: ControlPosition;
     readyToDisplay: boolean;
     onDrawPolygonModeActive: (polygoneDrawing: boolean) => void;
+    onCreate: EventedListener;
     onUpdate: EventedListener;
     onDelete: EventedListener;
 };
+
+function resetFirstPolygonDrawing() {
+    if (
+        mapDrawerController !== undefined &&
+        mapDrawerController.getAll().features.length > 1
+    ) {
+        //reset the first polygon, because we only want to draw one polygon
+        const idFirstPolygon = mapDrawerController.getAll().features[0].id;
+        mapDrawerController?.delete(String(idFirstPolygon));
+    }
+}
 
 export default function DrawControl(props: DrawControlProps) {
     const { onDrawPolygonModeActive } = props;
@@ -32,8 +44,8 @@ export default function DrawControl(props: DrawControlProps) {
         (e: { mode: string }) => {
             if (e.mode === 'draw_polygon') {
                 onDrawPolygonModeActive(true);
+                resetFirstPolygonDrawing();
             } else {
-                // mode === 'simple_select'
                 onDrawPolygonModeActive(false);
             }
         },
@@ -48,14 +60,14 @@ export default function DrawControl(props: DrawControlProps) {
         },
         //on add
         ({ map }) => {
-            map.on('draw.create', props.onUpdate);
+            map.on('draw.create', props.onCreate);
             map.on('draw.update', props.onUpdate);
             map.on('draw.delete', props.onDelete);
             map.on('draw.modechange', onModeChange);
         },
         //onRemove
         ({ map }) => {
-            map.off('draw.create', props.onUpdate);
+            map.off('draw.create', props.onCreate);
             map.off('draw.update', props.onUpdate);
             map.off('draw.delete', props.onDelete);
             map.off('draw.modechange', onModeChange);
@@ -69,6 +81,7 @@ export default function DrawControl(props: DrawControlProps) {
 }
 
 DrawControl.defaultProps = {
+    onCreate: () => {},
     onUpdate: () => {},
     onDelete: () => {},
 };

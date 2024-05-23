@@ -44,6 +44,17 @@ import { EQUIPMENT_TYPES } from '../utils/equipment-types.js';
 const MOUSE_EVENT_BUTTON_LEFT = 0;
 const MOUSE_EVENT_BUTTON_RIGHT = 2;
 
+/**
+ * Represents the draw event types for the network map.
+ * when a draw event is triggered, the event type is passed to the onDrawEvent callback
+ * On create, when the user create a new polygon (shape finished)
+ */
+export const DRAW_EVENT = {
+    CREATE: 1,
+    UPDATE: 2,
+    DELETE: 0,
+};
+
 // Small boilerplate recommended by deckgl, to bridge to a react-map-gl control declaratively
 // see https://deck.gl/docs/api-reference/mapbox/mapbox-overlay#using-with-react-map-gl
 const DeckGLOverlay = React.forwardRef((props, ref) => {
@@ -109,7 +120,8 @@ const NetworkMap = forwardRef((props, ref) => {
     const [isPolygonDrawingStarted, setPolygonDrawingStarted] = useState(false);
     //NOTE these constants are moved to the component's parameters list
     //const currentNode = useSelector((state) => state.currentTreeNode);
-    const { onPolygonChanged, centerOnSubstation, lineFullPath } = props;
+    const { onPolygonChanged, centerOnSubstation, lineFullPath, onDrawEvent } =
+        props;
 
     const { getNameOrId } = useNameOrId(props.useName);
 
@@ -536,16 +548,33 @@ const NetworkMap = forwardRef((props, ref) => {
         onPolygonChanged(polygonFeatures);
     }, [polygonFeatures, onPolygonChanged]);
 
-    const onUpdate = useCallback((e) => {
-        setPolygonFeatures((currFeatures) => {
-            const newFeatures = { ...currFeatures };
-            for (const f of e.features) {
-                newFeatures[f.id] = f;
-            }
-            return newFeatures;
-        });
-    }, []);
+    const onUpdate = useCallback(
+        (e) => {
+            setPolygonFeatures((currFeatures) => {
+                const newFeatures = { ...currFeatures };
+                for (const f of e.features) {
+                    newFeatures[f.id] = f;
+                }
+                return newFeatures;
+            });
+            onDrawEvent(DRAW_EVENT.UPDATE);
+        },
+        [onDrawEvent]
+    );
 
+    const onCreate = useCallback(
+        (e) => {
+            setPolygonFeatures((currFeatures) => {
+                const newFeatures = { ...currFeatures };
+                for (const f of e.features) {
+                    newFeatures[f.id] = f;
+                }
+                return newFeatures;
+            });
+            onDrawEvent(DRAW_EVENT.CREATE);
+        },
+        [onDrawEvent]
+    );
     const getSelectedLines = useCallback(() => {
         //check if polygon is defined correctly
         const firstPolygonFeatures = Object.values(polygonFeatures)[0];
@@ -562,7 +591,13 @@ const NetworkMap = forwardRef((props, ref) => {
             lineFullPath
         );
         return selectedLines.filter((line) => {
-            return props.filteredNominalVoltages.some((nv) => {
+            const extremities = [
+                props.filteredNominalVoltages[0],
+                props.filteredNominalVoltages[
+                    props.filteredNominalVoltages.length - 1
+                ],
+            ];
+            return extremities.some((nv) => {
                 return (
                     nv ===
                         props.mapEquipments.getVoltageLevel(
@@ -613,20 +648,25 @@ const NetworkMap = forwardRef((props, ref) => {
                 getMapDrawer()?.deleteAll();
                 //because deleteAll does not trigger a update of the polygonFeature callback
                 setPolygonFeatures({});
+                onDrawEvent(DRAW_EVENT.DELETE);
             },
         }),
-        [getSelectedSubstations, getSelectedLines]
+        [getSelectedSubstations, getSelectedLines, onDrawEvent]
     );
 
-    const onDelete = useCallback((e) => {
-        setPolygonFeatures((currFeatures) => {
-            const newFeatures = { ...currFeatures };
-            for (const f of e.features) {
-                delete newFeatures[f.id];
-            }
-            return newFeatures;
-        });
-    }, []);
+    const onDelete = useCallback(
+        (e) => {
+            setPolygonFeatures((currFeatures) => {
+                const newFeatures = { ...currFeatures };
+                for (const f of e.features) {
+                    delete newFeatures[f.id];
+                }
+                return newFeatures;
+            });
+            onDrawEvent(DRAW_EVENT.DELETE);
+        },
+        [onDrawEvent]
+    );
 
     return (
         mapLib && (
@@ -689,6 +729,7 @@ const NetworkMap = forwardRef((props, ref) => {
                         setPolygonDrawingStarted(polygon_draw);
                         props.onDrawPolygonModeActive(polygon_draw);
                     }}
+                    onCreate={onCreate}
                     onUpdate={onUpdate}
                     onDelete={onDelete}
                 />
@@ -737,6 +778,7 @@ NetworkMap.defaultProps = {
     },
     onDrawPolygonModeActive: () => {},
     onPolygonChanged: () => {},
+    onDrawEvent: () => {},
 };
 
 NetworkMap.propTypes = {
@@ -785,6 +827,7 @@ NetworkMap.propTypes = {
     onVoltageLevelMenuClick: PropTypes.func,
     onDrawPolygonModeActive: PropTypes.func,
     onPolygonChanged: PropTypes.func,
+    onDrawEvent: PropTypes.func,
 };
 
 export default React.memo(NetworkMap);
