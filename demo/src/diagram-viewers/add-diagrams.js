@@ -7,6 +7,8 @@
 
 import NadSvgExample from './data/nad-eurostag-tutorial-example1.svg';
 import NadSvgPstHvdcExample from './data/nad-four-substations.svg';
+import NadSvgMultibusVLNodesExample from './data/nad-ieee9-zeroimpedance-cdf.svg';
+import NadSvgMultibusVLNodes14Example from './data/nad-ieee14cdf-solved.svg';
 import SldSvgExample from './data/sld-example.svg';
 import SldSvgExampleMeta from './data/sld-example-meta.json';
 import SldSvgSubExample from './data/sld-sub-example.svg';
@@ -48,6 +50,42 @@ export const addNadToDemo = () => {
 
             document
                 .getElementById('svg-container-nad-pst-hvdc')
+                .getElementsByTagName('svg')[0]
+                .setAttribute('style', 'border:2px; border-style:solid;');
+        });
+
+    fetch(NadSvgMultibusVLNodesExample)
+        .then((response) => response.text())
+        .then((svgContent) => {
+            new NetworkAreaDiagramViewer(
+                document.getElementById('svg-container-nad-multibus-vlnodes'),
+                svgContent,
+                500,
+                600,
+                1000,
+                1200
+            );
+
+            document
+                .getElementById('svg-container-nad-multibus-vlnodes')
+                .getElementsByTagName('svg')[0]
+                .setAttribute('style', 'border:2px; border-style:solid;');
+        });
+
+    fetch(NadSvgMultibusVLNodes14Example)
+        .then((response) => response.text())
+        .then((svgContent) => {
+            new NetworkAreaDiagramViewer(
+                document.getElementById('svg-container-nad-multibus-vlnodes14'),
+                svgContent,
+                500,
+                600,
+                1000,
+                1200
+            );
+
+            document
+                .getElementById('svg-container-nad-multibus-vlnodes14')
                 .getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
         });

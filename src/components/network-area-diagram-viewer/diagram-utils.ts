@@ -242,3 +242,166 @@ function classIsContainerOfDraggables(element: SVGElement): boolean {
         element.classList.contains('nad-3wt-nodes')
     );
 }
+
+// get inner and outer radius of bus node and radius of voltage level
+export function getNodeRadius(
+    nbNeighbours: number,
+    voltageLevelCircleRadius: number,
+    busIndex: number,
+    interAnnulusSpace: number
+): [number, number, number] {
+    const vlCircleRadius: number =
+        Math.min(Math.max(nbNeighbours + 1, 1), 2) * voltageLevelCircleRadius;
+    const unitaryRadius = vlCircleRadius / (nbNeighbours + 1);
+    return [
+        busIndex * unitaryRadius + interAnnulusSpace / 2,
+        (busIndex + 1) * unitaryRadius - interAnnulusSpace / 2,
+        vlCircleRadius,
+    ];
+}
+
+function getCirclePath(
+    radius: number,
+    angleStart: number,
+    angleEnd: number,
+    clockWise: boolean
+) {
+    const arcAngle = angleEnd - angleStart;
+    const xStart = radius * Math.cos(angleStart);
+    const yStart = radius * Math.sin(angleStart);
+    const xEnd = radius * Math.cos(angleEnd);
+    const yEnd = radius * Math.sin(angleEnd);
+    const largeArc = Math.abs(arcAngle) > Math.PI ? 1 : 0;
+    return (
+        xStart.toFixed(3) +
+        ',' +
+        yStart.toFixed(3) +
+        ' A' +
+        radius.toFixed(3) +
+        ',' +
+        radius.toFixed(3) +
+        ' ' +
+        radToDeg(arcAngle).toFixed(3) +
+        ' ' +
+        largeArc +
+        ' ' +
+        (clockWise ? 1 : 0) +
+        ' ' +
+        xEnd.toFixed(3) +
+        ',' +
+        yEnd.toFixed(3)
+    );
+}
+
+// get path for bus annulus
+export function getFragmentedAnnulusPath(
+    angles: number[],
+    busNodeRadius: [number, number, number],
+    nodeHollowWidth: number
+): string {
+    let path: string = '';
+    const halfWidth = nodeHollowWidth / 2;
+    const deltaAngle0 = halfWidth / busNodeRadius[1];
+    const deltaAngle1 = halfWidth / busNodeRadius[0];
+    for (let index = 0; index < angles.length; index++) {
+        const outerArcStart = angles[index] + deltaAngle0;
+        const outerArcEnd = angles[index + 1] - deltaAngle0;
+        const innerArcStart = angles[index + 1] - deltaAngle1;
+        const innerArcEnd = angles[index] + deltaAngle1;
+        if (outerArcEnd > outerArcStart && innerArcEnd < innerArcStart) {
+            path =
+                path +
+                'M' +
+                getCirclePath(
+                    busNodeRadius[1],
+                    outerArcStart,
+                    outerArcEnd,
+                    true
+                ) +
+                ' L' +
+                getCirclePath(
+                    busNodeRadius[0],
+                    innerArcStart,
+                    innerArcEnd,
+                    false
+                ) +
+                ' Z ';
+        }
+    }
+    return path;
+}
+
+function getPolylinePoints(polylinePoints: string): Point[] | null {
+    const coordinates: string[] = polylinePoints.split(/,| /);
+    if (coordinates.length < 4) {
+        return null;
+    }
+    const points: Point[] = [];
+    for (let index = 0; index < 4; index = index + 2) {
+        const point = new Point(+coordinates[index], +coordinates[index + 1]);
+        points.push(point);
+    }
+    return points;
+}
+
+// get angle of first 2 points of a polyline
+export function getPolylineAngle(polyline: HTMLElement): number | null {
+    if (polyline.tagName !== 'polyline') {
+        return null;
+    }
+    const polylinePoints = polyline.getAttribute('points');
+    if (polylinePoints == null) {
+        return null;
+    }
+    const points: Point[] | null = getPolylinePoints(polylinePoints);
+    if (points == null) {
+        return null;
+    }
+    return getAngle(points[0], points[1]);
+}
+
+function getPathPoints(pathPoints: string): Point[] | null {
+    const stringPoints: string[] = pathPoints.split(' ');
+    if (stringPoints.length < 2) {
+        return null;
+    }
+    const points: Point[] = [];
+    for (let index = 0; index < 2; index++) {
+        const coordinates: string[] = stringPoints[index]
+            .substring(1)
+            .split(',');
+        const point = new Point(+coordinates[0], +coordinates[1]);
+        points.push(point);
+    }
+    return points;
+}
+
+// get angle of first 2 points of a path
+export function getPathAngle(path: HTMLElement): number | null {
+    if (path.tagName !== 'path') {
+        return null;
+    }
+    const pathPoints = path.getAttribute('d');
+    if (pathPoints == null) {
+        return null;
+    }
+    const points: Point[] | null = getPathPoints(pathPoints);
+    if (points == null) {
+        return null;
+    }
+    return getAngle(points[0], points[1]);
+}
+
+// sort list of bus nodes by index
+export function getSortedBusNodes(
+    busNodes: NodeListOf<SVGGraphicsElement>
+): SVGGraphicsElement[] {
+    const sortedBusNodes: SVGGraphicsElement[] = [];
+    busNodes.forEach((busNode) => {
+        const index = busNode.getAttribute('index') ?? '-1';
+        if (+index >= 0) {
+            sortedBusNodes[+index] = busNode;
+        }
+    });
+    return sortedBusNodes;
+}
