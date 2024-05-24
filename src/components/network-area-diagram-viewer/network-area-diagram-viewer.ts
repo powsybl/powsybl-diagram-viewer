@@ -849,25 +849,6 @@ export class NetworkAreaDiagramViewer {
         });
     }
 
-    private storeHalfEdgeAngle(
-        edgeNode: SVGGraphicsElement,
-        angleId: string,
-        sideIndex: number,
-        getAngle: (a: HTMLElement) => number | null
-    ) {
-        if (!this.edgeAngles.has(angleId)) {
-            const halfEdge: HTMLElement = <HTMLElement>(
-                edgeNode.children.item(sideIndex)?.firstElementChild
-            );
-            if (halfEdge != null) {
-                const angle = getAngle(halfEdge);
-                if (angle != null) {
-                    this.edgeAngles.set(angleId, angle);
-                }
-            }
-        }
-    }
-
     private redrawVoltageLevelNode(
         node: SVGGraphicsElement | null,
         busNodeEdges: Map<string, SVGGraphicsElement[]>,
@@ -952,14 +933,17 @@ export class NetworkAreaDiagramViewer {
                 this.container.querySelector("[id='" + edgeId + "']");
             if (edgeNode) {
                 const side = busId == busNode1 ? 0 : 1;
-                this.storeHalfEdgeAngle(
-                    edgeNode,
-                    angleId,
-                    side,
-                    isLoopEdge
-                        ? DiagramUtils.getPathAngle
-                        : DiagramUtils.getPolylineAngle
+                const halfEdge: HTMLElement = <HTMLElement>(
+                    edgeNode.children.item(side)?.firstElementChild
                 );
+                if (halfEdge != null) {
+                    const angle = isLoopEdge
+                        ? DiagramUtils.getPathAngle(halfEdge)
+                        : DiagramUtils.getPolylineAngle(halfEdge);
+                    if (angle != null) {
+                        this.edgeAngles.set(angleId, angle);
+                    }
+                }
             }
         }
         return this.edgeAngles.get(angleId);
