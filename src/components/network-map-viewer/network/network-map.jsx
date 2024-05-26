@@ -120,8 +120,7 @@ const NetworkMap = forwardRef((props, ref) => {
     const [isPolygonDrawingStarted, setPolygonDrawingStarted] = useState(false);
     //NOTE these constants are moved to the component's parameters list
     //const currentNode = useSelector((state) => state.currentTreeNode);
-    const { onPolygonChanged, centerOnSubstation, lineFullPath, onDrawEvent } =
-        props;
+    const { onPolygonChanged, centerOnSubstation, onDrawEvent } = props;
 
     const { getNameOrId } = useNameOrId(props.useName);
 
@@ -542,43 +541,20 @@ const NetworkMap = forwardRef((props, ref) => {
         setCentered(INITIAL_CENTERED);
     }, [mapLib?.key]);
 
-    const [polygonFeatures, setPolygonFeatures] = useState({});
+    const onUpdate = useCallback(() => {
+        onPolygonChanged(getMapDrawer()?.getAll()?.features[0] ?? {});
+        onDrawEvent(DRAW_EVENT.UPDATE);
+    }, [onDrawEvent, onPolygonChanged]);
 
-    useEffect(() => {
-        onPolygonChanged(polygonFeatures);
-    }, [polygonFeatures, onPolygonChanged]);
-
-    const onUpdate = useCallback(
-        (e) => {
-            setPolygonFeatures((currFeatures) => {
-                const newFeatures = { ...currFeatures };
-                for (const f of e.features) {
-                    newFeatures[f.id] = f;
-                }
-                return newFeatures;
-            });
-            onDrawEvent(DRAW_EVENT.UPDATE);
-        },
-        [onDrawEvent]
-    );
-
-    const onCreate = useCallback(
-        (e) => {
-            setPolygonFeatures((currFeatures) => {
-                const newFeatures = { ...currFeatures };
-                for (const f of e.features) {
-                    newFeatures[f.id] = f;
-                }
-                return newFeatures;
-            });
-            onDrawEvent(DRAW_EVENT.CREATE);
-        },
-        [onDrawEvent]
-    );
+    const onCreate = useCallback(() => {
+        // setPolygonFeatures(getMapDrawer()?.getAll()?.features[0] ?? {});
+        onPolygonChanged(getMapDrawer()?.getAll()?.features[0] ?? {});
+        onDrawEvent(DRAW_EVENT.CREATE);
+    }, [onDrawEvent, onPolygonChanged]);
     const getSelectedLines = useCallback(() => {
         //check if polygon is defined correctly
-        const firstPolygonFeatures = Object.values(polygonFeatures)[0];
-        const polygonCoordinates = firstPolygonFeatures?.geometry;
+        const polygonFeatures = getMapDrawer()?.getAll()?.features[0] ?? {};
+        const polygonCoordinates = polygonFeatures?.geometry;
         if (!polygonCoordinates || polygonCoordinates.coordinates < 3) {
             return [];
         }
@@ -587,17 +563,10 @@ const NetworkMap = forwardRef((props, ref) => {
             props.mapEquipments,
             mapEquipmentsLines,
             props.geoData,
-            polygonCoordinates,
-            lineFullPath
+            polygonCoordinates
         );
         return selectedLines.filter((line) => {
-            const extremities = [
-                props.filteredNominalVoltages[0],
-                props.filteredNominalVoltages[
-                    props.filteredNominalVoltages.length - 1
-                ],
-            ];
-            return extremities.some((nv) => {
+            return props.filteredNominalVoltages.some((nv) => {
                 return (
                     nv ===
                         props.mapEquipments.getVoltageLevel(
@@ -611,17 +580,16 @@ const NetworkMap = forwardRef((props, ref) => {
             });
         });
     }, [
-        polygonFeatures,
         props.mapEquipments,
         mapEquipmentsLines,
         props.geoData,
         props.filteredNominalVoltages,
-        lineFullPath,
     ]);
 
     const getSelectedSubstations = useCallback(() => {
+        const features = getMapDrawer()?.getAll()?.features[0] ?? {};
         const substations = getSubstationsInPolygon(
-            polygonFeatures,
+            features,
             props.mapEquipments,
             props.geoData
         );
@@ -632,12 +600,7 @@ const NetworkMap = forwardRef((props, ref) => {
                 );
             }) ?? []
         );
-    }, [
-        polygonFeatures,
-        props.mapEquipments,
-        props.geoData,
-        props.filteredNominalVoltages,
-    ]);
+    }, [props.mapEquipments, props.geoData, props.filteredNominalVoltages]);
 
     useImperativeHandle(
         ref,
@@ -645,28 +608,25 @@ const NetworkMap = forwardRef((props, ref) => {
             getSelectedSubstations,
             getSelectedLines,
             cleanDraw() {
-                getMapDrawer()?.deleteAll();
                 //because deleteAll does not trigger a update of the polygonFeature callback
-                setPolygonFeatures({});
+                getMapDrawer()?.deleteAll();
+                onPolygonChanged(getMapDrawer()?.getAll()?.features[0] ?? {});
                 onDrawEvent(DRAW_EVENT.DELETE);
+                console.log('debug :', getMapDrawer().getAll());
             },
         }),
-        [getSelectedSubstations, getSelectedLines, onDrawEvent]
+        [
+            onPolygonChanged,
+            getSelectedSubstations,
+            getSelectedLines,
+            onDrawEvent,
+        ]
     );
 
-    const onDelete = useCallback(
-        (e) => {
-            setPolygonFeatures((currFeatures) => {
-                const newFeatures = { ...currFeatures };
-                for (const f of e.features) {
-                    delete newFeatures[f.id];
-                }
-                return newFeatures;
-            });
-            onDrawEvent(DRAW_EVENT.DELETE);
-        },
-        [onDrawEvent]
-    );
+    const onDelete = useCallback(() => {
+        onPolygonChanged(getMapDrawer()?.getAll()?.features[0] ?? {});
+        onDrawEvent(DRAW_EVENT.DELETE);
+    }, [onPolygonChanged, onDrawEvent]);
 
     return (
         mapLib && (
@@ -833,8 +793,7 @@ NetworkMap.propTypes = {
 export default React.memo(NetworkMap);
 
 function getSubstationsInPolygon(features, mapEquipments, geoData) {
-    const firstPolygonFeatures = Object.values(features)[0];
-    const polygonCoordinates = firstPolygonFeatures?.geometry;
+    const polygonCoordinates = features?.geometry;
     if (!polygonCoordinates || polygonCoordinates.coordinates < 3) {
         return [];
     }
@@ -852,8 +811,7 @@ function getSelectedLinesInPolygon(
     network,
     lines,
     geoData,
-    polygonCoordinates,
-    lineFullPath
+    polygonCoordinates
 ) {
     return lines.filter((line) => {
         try {
@@ -864,10 +822,8 @@ function getSelectedLinesInPolygon(
             if (linePos.length < 2) {
                 return false;
             }
-            const displayedPath = lineFullPath
-                ? linePos
-                : [linePos[0], linePos[linePos.length - 1]];
-            return displayedPath.some((pos) =>
+            const extremities = [linePos[0], linePos[linePos.length - 1]];
+            return extremities.some((pos) =>
                 booleanPointInPolygon(pos, polygonCoordinates)
             );
         } catch (error) {
