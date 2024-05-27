@@ -244,6 +244,7 @@ export class NetworkAreaDiagramViewer {
     private drag(event: Event) {
         if (this.selectedElement) {
             event.preventDefault();
+            this.ctm = this.svgDraw?.node.getScreenCTM();
             this.updateGraph(event);
             this.initialPosition = DiagramUtils.getPosition(
                 this.selectedElement
