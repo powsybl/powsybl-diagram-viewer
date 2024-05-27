@@ -100,6 +100,9 @@ const INITIAL_CENTERED = {
     centered: false,
 };
 
+function getPolygonFeatures() {
+    return getMapDrawer()?.getAll()?.features[0] ?? {};
+}
 const NetworkMap = forwardRef((props, ref) => {
     const [labelsVisible, setLabelsVisible] = useState(false);
     const [showLineFlow, setShowLineFlow] = useState(true);
@@ -542,18 +545,16 @@ const NetworkMap = forwardRef((props, ref) => {
     }, [mapLib?.key]);
 
     const onUpdate = useCallback(() => {
-        onPolygonChanged(getMapDrawer()?.getAll()?.features[0] ?? {});
+        onPolygonChanged(getPolygonFeatures());
         onDrawEvent(DRAW_EVENT.UPDATE);
     }, [onDrawEvent, onPolygonChanged]);
 
     const onCreate = useCallback(() => {
-        // setPolygonFeatures(getMapDrawer()?.getAll()?.features[0] ?? {});
-        onPolygonChanged(getMapDrawer()?.getAll()?.features[0] ?? {});
+        onPolygonChanged(getPolygonFeatures());
         onDrawEvent(DRAW_EVENT.CREATE);
     }, [onDrawEvent, onPolygonChanged]);
     const getSelectedLines = useCallback(() => {
-        //check if polygon is defined correctly
-        const polygonFeatures = getMapDrawer()?.getAll()?.features[0] ?? {};
+        const polygonFeatures = getPolygonFeatures();
         const polygonCoordinates = polygonFeatures?.geometry;
         if (!polygonCoordinates || polygonCoordinates.coordinates < 3) {
             return [];
@@ -587,9 +588,8 @@ const NetworkMap = forwardRef((props, ref) => {
     ]);
 
     const getSelectedSubstations = useCallback(() => {
-        const features = getMapDrawer()?.getAll()?.features[0] ?? {};
         const substations = getSubstationsInPolygon(
-            features,
+            getPolygonFeatures(),
             props.mapEquipments,
             props.geoData
         );
@@ -610,9 +610,8 @@ const NetworkMap = forwardRef((props, ref) => {
             cleanDraw() {
                 //because deleteAll does not trigger a update of the polygonFeature callback
                 getMapDrawer()?.deleteAll();
-                onPolygonChanged(getMapDrawer()?.getAll()?.features[0] ?? {});
+                onPolygonChanged(getPolygonFeatures());
                 onDrawEvent(DRAW_EVENT.DELETE);
-                console.log('debug :', getMapDrawer().getAll());
             },
         }),
         [
@@ -624,7 +623,7 @@ const NetworkMap = forwardRef((props, ref) => {
     );
 
     const onDelete = useCallback(() => {
-        onPolygonChanged(getMapDrawer()?.getAll()?.features[0] ?? {});
+        onPolygonChanged(getPolygonFeatures());
         onDrawEvent(DRAW_EVENT.DELETE);
     }, [onPolygonChanged, onDrawEvent]);
 
