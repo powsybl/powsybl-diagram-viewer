@@ -27,27 +27,11 @@ type DrawControlProps = ConstructorParameters<typeof MapboxDraw>[0] & {
     onDelete: EventedListener;
 };
 
-// function resetFirstPolygonDrawing() {
-//     if (
-//         mapDrawerController !== undefined &&
-//         mapDrawerController.getAll().features.length > 1
-//     ) {
-//         //reset the first polygon, because we only want to draw one polygon
-//         const idFirstPolygon = mapDrawerController.getAll().features[0].id;
-//         mapDrawerController?.delete(String(idFirstPolygon));
-//     }
-// }
-
 export default function DrawControl(props: DrawControlProps) {
     const { onDrawPolygonModeActive } = props;
     const onModeChange = useCallback(
         (e: { mode: string }) => {
-            if (e.mode === 'draw_polygon') {
-                // resetFirstPolygonDrawing();
-                onDrawPolygonModeActive(e.mode);
-            } else {
-                onDrawPolygonModeActive(e.mode);
-            }
+            onDrawPolygonModeActive(e.mode);
         },
         [onDrawPolygonModeActive]
     );
