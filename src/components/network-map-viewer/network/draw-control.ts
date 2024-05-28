@@ -21,32 +21,32 @@ export function getMapDrawer() {
 type DrawControlProps = ConstructorParameters<typeof MapboxDraw>[0] & {
     position?: ControlPosition;
     readyToDisplay: boolean;
-    onDrawPolygonModeActive: (polygoneDrawing: boolean) => void;
+    onDrawPolygonModeActive: (polygoneDrawing: string) => void;
     onCreate: EventedListener;
     onUpdate: EventedListener;
     onDelete: EventedListener;
 };
 
-function resetFirstPolygonDrawing() {
-    if (
-        mapDrawerController !== undefined &&
-        mapDrawerController.getAll().features.length > 1
-    ) {
-        //reset the first polygon, because we only want to draw one polygon
-        const idFirstPolygon = mapDrawerController.getAll().features[0].id;
-        mapDrawerController?.delete(String(idFirstPolygon));
-    }
-}
+// function resetFirstPolygonDrawing() {
+//     if (
+//         mapDrawerController !== undefined &&
+//         mapDrawerController.getAll().features.length > 1
+//     ) {
+//         //reset the first polygon, because we only want to draw one polygon
+//         const idFirstPolygon = mapDrawerController.getAll().features[0].id;
+//         mapDrawerController?.delete(String(idFirstPolygon));
+//     }
+// }
 
 export default function DrawControl(props: DrawControlProps) {
     const { onDrawPolygonModeActive } = props;
     const onModeChange = useCallback(
         (e: { mode: string }) => {
             if (e.mode === 'draw_polygon') {
-                onDrawPolygonModeActive(true);
-                resetFirstPolygonDrawing();
+                // resetFirstPolygonDrawing();
+                onDrawPolygonModeActive(e.mode);
             } else {
-                onDrawPolygonModeActive(false);
+                onDrawPolygonModeActive(e.mode);
             }
         },
         [onDrawPolygonModeActive]

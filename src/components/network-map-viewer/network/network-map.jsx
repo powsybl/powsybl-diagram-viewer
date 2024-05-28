@@ -120,7 +120,8 @@ const NetworkMap = forwardRef((props, ref) => {
     }, [theme]);
     const [cursorType, setCursorType] = useState('grab');
     const [isDragging, setDragging] = useState(false);
-    const [isPolygonDrawingStarted, setPolygonDrawingStarted] = useState(false);
+    const [isPolygonDrawingStarted, setPolygonDrawingStarted] =
+        useState('simple_select');
     //NOTE these constants are moved to the component's parameters list
     //const currentNode = useSelector((state) => state.currentTreeNode);
     const { onPolygonChanged, centerOnSubstation, onDrawEvent } = props;
@@ -613,6 +614,7 @@ const NetworkMap = forwardRef((props, ref) => {
                 onPolygonChanged(getPolygonFeatures());
                 onDrawEvent(DRAW_EVENT.DELETE);
             },
+            getMapDrawer,
         }),
         [
             onPolygonChanged,
