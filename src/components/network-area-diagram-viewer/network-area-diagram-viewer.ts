@@ -491,11 +491,7 @@ export class NetworkAreaDiagramViewer {
                     }
                     if (edgeNodes[0] == null || edgeNodes[1] == null) {
                         // only 1 side of the edge is in the SVG
-                        this.translateEdge(
-                            edgeNode,
-                            offset,
-                            edgeNodes[0] == null ? 2 : 1
-                        );
+                        this.translateEdge(edgeNode, mousePosition);
                         return;
                     }
                     // compute moved edge data: polyline points
@@ -593,7 +589,7 @@ export class NetworkAreaDiagramViewer {
         const edgeNodes = this.getEdgeNodes(edge);
         if (edgeNodes[0] == null || edgeNodes[1] == null) {
             // only 1 side of the edge is in the SVG
-            this.translateEdge(edgeNode, offset, edgeNodes[0] == null ? 2 : 1);
+            this.translateEdge(edgeNode, mousePosition);
             return;
         }
         const busNodeId1 = edge.getAttribute('busnode1');
@@ -1209,14 +1205,10 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private translateEdge(
-        edgeNode: SVGGraphicsElement,
-        offset: Point,
-        side: number
-    ) {
+    private translateEdge(edgeNode: SVGGraphicsElement, mousePosition: Point) {
         const translation = new Point(
-            offset.x - this.initialPosition.x,
-            offset.y - this.initialPosition.y
+            mousePosition.x - this.initialPosition.x,
+            mousePosition.y - this.initialPosition.y
         );
         const transform = DiagramUtils.getTransform(edgeNode);
         const totalTranslation = new Point(
@@ -1231,15 +1223,5 @@ export class NetworkAreaDiagramViewer {
                 totalTranslation.y.toFixed(2) +
                 ')'
         );
-        // store edge angles, to use them for bus node redrawing
-        if (!this.edgeAngles.has(edgeNode.id + '.' + side)) {
-            if (edgeNode != null) {
-                this.storeHalfEdgeAngle(
-                    edgeNode,
-                    edgeNode.id + '.' + side,
-                    side - 1
-                );
-            }
-        }
     }
 }
