@@ -236,7 +236,6 @@ export class NetworkAreaDiagramViewer {
         this.disablePanzoom(); // to avoid panning the whole SVG when moving a node
         this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute mouse movement
         this.selectedElement = draggableElem as SVGGraphicsElement; // element to be moved
-        //this.selectedElement.style.cursor = 'grabbing';
         const svg: HTMLElement = <HTMLElement>(
             this.svgDraw?.node.firstElementChild?.parentElement
         );
@@ -457,9 +456,9 @@ export class NetworkAreaDiagramViewer {
         );
     }
 
-    private moveEdgeGroup(edges: SVGGraphicsElement[], offset: Point) {
+    private moveEdgeGroup(edges: SVGGraphicsElement[], mousePosition: Point) {
         if (edges.length == 1) {
-            this.moveStraightEdge(edges[0], offset); // 1 edge in the group -> straight line
+            this.moveStraightEdge(edges[0], mousePosition); // 1 edge in the group -> straight line
         } else {
             const edgeNodes = this.getEdgeNodes(edges[0]);
             const point1 = DiagramUtils.getPosition(edgeNodes[0]);
@@ -474,7 +473,7 @@ export class NetworkAreaDiagramViewer {
             let i = 0;
             edges.forEach((edge) => {
                 if (2 * i + 1 == nbForks) {
-                    this.moveStraightEdge(edge, offset); // central edge, if present -> straight line
+                    this.moveStraightEdge(edge, mousePosition); // central edge, if present -> straight line
                 } else {
                     // get edge type
                     const edgeType = DiagramUtils.getEdgeType(edge);
@@ -562,7 +561,7 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private moveStraightEdge(edge: SVGGraphicsElement, offset: Point) {
+    private moveStraightEdge(edge: SVGGraphicsElement, mousePosition: Point) {
         // get edge type
         const edgeType = DiagramUtils.getEdgeType(edge);
         if (edgeType == null) {
@@ -577,36 +576,30 @@ export class NetworkAreaDiagramViewer {
             return;
         }
         if (edgeType == DiagramUtils.EdgeType.THREE_WINDINGS_TRANSFORMER) {
-            this.moveThreeWtEdge(edge, edgeNode, offset);
+            this.moveThreeWtEdge(edge, edgeNode, mousePosition);
             return;
         }
         // compute moved edge data: polyline points
         const edgeNodes = this.getEdgeNodes(edge);
         const busNodeId1 = edge.getAttribute('busnode1');
-        const unknownBusNode1 = busNodeId1 != null && busNodeId1.length == 0;
         const nodeRadius1 = this.getNodeRadius(
             busNodeId1 != null ? +busNodeId1 : -1
         );
-        const edgeStart1 = DiagramUtils.getPointAtDistance(
-            DiagramUtils.getPosition(edgeNodes[0]),
-            DiagramUtils.getPosition(edgeNodes[1]),
-            unknownBusNode1
-                ? nodeRadius1[1] +
-                      this.svgParameters.getUnknownBusNodeExtraRadius()
-                : nodeRadius1[1]
+        const edgeStart1 = this.getEdgeStart(
+            busNodeId1,
+            nodeRadius1[1],
+            edgeNodes[0],
+            edgeNodes[1]
         );
         const busNodeId2 = edge.getAttribute('busnode2');
-        const unknownBusNode2 = busNodeId2 != null && busNodeId2.length == 0;
         const nodeRadius2 = this.getNodeRadius(
             busNodeId2 != null ? +busNodeId2 : -1
         );
-        const edgeStart2 = DiagramUtils.getPointAtDistance(
-            DiagramUtils.getPosition(edgeNodes[1]),
-            DiagramUtils.getPosition(edgeNodes[0]),
-            unknownBusNode2
-                ? nodeRadius2[1] +
-                      this.svgParameters.getUnknownBusNodeExtraRadius()
-                : nodeRadius2[1]
+        const edgeStart2 = this.getEdgeStart(
+            busNodeId2,
+            nodeRadius2[1],
+            edgeNodes[1],
+            edgeNodes[0]
         );
         const edgeMiddle = DiagramUtils.getMidPosition(edgeStart1, edgeStart2);
         // move edge
@@ -622,31 +615,39 @@ export class NetworkAreaDiagramViewer {
             edgeType
         );
         // if dangling line edge -> redraw boundary node
-        let boundaryNodeMoved = false;
-        if (
-            edgeType == DiagramUtils.EdgeType.DANGLING_LINE &&
-            edgeNodes[1] != null
-        ) {
+        if (edgeType == DiagramUtils.EdgeType.DANGLING_LINE) {
             this.redrawBoundaryNode(
                 edgeNodes[1],
                 DiagramUtils.getAngle(edgeStart2, edgeMiddle),
                 nodeRadius2[1]
             );
-            if (this.selectedElement?.id == edgeNodes[1].id) {
-                boundaryNodeMoved = true;
+            if (this.selectedElement?.id == edgeNodes[1]?.id) {
+                // if boudary node moved -> redraw other voltage level node
+                this.redrawOtherVoltageLevelNode(edgeNodes[0], [edge]);
             }
-        }
-        if (
-            edgeType != DiagramUtils.EdgeType.DANGLING_LINE ||
-            boundaryNodeMoved
-        ) {
+        } else {
             // redraw other voltage level node
             const otherNode: SVGGraphicsElement | null =
-                edgeNodes[0]?.id == this.selectedElement?.id
-                    ? edgeNodes[1]
-                    : edgeNodes[0];
+                this.getOtherNode(edgeNodes);
             this.redrawOtherVoltageLevelNode(otherNode, [edge]);
         }
+    }
+
+    private getEdgeStart(
+        busNodeId: string | null,
+        outerRadius: number,
+        point1: SVGGraphicsElement | null,
+        point2: SVGGraphicsElement | null
+    ): Point {
+        const unknownBusNode = busNodeId != null && busNodeId.length == 0;
+        return DiagramUtils.getPointAtDistance(
+            DiagramUtils.getPosition(point1),
+            DiagramUtils.getPosition(point2),
+            unknownBusNode
+                ? outerRadius +
+                      this.svgParameters.getUnknownBusNodeExtraRadius()
+                : outerRadius
+        );
     }
 
     private moveEdge(
@@ -755,7 +756,7 @@ export class NetworkAreaDiagramViewer {
         polyline?.setAttribute('points', polylinePoints);
         // move edge arrow and label
         if (halfEdge != null && halfEdge.children.length > 1) {
-            this.moveEdgeArroWAndLabel(
+            this.moveEdgeArrowAndLabel(
                 halfEdge,
                 startPolyline,
                 middlePolyline,
@@ -765,7 +766,7 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private moveEdgeArroWAndLabel(
+    private moveEdgeArrowAndLabel(
         edgeNode: SVGGraphicsElement,
         startPolyline: Point,
         middlePolyline: Point | null, // if null -> straight line
@@ -1047,17 +1048,15 @@ export class NetworkAreaDiagramViewer {
             busIndex,
             this.svgParameters.getInterAnnulusSpace()
         );
-        traversingBusEdgesAngles.sort(function (a, b) {
-            return a - b;
-        });
-        traversingBusEdgesAngles.push(
-            traversingBusEdgesAngles[0] + 2 * Math.PI
+        const edgeAngles = Object.assign(
+            [],
+            traversingBusEdgesAngles.sort(function (a, b) {
+                return a - b;
+            })
         );
-        traversingBusEdgesAngles.sort(function (a, b) {
-            return a - b;
-        });
+        edgeAngles.push(edgeAngles[0] + 2 * Math.PI);
         const path: string = DiagramUtils.getFragmentedAnnulusPath(
-            traversingBusEdgesAngles,
+            edgeAngles,
             busNodeRadius,
             this.svgParameters.getNodeHollowWidth()
         );
@@ -1113,90 +1112,85 @@ export class NetworkAreaDiagramViewer {
     private moveThreeWtEdge(
         edge: SVGGraphicsElement,
         edgeNode: SVGGraphicsElement,
-        offset: Point
+        mousePosition: Point
     ) {
         const twtEdge: HTMLElement = <HTMLElement>edgeNode.firstElementChild;
-        if (twtEdge != null && twtEdge.tagName == 'polyline') {
-            const pointsAttributes = twtEdge.getAttribute('points');
-            if (pointsAttributes != null) {
-                const points = DiagramUtils.getPolylinePoints(pointsAttributes);
-                if (points != null) {
-                    // compute polyline points
-                    const edgeNodes = this.getEdgeNodes(edge);
-                    const threeWtMoved =
-                        edgeNodes[1]?.id == this.selectedElement?.id;
-                    const busNodeId1 = edge.getAttribute('busnode1');
-                    const unknownBusNode1 =
-                        busNodeId1 != null && busNodeId1.length == 0;
-                    const nodeRadius1 = this.getNodeRadius(
-                        busNodeId1 != null ? +busNodeId1 : -1
+        if (twtEdge != null) {
+            const points = DiagramUtils.getPolylinePoints(twtEdge);
+            if (points != null) {
+                // compute polyline points
+                const edgeNodes = this.getEdgeNodes(edge);
+                const threeWtMoved =
+                    edgeNodes[1]?.id == this.selectedElement?.id;
+                const busNodeId1 = edge.getAttribute('busnode1');
+                const nodeRadius1 = this.getNodeRadius(
+                    busNodeId1 != null ? +busNodeId1 : -1
+                );
+                const edgeStart = this.getEdgeStart(
+                    busNodeId1,
+                    nodeRadius1[1],
+                    edgeNodes[0],
+                    edgeNodes[1]
+                );
+                const translation = new Point(
+                    mousePosition.x - this.initialPosition.x,
+                    mousePosition.y - this.initialPosition.y
+                );
+                const edgeEnd = threeWtMoved
+                    ? new Point(
+                          points[points.length - 1].x + translation.x,
+                          points[points.length - 1].y + translation.y
+                      )
+                    : points[points.length - 1];
+                // move polyline
+                const polylinePoints: string =
+                    edgeStart.x.toFixed(2) +
+                    ',' +
+                    edgeStart.y.toFixed(2) +
+                    ' ' +
+                    edgeEnd.x.toFixed(2) +
+                    ',' +
+                    edgeEnd.y.toFixed(2);
+                twtEdge.setAttribute('points', polylinePoints);
+                // move edge arrow and label
+                if (edgeNode.children.length > 1) {
+                    this.moveEdgeArrowAndLabel(
+                        edgeNode,
+                        edgeStart,
+                        null,
+                        edgeEnd,
+                        nodeRadius1
                     );
-                    const edgeStart = DiagramUtils.getPointAtDistance(
-                        DiagramUtils.getPosition(edgeNodes[0]),
-                        DiagramUtils.getPosition(edgeNodes[1]),
-                        unknownBusNode1
-                            ? nodeRadius1[1] +
-                                  this.svgParameters.getUnknownBusNodeExtraRadius()
-                            : nodeRadius1[1]
-                    );
-                    const translation = new Point(
-                        offset.x - this.initialPosition.x,
-                        offset.y - this.initialPosition.y
-                    );
-                    const edgeEnd = threeWtMoved
-                        ? new Point(
-                              points[points.length - 1].x + translation.x,
-                              points[points.length - 1].y + translation.y
-                          )
-                        : points[points.length - 1];
-                    // move polyline
-                    const polylinePoints: string =
-                        edgeStart.x.toFixed(2) +
-                        ',' +
-                        edgeStart.y.toFixed(2) +
-                        ' ' +
-                        edgeEnd.x.toFixed(2) +
-                        ',' +
-                        edgeEnd.y.toFixed(2);
-                    twtEdge.setAttribute('points', polylinePoints);
-                    // move edge arrow and label
-                    if (edgeNode.children.length > 1) {
-                        this.moveEdgeArroWAndLabel(
-                            edgeNode,
-                            edgeStart,
-                            null,
-                            edgeEnd,
-                            nodeRadius1
-                        );
-                    }
-                    // store edge angles, to use them for bus node redrawing
-                    this.edgeAngles.set(
-                        edgeNode.id + '.1',
-                        DiagramUtils.getAngle(edgeStart, edgeEnd)
-                    );
-                    // redraw voltage level node connected to three windings transformer
-                    if (threeWtMoved) {
-                        this.redrawOtherVoltageLevelNode(edgeNodes[0], [edge]);
-                    }
+                }
+                // store edge angles, to use them for bus node redrawing
+                this.edgeAngles.set(
+                    edgeNode.id + '.1',
+                    DiagramUtils.getAngle(edgeStart, edgeEnd)
+                );
+                // redraw voltage level node connected to three windings transformer
+                if (threeWtMoved) {
+                    this.redrawOtherVoltageLevelNode(edgeNodes[0], [edge]);
                 }
             }
         }
     }
 
     private redrawBoundaryNode(
-        node: SVGGraphicsElement,
+        node: SVGGraphicsElement | null,
         edgeStartAngle: number,
         busOuterRadius: number
     ) {
-        const path: string = DiagramUtils.getBoundarySemicircle(
-            edgeStartAngle,
-            busOuterRadius
-        );
-        const pathElement: HTMLElement | null = <HTMLElement>(
-            node.firstElementChild
-        );
-        if (pathElement != null && pathElement.tagName == 'path') {
-            pathElement.setAttribute('d', path);
+        if (node != null) {
+            const path: string = DiagramUtils.getBoundarySemicircle(
+                edgeStartAngle,
+                busOuterRadius
+            );
+            const pathElement: HTMLElement | null = <HTMLElement>(
+                node.firstElementChild
+            );
+            if (pathElement != null && pathElement.tagName == 'path') {
+                pathElement.setAttribute('d', path);
+            }
         }
     }
 }

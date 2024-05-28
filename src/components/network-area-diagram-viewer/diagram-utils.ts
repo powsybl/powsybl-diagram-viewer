@@ -329,8 +329,23 @@ export function getFragmentedAnnulusPath(
     return path;
 }
 
+function getAttribute(
+    element: HTMLElement,
+    tagName: string,
+    attribute: string
+): string | null {
+    if (element.tagName !== tagName) {
+        return null;
+    }
+    return element.getAttribute(attribute);
+}
+
 // get points of a polyline
-export function getPolylinePoints(polylinePoints: string): Point[] | null {
+export function getPolylinePoints(polyline: HTMLElement): Point[] | null {
+    const polylinePoints = getAttribute(polyline, 'polyline', 'points');
+    if (polylinePoints == null) {
+        return null;
+    }
     const coordinates: string[] = polylinePoints.split(/,| /);
     if (coordinates.length < 4) {
         return null;
@@ -345,14 +360,7 @@ export function getPolylinePoints(polylinePoints: string): Point[] | null {
 
 // get angle of first 2 points of a polyline
 export function getPolylineAngle(polyline: HTMLElement): number | null {
-    if (polyline.tagName !== 'polyline') {
-        return null;
-    }
-    const polylinePoints = polyline.getAttribute('points');
-    if (polylinePoints == null) {
-        return null;
-    }
-    const points: Point[] | null = getPolylinePoints(polylinePoints);
+    const points: Point[] | null = getPolylinePoints(polyline);
     if (points == null) {
         return null;
     }
@@ -377,10 +385,7 @@ function getPathPoints(pathPoints: string): Point[] | null {
 
 // get angle of first 2 points of a path
 export function getPathAngle(path: HTMLElement): number | null {
-    if (path.tagName !== 'path') {
-        return null;
-    }
-    const pathPoints = path.getAttribute('d');
+    const pathPoints = getAttribute(path, 'path', 'd');
     if (pathPoints == null) {
         return null;
     }
