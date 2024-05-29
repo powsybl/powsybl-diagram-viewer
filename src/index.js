@@ -20,4 +20,4 @@ export {
     DRAW_EVENT,
 } from './components/network-map-viewer/network/network-map';
 
-export { DrawModes } from './components/network-map-viewer/network/draw-control';
+export { DRAW_MODES } from './components/network-map-viewer/network/constants';
