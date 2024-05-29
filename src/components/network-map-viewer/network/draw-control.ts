@@ -27,6 +27,8 @@ type DrawControlProps = ConstructorParameters<typeof MapboxDraw>[0] & {
     onDelete: EventedListener;
 };
 
+export { DrawModes } from '@mapbox/mapbox-gl-draw';
+
 export default function DrawControl(props: DrawControlProps) {
     const { onDrawPolygonModeActive } = props;
     const onModeChange = useCallback(
