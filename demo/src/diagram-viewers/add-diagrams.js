@@ -10,6 +10,7 @@ import NadSvgPstHvdcExample from './data/nad-four-substations.svg';
 import NadSvgMultibusVLNodesExample from './data/nad-ieee9-zeroimpedance-cdf.svg';
 import NadSvgMultibusVLNodes14Example from './data/nad-ieee14cdf-solved.svg';
 import NadSvgTrheeWTDanglingLineUnknownBusExample from './data/nad-scada.svg';
+import NadSvgPartialNetworkExample from './data/nad-ieee300cdf-VL9006.svg';
 import SldSvgExample from './data/sld-example.svg';
 import SldSvgExampleMeta from './data/sld-example-meta.json';
 import SldSvgSubExample from './data/sld-sub-example.svg';
@@ -105,6 +106,24 @@ export const addNadToDemo = () => {
 
             document
                 .getElementById('svg-container-nad-threewt-dl-ub')
+                .getElementsByTagName('svg')[0]
+                .setAttribute('style', 'border:2px; border-style:solid;');
+        });
+
+    fetch(NadSvgPartialNetworkExample)
+        .then((response) => response.text())
+        .then((svgContent) => {
+            new NetworkAreaDiagramViewer(
+                document.getElementById('svg-container-nad-partial-network'),
+                svgContent,
+                500,
+                600,
+                1000,
+                1200
+            );
+
+            document
+                .getElementById('svg-container-nad-partial-network')
                 .getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
         });

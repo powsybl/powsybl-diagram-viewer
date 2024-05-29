@@ -280,6 +280,14 @@ export class NetworkAreaDiagramViewer {
         );
     }
 
+    // translation w.r.t. the initial position
+    private getTranslation(mousePosition: Point): Point {
+        return new Point(
+            mousePosition.x - this.initialPosition.x,
+            mousePosition.y - this.initialPosition.y
+        );
+    }
+
     private updateGraph(event: Event) {
         const mousePosition = this.getMousePosition(event as MouseEvent);
         this.moveNode(mousePosition);
@@ -299,10 +307,7 @@ export class NetworkAreaDiagramViewer {
     }
 
     private moveText(mousePosition: Point) {
-        const translation = new Point(
-            mousePosition.x - this.initialPosition.x,
-            mousePosition.y - this.initialPosition.y
-        );
+        const translation = this.getTranslation(mousePosition);
         // move node text
         this.moveSvgElement(
             this.selectedElement?.id + '-textnode',
@@ -481,6 +486,14 @@ export class NetworkAreaDiagramViewer {
                     if (edgeType == null) {
                         return;
                     }
+                    if (edgeNodes[0] == null || edgeNodes[1] == null) {
+                        // only 1 side of the edge is in the SVG
+                        this.moveSvgElement(
+                            edge.getAttribute('svgid') ?? '-1',
+                            this.getTranslation(mousePosition)
+                        );
+                        return;
+                    }
                     // get edge element
                     const edgeNode: SVGGraphicsElement | null =
                         this.container.querySelector(
@@ -568,6 +581,15 @@ export class NetworkAreaDiagramViewer {
         if (edgeType == null) {
             return;
         }
+        const edgeNodes = this.getEdgeNodes(edge);
+        if (edgeNodes[0] == null || edgeNodes[1] == null) {
+            // only 1 side of the edge is in the SVG
+            this.moveSvgElement(
+                edge.getAttribute('svgid') ?? '-1',
+                this.getTranslation(mousePosition)
+            );
+            return;
+        }
         // get edge element
         const edgeNode: SVGGraphicsElement | null =
             this.container.querySelector(
@@ -581,7 +603,6 @@ export class NetworkAreaDiagramViewer {
             return;
         }
         // compute moved edge data: polyline points
-        const edgeNodes = this.getEdgeNodes(edge);
         const busNodeId1 = edge.getAttribute('busnode1');
         const nodeRadius1 = this.getNodeRadius(
             busNodeId1 != null ? +busNodeId1 : -1
@@ -928,11 +949,7 @@ export class NetworkAreaDiagramViewer {
             if (!edgeId) {
                 return;
             }
-            const translation = new Point(
-                mousePosition.x - this.initialPosition.x,
-                mousePosition.y - this.initialPosition.y
-            );
-            this.moveSvgElement(edgeId, translation);
+            this.moveSvgElement(edgeId, this.getTranslation(mousePosition));
         });
     }
 
@@ -1133,10 +1150,7 @@ export class NetworkAreaDiagramViewer {
                     edgeNodes[0],
                     edgeNodes[1]
                 );
-                const translation = new Point(
-                    mousePosition.x - this.initialPosition.x,
-                    mousePosition.y - this.initialPosition.y
-                );
+                const translation = this.getTranslation(mousePosition);
                 const edgeEnd = threeWtMoved
                     ? new Point(
                           points[points.length - 1].x + translation.x,
