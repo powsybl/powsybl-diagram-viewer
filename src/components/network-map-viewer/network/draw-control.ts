@@ -17,37 +17,27 @@ export function getMapDrawer() {
     return mapDrawerController;
 }
 
-//source: https://github.com/visgl/react-map-gl/blob/master/examples/draw-polygon/src/
+export enum DRAW_MODES {
+    DRAW_POLYGON = 'draw_polygon',
+    DRAW_POINT = 'draw_point',
+    SIMPLE_SELECT = 'simple_select',
+    DIRECT_SELECT = 'direct_select',
+}
+
 type DrawControlProps = ConstructorParameters<typeof MapboxDraw>[0] & {
     position?: ControlPosition;
     readyToDisplay: boolean;
-    onDrawPolygonModeActive: (polygoneDrawing: boolean) => void;
+    onDrawPolygonModeActive: (polygoneDrawing: DRAW_MODES) => void;
     onCreate: EventedListener;
     onUpdate: EventedListener;
     onDelete: EventedListener;
 };
 
-function resetFirstPolygonDrawing() {
-    if (
-        mapDrawerController !== undefined &&
-        mapDrawerController.getAll().features.length > 1
-    ) {
-        //reset the first polygon, because we only want to draw one polygon
-        const idFirstPolygon = mapDrawerController.getAll().features[0].id;
-        mapDrawerController?.delete(String(idFirstPolygon));
-    }
-}
-
 export default function DrawControl(props: DrawControlProps) {
     const { onDrawPolygonModeActive } = props;
     const onModeChange = useCallback(
-        (e: { mode: string }) => {
-            if (e.mode === 'draw_polygon') {
-                onDrawPolygonModeActive(true);
-                resetFirstPolygonDrawing();
-            } else {
-                onDrawPolygonModeActive(false);
-            }
+        (e: { mode: DRAW_MODES }) => {
+            onDrawPolygonModeActive(e.mode);
         },
         [onDrawPolygonModeActive]
     );

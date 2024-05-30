@@ -19,3 +19,5 @@ export {
     default as NetworkMap,
     DRAW_EVENT,
 } from './components/network-map-viewer/network/network-map';
+
+export { DRAW_MODES } from './components/network-map-viewer/network/draw-control';
