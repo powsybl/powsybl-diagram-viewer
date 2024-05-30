@@ -27,7 +27,7 @@ export enum DRAW_MODES {
 type DrawControlProps = ConstructorParameters<typeof MapboxDraw>[0] & {
     position?: ControlPosition;
     readyToDisplay: boolean;
-    onDrawPolygonModeActive: (polygoneDrawing: string) => void;
+    onDrawPolygonModeActive: (polygoneDrawing: DRAW_MODES) => void;
     onCreate: EventedListener;
     onUpdate: EventedListener;
     onDelete: EventedListener;
