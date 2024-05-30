@@ -13,6 +13,15 @@ import { SvgParameters } from './svg-parameters';
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
 
+export type OnMoveNodeCallbackType = (
+    equipmentId: string,
+    nodeId: string,
+    x: number,
+    y: number,
+    XOrig: number,
+    yOrig: number
+) => void;
+
 export class NetworkAreaDiagramViewer {
     container: HTMLElement;
     svgContent: string;
@@ -28,6 +37,7 @@ export class NetworkAreaDiagramViewer {
     initialPosition: Point = new Point(0, 0);
     svgParameters: SvgParameters;
     edgeAngles: Map<string, number> = new Map<string, number>();
+    onNodeCallback: OnMoveNodeCallbackType | null;
 
     constructor(
         container: HTMLElement,
@@ -35,7 +45,8 @@ export class NetworkAreaDiagramViewer {
         minWidth: number,
         minHeight: number,
         maxWidth: number,
-        maxHeight: number
+        maxHeight: number,
+        onNodeCallback: OnMoveNodeCallbackType | null
     ) {
         this.container = container;
         this.svgContent = svgContent;
@@ -48,6 +59,7 @@ export class NetworkAreaDiagramViewer {
         // so far, they are hardcoded in the class
         // the idea is to read them from the metadata included in the SVG
         this.svgParameters = new SvgParameters();
+        this.onNodeCallback = onNodeCallback;
     }
 
     public setWidth(width: number): void {
@@ -250,7 +262,7 @@ export class NetworkAreaDiagramViewer {
         if (this.selectedElement) {
             event.preventDefault();
             this.ctm = this.svgDraw?.node.getScreenCTM();
-            this.updateGraph(event);
+            this.updateGraph(event, false);
             this.initialPosition = DiagramUtils.getPosition(
                 this.selectedElement
             );
@@ -259,7 +271,7 @@ export class NetworkAreaDiagramViewer {
 
     private endDrag(event: Event) {
         if (this.selectedElement) {
-            this.updateGraph(event);
+            this.updateGraph(event, true);
             const svg: HTMLElement = <HTMLElement>(
                 this.svgDraw?.node.firstElementChild?.parentElement
             );
@@ -288,11 +300,14 @@ export class NetworkAreaDiagramViewer {
         );
     }
 
-    private updateGraph(event: Event) {
+    private updateGraph(event: Event, updateMetadata: boolean) {
         const mousePosition = this.getMousePosition(event as MouseEvent);
         this.moveNode(mousePosition);
         this.moveText(mousePosition);
         this.moveEdges(mousePosition);
+        if (updateMetadata) {
+            this.updataMetadata(mousePosition);
+        }
     }
 
     private moveNode(mousePosition: Point) {
@@ -1205,6 +1220,32 @@ export class NetworkAreaDiagramViewer {
             );
             if (pathElement != null && pathElement.tagName == 'path') {
                 pathElement.setAttribute('d', path);
+            }
+        }
+    }
+
+    private updataMetadata(mousePosition: Point) {
+        // get move node in metadata
+        const node: SVGGraphicsElement | null = this.container.querySelector(
+            'nad\\:node[svgid="' + this.selectedElement?.id + '"]'
+        );
+        if (node != null) {
+            // save original position, for the callback
+            const xOrig = node.getAttribute('x') ?? 0;
+            const yOrig = node.getAttribute('y') ?? 0;
+            // update node position in metadata
+            node.setAttribute('x', mousePosition.x.toFixed(2));
+            node.setAttribute('y', mousePosition.y.toFixed(2));
+            // call the callback, if defined
+            if (this.onNodeCallback != null) {
+                this.onNodeCallback(
+                    node.getAttribute('equipmentid') ?? '',
+                    node.getAttribute('svgid') ?? '',
+                    +mousePosition.x.toFixed(2),
+                    +mousePosition.y.toFixed(2),
+                    +xOrig,
+                    +yOrig
+                );
             }
         }
     }

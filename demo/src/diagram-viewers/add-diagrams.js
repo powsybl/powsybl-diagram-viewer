@@ -29,7 +29,8 @@ export const addNadToDemo = () => {
                 500,
                 600,
                 1000,
-                1200
+                1200,
+                handleNodeMove
             );
 
             document
@@ -47,7 +48,8 @@ export const addNadToDemo = () => {
                 500,
                 600,
                 1000,
-                1200
+                1200,
+                handleNodeMove
             );
 
             document
@@ -65,7 +67,8 @@ export const addNadToDemo = () => {
                 500,
                 600,
                 1000,
-                1200
+                1200,
+                handleNodeMove
             );
 
             document
@@ -83,7 +86,8 @@ export const addNadToDemo = () => {
                 500,
                 600,
                 1000,
-                1200
+                1200,
+                handleNodeMove
             );
 
             document
@@ -101,7 +105,8 @@ export const addNadToDemo = () => {
                 500,
                 600,
                 1000,
-                1200
+                1200,
+                handleNodeMove
             );
 
             document
@@ -119,7 +124,8 @@ export const addNadToDemo = () => {
                 500,
                 600,
                 1000,
-                1200
+                1200,
+                handleNodeMove
             );
 
             document
@@ -260,4 +266,22 @@ const handleTogglePopover = (
             equipmentType;
         console.log(msg);
     }
+};
+
+const handleNodeMove = (equipmentId, nodeId, x, y, xOrig, yOrig) => {
+    const msg =
+        'Node ' +
+        nodeId +
+        ' equipment ' +
+        equipmentId +
+        ' moved from [' +
+        xOrig +
+        ', ' +
+        yOrig +
+        '] to [' +
+        x +
+        ', ' +
+        y +
+        ']';
+    console.log(msg);
 };
