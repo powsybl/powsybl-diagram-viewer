@@ -27,7 +27,7 @@ import { Map, NavigationControl, useControl } from 'react-map-gl';
 import { getNominalVoltageColor } from '../../../utils/colors';
 import { useNameOrId } from '../utils/equipmentInfosHandler';
 import { GeoData } from './geo-data';
-import DrawControl, { getMapDrawer } from './draw-control.ts';
+import DrawControl, { DRAW_MODES, getMapDrawer } from './draw-control.ts';
 import { LineFlowColorMode, LineFlowMode, LineLayer } from './line-layer';
 import { MapEquipments } from './map-equipments';
 import { SubstationLayer } from './substation-layer';
@@ -100,6 +100,7 @@ const INITIAL_CENTERED = {
     centered: false,
 };
 
+// get polygon coordinates (features) or an empty object
 function getPolygonFeatures() {
     return getMapDrawer()?.getAll()?.features[0] ?? {};
 }
@@ -120,8 +121,9 @@ const NetworkMap = forwardRef((props, ref) => {
     }, [theme]);
     const [cursorType, setCursorType] = useState('grab');
     const [isDragging, setDragging] = useState(false);
-    const [isPolygonDrawingStarted, setPolygonDrawingStarted] =
-        useState('simple_select');
+    const [isPolygonDrawingStarted, setPolygonDrawingStarted] = useState(
+        DRAW_MODES.SIMPLE_SELECT
+    );
     //NOTE these constants are moved to the component's parameters list
     //const currentNode = useSelector((state) => state.currentTreeNode);
     const { onPolygonChanged, centerOnSubstation, onDrawEvent } = props;

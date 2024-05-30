@@ -8,10 +8,3 @@
 export const SUBSTATION_RADIUS = 500;
 export const SUBSTATION_RADIUS_MAX_PIXEL = 5;
 export const SUBSTATION_RADIUS_MIN_PIXEL = 1;
-
-export const DRAW_MODES = {
-    DRAW_POLYGON: 'draw_polygon',
-    DRAW_POINT: 'draw_point',
-    SIMPLE_SELECT: 'simple_select',
-    DIRECT_SELECT: 'direct_select',
-};
