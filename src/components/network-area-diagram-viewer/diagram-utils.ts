@@ -27,7 +27,7 @@ const EdgeTypeMapping: { [key: string]: EdgeType } = {
     ThreeWtEdge: EdgeType.THREE_WINDINGS_TRANSFORMER,
 };
 
-// riound a number w.r.t a precision
+// round a number w.r.t a precision
 export function round(value: number, precision: number): number {
     return +value.toFixed(precision);
 }
@@ -229,7 +229,6 @@ export function getConverterStationPolyline(
         endPolyline2,
         converterStationWidth
     );
-    //return getFormattedPoint(points[0]) + ' ' + getFormattedPoint(points[1]);
     return getFormattedPolyline(points[0], null, points[1]);
 }
 
