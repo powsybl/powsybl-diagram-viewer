@@ -782,6 +782,7 @@ NetworkMap.propTypes = {
     updatedLines: PropTypes.array,
     useName: PropTypes.bool,
     visible: PropTypes.bool,
+    shouldDisableToolTip: PropTypes.bool,
 
     onHvdcLineMenuClick: PropTypes.func,
     onLineMenuClick: PropTypes.func,
