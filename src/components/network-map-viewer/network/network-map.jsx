@@ -27,7 +27,7 @@ import { Map, NavigationControl, useControl } from 'react-map-gl';
 import { getNominalVoltageColor } from '../../../utils/colors';
 import { useNameOrId } from '../utils/equipmentInfosHandler';
 import { GeoData } from './geo-data';
-import DrawControl, { DRAW_MODES, getMapDrawer } from './draw-control.ts';
+import DrawControl, { getMapDrawer } from './draw-control.ts';
 import { LineFlowColorMode, LineFlowMode, LineLayer } from './line-layer';
 import { MapEquipments } from './map-equipments';
 import { SubstationLayer } from './substation-layer';
@@ -121,12 +121,15 @@ const NetworkMap = forwardRef((props, ref) => {
     }, [theme]);
     const [cursorType, setCursorType] = useState('grab');
     const [isDragging, setDragging] = useState(false);
-    const [isPolygonDrawingStarted, setPolygonDrawingStarted] = useState(
-        DRAW_MODES.SIMPLE_SELECT
-    );
+
     //NOTE these constants are moved to the component's parameters list
     //const currentNode = useSelector((state) => state.currentTreeNode);
-    const { onPolygonChanged, centerOnSubstation, onDrawEvent } = props;
+    const {
+        onPolygonChanged,
+        centerOnSubstation,
+        onDrawEvent,
+        shouldDisableToolTip,
+    } = props;
 
     const { getNameOrId } = useNameOrId(props.useName);
 
@@ -286,7 +289,7 @@ const NetworkMap = forwardRef((props, ref) => {
         return (
             tooltip &&
             tooltip.visible &&
-            !isPolygonDrawingStarted &&
+            !shouldDisableToolTip &&
             //As of now only LINE tooltip is implemented, the following condition is to be removed or tweaked once other types of line tooltip are implemented
             tooltip.equipmentType === EQUIPMENT_TYPES.LINE && (
                 <div
@@ -689,7 +692,6 @@ const NetworkMap = forwardRef((props, ref) => {
                     defaultMode="simple_select"
                     readyToDisplay={readyToDisplay}
                     onDrawPolygonModeActive={(polygon_draw) => {
-                        setPolygonDrawingStarted(polygon_draw);
                         props.onDrawPolygonModeActive(polygon_draw);
                     }}
                     onCreate={onCreate}
@@ -727,6 +729,7 @@ NetworkMap.defaultProps = {
     updatedLines: [],
     useName: true,
     visible: true,
+    shouldDisableToolTip: false,
 
     onSubstationClick: () => {},
     onSubstationClickChooseVoltageLevel: () => {},
