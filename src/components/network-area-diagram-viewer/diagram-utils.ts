@@ -27,6 +27,35 @@ const EdgeTypeMapping: { [key: string]: EdgeType } = {
     ThreeWtEdge: EdgeType.THREE_WINDINGS_TRANSFORMER,
 };
 
+// riound a number w.r.t a precision
+export function round(value: number, precision: number): number {
+    return +value.toFixed(precision);
+}
+
+// format number to string
+export function getFormattedValue(value: number): string {
+    return value.toFixed(2);
+}
+
+// format point to string
+export function getFormattedPoint(point: Point): string {
+    return getFormattedValue(point.x) + ',' + getFormattedValue(point.y);
+}
+
+// format points to polyline string
+export function getFormattedPolyline(
+    startPolyline: Point,
+    middlePolyline: Point | null,
+    endPolyline: Point
+): string {
+    let polyline: string = getFormattedPoint(startPolyline);
+    if (middlePolyline != null) {
+        polyline += ' ' + getFormattedPoint(middlePolyline);
+    }
+    polyline += ' ' + getFormattedPoint(endPolyline);
+    return polyline;
+}
+
 // transform angle degrees to radians
 export function degToRad(deg: number): number {
     return deg * (Math.PI / 180.0);
@@ -160,7 +189,7 @@ export function getTransformerArrowMatrixString(
         transformerCenter,
         transfomerCircleRadius
     );
-    return matrix.map((e) => e.toFixed(2)).join(',');
+    return matrix.map((e) => getFormattedValue(e)).join(',');
 }
 
 // get the points of a converter station of an HVDC line edge
@@ -200,15 +229,8 @@ export function getConverterStationPolyline(
         endPolyline2,
         converterStationWidth
     );
-    return (
-        points[0].x.toFixed(2) +
-        ',' +
-        points[0].y.toFixed(2) +
-        ' ' +
-        points[1].x.toFixed(2) +
-        ',' +
-        points[1].y.toFixed(2)
-    );
+    //return getFormattedPoint(points[0]) + ' ' + getFormattedPoint(points[1]);
+    return getFormattedPolyline(points[0], null, points[1]);
 }
 
 // get the drabbable element, if present,
