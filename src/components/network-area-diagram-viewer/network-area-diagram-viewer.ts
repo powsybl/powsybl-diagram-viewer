@@ -1211,30 +1211,27 @@ export class NetworkAreaDiagramViewer {
     }
 
     private updateMetadataCallCallback(mousePosition: Point) {
-        // get move node in metadata
+        // get moved node in metadata
         const node: SVGGraphicsElement | null = this.container.querySelector(
             'nad\\:node[svgid="' + this.selectedElement?.id + '"]'
         );
         if (node != null) {
+            // get new position
+            const xNew = DiagramUtils.getFormattedValue(mousePosition.x);
+            const yNew = DiagramUtils.getFormattedValue(mousePosition.y);
             // save original position, for the callback
-            const xOrig = node.getAttribute('x') ?? 0;
-            const yOrig = node.getAttribute('y') ?? 0;
+            const xOrig = node.getAttribute('x') ?? '0';
+            const yOrig = node.getAttribute('y') ?? '0';
             // update node position in metadata
-            node.setAttribute(
-                'x',
-                DiagramUtils.getFormattedValue(mousePosition.x)
-            );
-            node.setAttribute(
-                'y',
-                DiagramUtils.getFormattedValue(mousePosition.y)
-            );
+            node.setAttribute('x', xNew);
+            node.setAttribute('y', yNew);
             // call the callback, if defined
             if (this.onNodeCallback != null) {
                 this.onNodeCallback(
                     node.getAttribute('equipmentid') ?? '',
                     node.getAttribute('svgid') ?? '',
-                    DiagramUtils.round(mousePosition.x, 2),
-                    DiagramUtils.round(mousePosition.y, 2),
+                    +xNew,
+                    +yNew,
                     +xOrig,
                     +yOrig
                 );

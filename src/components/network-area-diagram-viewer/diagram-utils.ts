@@ -27,11 +27,6 @@ const EdgeTypeMapping: { [key: string]: EdgeType } = {
     ThreeWtEdge: EdgeType.THREE_WINDINGS_TRANSFORMER,
 };
 
-// round a number w.r.t a precision
-export function round(value: number, precision: number): number {
-    return +value.toFixed(precision);
-}
-
 // format number to string
 export function getFormattedValue(value: number): string {
     return value.toFixed(2);
