@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 import { ScatterplotLayer } from 'deck.gl';
-import GL from '@luma.gl/constants';
 
 const defaultProps = {
     getRadiusMaxPixels: { type: 'accessor', value: 1 },
@@ -30,8 +29,8 @@ attribute float instanceRadiusMaxPixels;
         });
     }
 
-    initializeState(params) {
-        super.initializeState(params);
+    initializeState() {
+        super.initializeState();
 
         const attributeManager = this.getAttributeManager();
         attributeManager.addInstanced({
@@ -39,7 +38,7 @@ attribute float instanceRadiusMaxPixels;
                 size: 1,
                 transition: true,
                 accessor: 'getRadiusMaxPixels',
-                type: GL.FLOAT,
+                type: 'float32',
                 defaultValue: 0,
             },
         });

@@ -5,15 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 import { Layer, project32, picking } from '@deck.gl/core';
-import GL from '@luma.gl/constants';
-import {
-    Model,
-    Geometry,
-    Texture2D,
-    FEATURES,
-    hasFeatures,
-    isWebGL2,
-} from '@luma.gl/core';
+import { GL } from '@luma.gl/constants';
+import { Model, Geometry } from '@luma.gl/engine';
 
 import vs from './arrow-layer-vertex.glsl';
 import fs from './arrow-layer-fragment.glsl';
@@ -76,17 +69,16 @@ export class ArrowLayer extends Layer {
         return attributes;
     }
 
-    initializeState() {
-        const { gl } = this.context;
+    initializeState(context) {
+        const { device } = context;
 
-        if (!hasFeatures(gl, [FEATURES.TEXTURE_FLOAT])) {
+        if (!device.features.has('texture-blend-float-webgl')) {
             throw new Error('Arrow layer not supported on this browser');
         }
 
-        const maxTextureSize = gl.getParameter(GL.MAX_TEXTURE_SIZE);
+        const maxTextureSize = device.getParametersWebGL(GL.MAX_TEXTURE_SIZE);
         this.state = {
             maxTextureSize,
-            webgl2: isWebGL2(gl),
         };
 
         this.getAttributeManager().addInstanced({
@@ -114,7 +106,7 @@ export class ArrowLayer extends Layer {
                 size: 1,
                 transition: true,
                 accessor: 'getDistance',
-                type: GL.FLOAT,
+                type: 'float32',
                 defaultValue: 0,
             },
             instanceArrowDirection: {
@@ -181,13 +173,13 @@ export class ArrowLayer extends Layer {
         });
     }
 
-    finalizeState() {
-        super.finalizeState();
+    finalizeState(context) {
+        super.finalizeState(context);
         // we do not use setState to avoid a redraw, it is just used to stop the animation
         this.state.stop = true;
     }
 
-    createTexture2D(gl, data, elementSize, format, dataFormat) {
+    createTexture2D(device, data, elementSize, format, dataFormat) {
         const start = performance.now();
 
         // we calculate the smallest square texture that is a power of 2 but less or equals to MAX_TEXTURE_SIZE
@@ -210,7 +202,7 @@ export class ArrowLayer extends Layer {
             data.fill(0, oldLength, textureSize * textureSize * elementSize);
         }
 
-        const texture2d = new Texture2D(gl, {
+        const texture2d = device.createTexture({
             width: textureSize,
             height: textureSize,
             format: format,
@@ -303,7 +295,7 @@ export class ArrowLayer extends Layer {
                     changeFlags.updateTriggersChanged.getLinePositions));
 
         if (geometryChanged) {
-            const { gl } = this.context;
+            const { device } = this.context;
 
             const {
                 linePositionsTextureData,
@@ -312,14 +304,14 @@ export class ArrowLayer extends Layer {
             } = this.createTexturesStructure(props);
 
             const linePositionsTexture = this.createTexture2D(
-                gl,
+                device,
                 linePositionsTextureData,
                 2,
                 this.state.webgl2 ? GL.RG32F : GL.LUMINANCE_ALPHA,
                 this.state.webgl2 ? GL.RG : GL.LUMINANCE_ALPHA
             );
             const lineDistancesTexture = this.createTexture2D(
-                gl,
+                device,
                 lineDistancesTextureData,
                 1,
                 this.state.webgl2 ? GL.R32F : GL.LUMINANCE,
@@ -339,8 +331,8 @@ export class ArrowLayer extends Layer {
     }
 
     updateModel({ changeFlags }) {
-        if (changeFlags.extensionsChanged) {
-            const { gl } = this.context;
+        if (changeFlags.somethingChanged) {
+            const { device } = this.context;
 
             const { model } = this.state;
             if (model) {
@@ -348,7 +340,7 @@ export class ArrowLayer extends Layer {
             }
 
             this.setState({
-                model: this._getModel(gl),
+                model: this._getModel(device),
             });
 
             this.getAttributeManager().invalidateAll();
@@ -392,47 +384,47 @@ export class ArrowLayer extends Layer {
         const { sizeMinPixels, sizeMaxPixels } = this.props;
 
         const {
+            model,
             linePositionsTexture,
             lineDistancesTexture,
             timestamp,
             webgl2,
         } = this.state;
 
-        this.state.model
-            .setUniforms(uniforms)
-            .setUniforms({
-                sizeMinPixels,
-                sizeMaxPixels,
-                linePositionsTexture,
-                lineDistancesTexture,
-                linePositionsTextureSize: [
-                    linePositionsTexture.width,
-                    linePositionsTexture.height,
-                ],
-                lineDistancesTextureSize: [
-                    lineDistancesTexture.width,
-                    lineDistancesTexture.height,
-                ],
-                timestamp,
-                webgl2,
-                distanceBetweenLines: this.props.getDistanceBetweenLines,
-                maxParallelOffset: this.props.maxParallelOffset,
-                minParallelOffset: this.props.minParallelOffset,
-            })
-            .draw();
+        model.setUniforms({
+            ...uniforms,
+            sizeMinPixels,
+            sizeMaxPixels,
+            linePositionsTexture,
+            lineDistancesTexture,
+            linePositionsTextureSize: [
+                linePositionsTexture.width,
+                linePositionsTexture.height,
+            ],
+            lineDistancesTextureSize: [
+                lineDistancesTexture.width,
+                lineDistancesTexture.height,
+            ],
+            timestamp,
+            webgl2,
+            distanceBetweenLines: this.props.getDistanceBetweenLines,
+            maxParallelOffset: this.props.maxParallelOffset,
+            minParallelOffset: this.props.minParallelOffset,
+        });
+        model.draw();
     }
 
-    _getModel(gl) {
+    _getModel(device) {
         const positions = [
             -1, -1, 0, 0, 1, 0, 0, -0.6, 0, 1, -1, 0, 0, 1, 0, 0, -0.6, 0,
         ];
 
         return new Model(
-            gl,
+            device,
             Object.assign(this.getShaders(), {
                 id: this.props.id,
                 geometry: new Geometry({
-                    drawMode: GL.TRIANGLES,
+                    topology: 'triangle-list',
                     vertexCount: 6,
                     attributes: {
                         positions: {

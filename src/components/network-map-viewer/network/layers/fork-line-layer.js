@@ -6,7 +6,6 @@
  */
 
 import { LineLayer } from 'deck.gl';
-import GL from '@luma.gl/constants';
 
 const defaultProps = {
     getLineParallelIndex: { type: 'accessor', value: 0 },
@@ -71,29 +70,29 @@ uniform float minSubstationRadiusPixel;
         return shaders;
     }
 
-    initializeState(params) {
-        super.initializeState(params);
+    initializeState() {
+        super.initializeState();
 
         const attributeManager = this.getAttributeManager();
         attributeManager.addInstanced({
             instanceLineParallelIndex: {
                 size: 1,
-                type: GL.FLOAT,
+                type: 'float32',
                 accessor: 'getLineParallelIndex',
             },
             instanceLineAngle: {
                 size: 1,
-                type: GL.FLOAT,
+                type: 'float32',
                 accessor: 'getLineAngle',
             },
             instanceOffsetStart: {
                 size: 1,
-                type: GL.FLOAT,
+                type: 'float32',
                 accessor: 'getSubstationOffset',
             },
             instanceProximityFactor: {
                 size: 1,
-                type: GL.FLOAT,
+                type: 'float32',
                 accessor: 'getProximityFactor',
             },
         });
