@@ -20,6 +20,54 @@ export class NetworkAreaDiagramViewer {
     originalHeight: number;
     svgDraw: Svg | undefined;
 
+    cullingRules = [
+        {
+            css: ".nad-edge-infos", // data on edges (arrows and values)
+            threshold: 0.07,
+            visible: false,
+        },
+        {
+            css: ".nad-label-box", // tooltips linked to nodes
+            threshold: 0.06,
+            visible: false,
+        },
+        {
+            css: ".nad-text-edges", // visual link between nodes and their tooltip
+            threshold: 0.06,
+            visible: false,
+        },
+        {
+            css: ".nad-vl0to30",
+            threshold: 0.03,
+            visible: false,
+        },
+        {
+            css: ".nad-vl30to50",
+            threshold: 0.03,
+            visible: false,
+        },
+        {
+            css: ".nad-vl50to70",
+            threshold: 0.02,
+            visible: false,
+        },
+        {
+            css: ".nad-vl70to120",
+            threshold: 0.02,
+            visible: false,
+        },
+        {
+            css: ".nad-vl120to180",
+            threshold: 0.015,
+            visible: false,
+        },
+        {
+            css: ".nad-vl180to300",
+            threshold: 0.01,
+            visible: false,
+        },
+    ];
+
     constructor(
         container: HTMLElement,
         svgContent: string,
@@ -95,6 +143,64 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
+    public getCullingRules() {
+        return this.cullingRules;
+    }
+
+    public updateSvgCssDisplayValue(svg: any, cssRule: String, displayValue) {
+        const svgStyles = svg.querySelectorAll('svg style');
+        let ruleFound = false;
+        for (const svgStyle: SVGStyleElement of svgStyles) {
+            if(!svgStyle?.sheet?.cssRules) {
+                continue;
+            }
+            for (const rule: any of svgStyle.sheet.cssRules) {
+                if (rule.selectorText === cssRule) {
+                    rule.style.display = displayValue;
+                    ruleFound = true;
+                    break;
+                }
+            }
+            if (ruleFound) {
+                break;
+            }
+        }
+        if (!ruleFound) {
+            console.info(cssRule+" do not exist yet")
+            let svgStyle = svgStyles[svgStyles.length - 1];
+            svgStyle.sheet.insertRule(`${cssRule} { display: ${displayValue}; }`);
+        }
+    }
+
+    public injectCullingRules(htmlElementSvg: HTMLElement) {
+        let rules = this.getCullingRules().map(rule => {
+            return `${rule.css} {display: ${rule.visible ? 'block' : 'none'};}`;
+        }).join('\n');
+
+        let styleTag = htmlElementSvg.querySelector('style');
+        if (!styleTag) {
+            console.error("STYLE WAS NOT FOUND, WE SHOULD INSERT IT HERE");
+            // TODO ADD HERE
+            styleTag = htmlElementSvg.querySelector('style');
+        }
+        styleTag.textContent = rules + styleTag.textContent;
+    }
+
+    public checkLevelOfDetail(event: CustomEvent) {
+        console.debug("zoom level "+event.detail.level);
+        this.getCullingRules().forEach((rule) => {
+            if (rule.visible && event.detail.level < rule.threshold) {
+                //console.debug("Should hide", rule.css);
+                this.updateSvgCssDisplayValue(event.target, rule.css, 'none');
+                rule.visible = false;
+            } else if (!rule.visible && event.detail.level >= rule.threshold) {
+                //console.debug("Should show", rule.css);
+                this.updateSvgCssDisplayValue(event.target, rule.css, 'block');
+                rule.visible = true;
+            }
+        });
+    }
+
     public init(
         minWidth: number,
         minHeight: number,
@@ -148,7 +254,8 @@ export class NetworkAreaDiagramViewer {
                 zoomMax: 30 * ratio,
                 zoomFactor: 0.3,
                 margins: { top: 0, left: 0, right: 0, bottom: 0 },
-            });
+            })
+            .on('zoom', (event: CustomEvent) => this.checkLevelOfDetail(event));
 
         const drawnSvg: HTMLElement = <HTMLElement>(
             draw.svg(this.svgContent).node.firstElementChild
@@ -159,6 +266,9 @@ export class NetworkAreaDiagramViewer {
         firstChild.removeAttribute('viewBox');
         firstChild.removeAttribute('width');
         firstChild.removeAttribute('height');
+
+        // We insert custom CSS to hide details before first load, in order to improve performances
+        this.injectCullingRules(firstChild);
 
         this.svgDraw = draw;
     }
