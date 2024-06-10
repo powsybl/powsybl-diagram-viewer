@@ -392,47 +392,13 @@ export class SingleLineDiagramViewer {
     private addNavigationArrow() {
         if (this.onNextVoltageCallback !== null) {
             let navigable = this.svgMetadata?.nodes.filter((el) => el.nextVId);
-            let vlList = this.svgMetadata?.nodes.map((element) => element.vid);
-            vlList = vlList?.filter(
-                (element, index) =>
-                    element !== '' && vlList?.indexOf(element) === index
-            );
+            const vlList = navigable?.map((element) => element.vid);
+            const vlSet = new Set(vlList);
 
             //remove arrows if the arrow points to the current svg
-            navigable = navigable?.filter((element) => {
-                return vlList?.indexOf(element.nextVId) === -1;
-            });
-
-            const highestY = new Map();
-            const lowestY = new Map();
-            let y;
-
-            navigable?.forEach((element) => {
-                const elementById: HTMLElement | null =
-                    this.container.querySelector('#' + element.id);
-                if (elementById != null) {
-                    const transform: string[] | undefined = elementById
-                        ?.getAttribute('transform')
-                        ?.split(',');
-
-                    const ys = transform?.[1]?.match(/\d+/)?.[0];
-                    if (ys !== undefined) {
-                        y = parseInt(ys, 10);
-                        if (
-                            highestY.get(element.vid) === undefined ||
-                            y > highestY.get(element.vid)
-                        ) {
-                            highestY.set(element.vid, y);
-                        }
-                        if (
-                            lowestY.get(element.vid) === undefined ||
-                            y < lowestY.get(element.vid)
-                        ) {
-                            lowestY.set(element.vid, y);
-                        }
-                    }
-                }
-            });
+            navigable = navigable?.filter(
+                (element) => !vlSet.has(element.nextVId)
+            );
 
             navigable?.forEach((element) => {
                 const elementById: HTMLElement | null =
@@ -442,6 +408,8 @@ export class SingleLineDiagramViewer {
                         ?.getAttribute('transform')
                         ?.split(',');
                     const xs = transform?.[0]?.match(/\d+/)?.[0];
+                    const ys = transform?.[1]?.match(/\d+/)?.[0] || '';
+                    const y = parseInt(ys, 10);
                     if (xs !== undefined) {
                         const x = parseInt(xs, 10);
                         const feederWidth =
@@ -452,8 +420,7 @@ export class SingleLineDiagramViewer {
                             elementById,
                             element.direction,
                             x + feederWidth / 2,
-                            highestY.get(element.vid),
-                            lowestY.get(element.vid)
+                            y
                         );
                     }
                 }
@@ -480,20 +447,17 @@ export class SingleLineDiagramViewer {
         element: HTMLElement,
         position: string,
         x: number,
-        highestY: number,
-        lowestY: number
+        y: number
     ) {
         const svgInsert: HTMLElement | null = element?.parentElement;
         if (svgInsert !== undefined && svgInsert !== null) {
             const group = document.createElementNS(SVG_NS, 'g');
             const svgMetadata = this.svgMetadata;
-            let y;
-
             if (position === 'TOP') {
-                y = lowestY - 65;
+                y = y - 65;
                 x = x - 22;
             } else {
-                y = highestY + 65;
+                y = y + 65;
                 x = x + 22;
             }
 
