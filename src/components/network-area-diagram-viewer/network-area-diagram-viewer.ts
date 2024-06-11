@@ -20,51 +20,83 @@ export class NetworkAreaDiagramViewer {
     originalHeight: number;
     svgDraw: Svg | undefined;
 
-    cullingRules = [
+    dynamicCssRules = [
         {
-            css: ".nad-edge-infos", // data on edges (arrows and values)
+            cssSelector: ".nad-edge-infos", // data on edges (arrows and values)
+            activeCssDeclaration: {"display": "block"},
+            inactiveCssDeclaration: {"display": "none"},
             threshold: 0.07,
-            visible: false,
+            active: false,
         },
         {
-            css: ".nad-label-box", // tooltips linked to nodes
-            threshold: 0.06,
-            visible: false,
+            cssSelector: ".nad-label-box", // tooltips linked to nodes
+            activeCssDeclaration: {"display": "block"},
+            inactiveCssDeclaration: {"display": "none"},
+            threshold: 0.05,
+            active: false,
         },
         {
-            css: ".nad-text-edges", // visual link between nodes and their tooltip
-            threshold: 0.06,
-            visible: false,
+            cssSelector: ".nad-text-edges", // visual link between nodes and their tooltip
+            activeCssDeclaration: {"display": "block"},
+            inactiveCssDeclaration: {"display": "none"},
+            threshold: 0.05,
+            active: false,
         },
         {
-            css: '[class^="nad-vl0to30"], [class*=" nad-vl0to30"]',
+            cssSelector: '[class^="nad-vl0to30"], [class*=" nad-vl0to30"]',
+            activeCssDeclaration: {"display": "block"},
+            inactiveCssDeclaration: {"display": "none"},
             threshold: 0.03,
-            visible: false,
+            active: false,
         },
         {
-            css: '[class^="nad-vl30to50"], [class*=" nad-vl30to50"]',
+            cssSelector: '[class^="nad-vl30to50"], [class*=" nad-vl30to50"]',
+            activeCssDeclaration: {"display": "block"},
+            inactiveCssDeclaration: {"display": "none"},
             threshold: 0.03,
-            visible: false,
+            active: false,
         },
         {
-            css: '[class^="nad-vl50to70"], [class*=" nad-vl50to70"]',
+            cssSelector: '[class^="nad-vl50to70"], [class*=" nad-vl50to70"]',
+            activeCssDeclaration: {"display": "block"},
+            inactiveCssDeclaration: {"display": "none"},
             threshold: 0.02,
-            visible: false,
+            active: false,
         },
         {
-            css: '[class^="nad-vl70to120"], [class*=" nad-vl70to120"]',
+            cssSelector: '[class^="nad-vl70to120"], [class*=" nad-vl70to120"]',
+            activeCssDeclaration: {"display": "block"},
+            inactiveCssDeclaration: {"display": "none"},
             threshold: 0.02,
-            visible: false,
+            active: false,
         },
         {
-            css: '[class^="nad-vl120to180"], [class*=" nad-vl120to180"]',
+            cssSelector: '[class^="nad-vl120to180"], [class*=" nad-vl120to180"]',
+            activeCssDeclaration: {"display": "block"},
+            inactiveCssDeclaration: {"display": "none"},
             threshold: 0.015,
-            visible: false,
+            active: false,
         },
         {
-            css: '[class^="nad-vl180to300"], [class*=" nad-vl180to300"]',
+            cssSelector: '[class^="nad-vl180to300"], [class*=" nad-vl180to300"]',
+            activeCssDeclaration: {"display": "block"},
+            inactiveCssDeclaration: {"display": "none"},
             threshold: 0.01,
-            visible: false,
+            active: false,
+        },
+        {
+            cssSelector: '[class^="nad-vl180to300"] .nad-edge-path.nad-edge-path, [class*=" nad-vl180to300"] .nad-edge-path.nad-edge-path',
+            activeCssDeclaration: {"stroke-width": "5px"},
+            inactiveCssDeclaration: {"stroke-width": "10px"},
+            threshold: 0.015,
+            active: false,
+        },
+        {
+            cssSelector: '[class^="nad-vl300to500"] .nad-edge-path.nad-edge-path, [class*=" nad-vl300to500"] .nad-edge-path.nad-edge-path',
+            activeCssDeclaration: {"stroke-width": "5px"},
+            inactiveCssDeclaration: {"stroke-width": "15px"},
+            threshold: 0.015,
+            active: false,
         },
     ];
 
@@ -143,11 +175,11 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    public getCullingRules() {
-        return this.cullingRules;
+    public getDynamicCssRules() {
+        return this.dynamicCssRules;
     }
 
-    public updateSvgCssDisplayValue(svg: any, cssRule: String, displayValue) {
+    public updateSvgCssDisplayValue(svg: any, cssSelector: String, cssDeclaration) {
         const svgStyles = svg.querySelectorAll('svg style');
         let ruleFound = false;
         for (const svgStyle: SVGStyleElement of svgStyles) {
@@ -155,8 +187,10 @@ export class NetworkAreaDiagramViewer {
                 continue;
             }
             for (const rule: any of svgStyle.sheet.cssRules) {
-                if (rule.selectorText === cssRule) {
-                    rule.style.display = displayValue;
+                if (rule.selectorText === cssSelector) {
+                    const key = Object.keys(cssDeclaration)[0];
+                    const value = cssDeclaration[key];
+                    rule.style.setProperty(key, value);
                     ruleFound = true;
                     break;
                 }
@@ -166,15 +200,20 @@ export class NetworkAreaDiagramViewer {
             }
         }
         if (!ruleFound) {
-            console.info(cssRule+" do not exist yet")
-            let svgStyle = svgStyles[svgStyles.length - 1];
-            svgStyle.sheet.insertRule(`${cssRule} { display: ${displayValue}; }`);
+            console.info(cssSelector+" do not exist yet")
+            let svgStyle = svgStyles[svgStyles.length - 1]; // Adds the new rule to the last <style> tag in the SVG
+            const key = Object.keys(cssDeclaration)[0];
+            const value = cssDeclaration[key];
+            svgStyle.sheet.insertRule(`${cssSelector} {${key}: ${value};}`);
         }
     }
 
-    public injectCullingRules(htmlElementSvg: HTMLElement) {
-        let rules = this.getCullingRules().map(rule => {
-            return `${rule.css} {display: ${rule.visible ? 'block' : 'none'};}`;
+    public injectDynamicCssRules(htmlElementSvg: HTMLElement) {
+        let rules = this.getDynamicCssRules().map(rule => {
+            const ruleToInject = rule.active ? rule.activeCssDeclaration : rule.inactiveCssDeclaration;
+            const key = Object.keys(ruleToInject)[0];
+            const value = ruleToInject[key];
+            return `${rule.cssSelector} {${key}: ${value};}`;
         }).join('\n');
 
         let styleTag = htmlElementSvg.querySelector('style');
@@ -188,15 +227,15 @@ export class NetworkAreaDiagramViewer {
 
     public checkLevelOfDetail(event: CustomEvent) {
         console.debug("zoom level "+event.detail.level);
-        this.getCullingRules().forEach((rule) => {
-            if (rule.visible && event.detail.level < rule.threshold) {
-                console.debug("Should hide", rule.css);
-                this.updateSvgCssDisplayValue(event.target, rule.css, 'none');
-                rule.visible = false;
-            } else if (!rule.visible && event.detail.level >= rule.threshold) {
-                console.debug("Should show", rule.css);
-                this.updateSvgCssDisplayValue(event.target, rule.css, 'block');
-                rule.visible = true;
+        this.getDynamicCssRules().forEach((rule) => {
+            if (rule.active && event.detail.level < rule.threshold) {
+                console.debug("CSS Rule "+rule.cssSelector+" below threshold");
+                rule.active = false;
+                this.updateSvgCssDisplayValue(event.target, rule.cssSelector, rule.inactiveCssDeclaration);
+            } else if (!rule.active && event.detail.level >= rule.threshold) {
+                console.debug("CSS Rule "+rule.cssSelector+" above threshold");
+                rule.active = true;
+                this.updateSvgCssDisplayValue(event.target, rule.cssSelector, rule.activeCssDeclaration);
             }
         });
     }
@@ -268,7 +307,7 @@ export class NetworkAreaDiagramViewer {
         firstChild.removeAttribute('height');
 
         // We insert custom CSS to hide details before first load, in order to improve performances
-        this.injectCullingRules(firstChild);
+        this.injectDynamicCssRules(firstChild);
 
         this.svgDraw = draw;
     }
