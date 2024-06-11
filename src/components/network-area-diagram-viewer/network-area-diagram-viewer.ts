@@ -37,32 +37,32 @@ export class NetworkAreaDiagramViewer {
             visible: false,
         },
         {
-            css: ".nad-vl0to30",
+            css: '[class^="nad-vl0to30"], [class*=" nad-vl0to30"]',
             threshold: 0.03,
             visible: false,
         },
         {
-            css: ".nad-vl30to50",
+            css: '[class^="nad-vl30to50"], [class*=" nad-vl30to50"]',
             threshold: 0.03,
             visible: false,
         },
         {
-            css: ".nad-vl50to70",
+            css: '[class^="nad-vl50to70"], [class*=" nad-vl50to70"]',
             threshold: 0.02,
             visible: false,
         },
         {
-            css: ".nad-vl70to120",
+            css: '[class^="nad-vl70to120"], [class*=" nad-vl70to120"]',
             threshold: 0.02,
             visible: false,
         },
         {
-            css: ".nad-vl120to180",
+            css: '[class^="nad-vl120to180"], [class*=" nad-vl120to180"]',
             threshold: 0.015,
             visible: false,
         },
         {
-            css: ".nad-vl180to300",
+            css: '[class^="nad-vl180to300"], [class*=" nad-vl180to300"]',
             threshold: 0.01,
             visible: false,
         },
@@ -179,8 +179,8 @@ export class NetworkAreaDiagramViewer {
 
         let styleTag = htmlElementSvg.querySelector('style');
         if (!styleTag) {
-            console.error("STYLE WAS NOT FOUND, WE SHOULD INSERT IT HERE");
-            // TODO ADD HERE
+            htmlElementSvg.appendChild(document.createElement('style'));
+            console.debug("Style tag missing from SVG file. It has been created.");
             styleTag = htmlElementSvg.querySelector('style');
         }
         styleTag.textContent = rules + styleTag.textContent;
@@ -190,11 +190,11 @@ export class NetworkAreaDiagramViewer {
         console.debug("zoom level "+event.detail.level);
         this.getCullingRules().forEach((rule) => {
             if (rule.visible && event.detail.level < rule.threshold) {
-                //console.debug("Should hide", rule.css);
+                console.debug("Should hide", rule.css);
                 this.updateSvgCssDisplayValue(event.target, rule.css, 'none');
                 rule.visible = false;
             } else if (!rule.visible && event.detail.level >= rule.threshold) {
-                //console.debug("Should show", rule.css);
+                console.debug("Should show", rule.css);
                 this.updateSvgCssDisplayValue(event.target, rule.css, 'block');
                 rule.visible = true;
             }
@@ -252,7 +252,7 @@ export class NetworkAreaDiagramViewer {
                 panning: true,
                 zoomMin: 0.5 / ratio,
                 zoomMax: 30 * ratio,
-                zoomFactor: 0.3,
+                zoomFactor: 0.2,
                 margins: { top: 0, left: 0, right: 0, bottom: 0 },
             })
             .on('zoom', (event: CustomEvent) => this.checkLevelOfDetail(event));
