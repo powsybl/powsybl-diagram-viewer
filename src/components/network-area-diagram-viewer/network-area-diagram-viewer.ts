@@ -973,15 +973,16 @@ export class NetworkAreaDiagramViewer {
         anchorPoint: Point,
         edgeStart: Point
     ) {
-        const edgeNameElements = DiagramUtils.getEdgeNameElements(edgeNode);
-        const positionElement: SVGGraphicsElement | null = edgeNameElements[0];
+        const positionElement: SVGGraphicsElement | null =
+            edgeNode.querySelector('.nad-edge-label') as SVGGraphicsElement;
         if (positionElement != null) {
             // move edge name position
             positionElement.setAttribute(
                 'transform',
                 'translate(' + DiagramUtils.getFormattedPoint(anchorPoint) + ')'
             );
-            const angleElement: SVGGraphicsElement | null = edgeNameElements[1];
+            const angleElement: SVGGraphicsElement | null =
+                positionElement.querySelector('text') as SVGGraphicsElement;
             if (angleElement != null) {
                 // change edge name angle
                 const edgeNameAngle = DiagramUtils.getEdgeNameAngle(

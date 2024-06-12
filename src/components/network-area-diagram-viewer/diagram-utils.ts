@@ -437,44 +437,6 @@ export function getBoundarySemicircle(
     );
 }
 
-// get egde name elements: position and angle elements
-export function getEdgeNameElements(
-    edgeNode: SVGGraphicsElement
-): [SVGGraphicsElement | null, SVGGraphicsElement | null] {
-    let edgeNamePositionElement: SVGGraphicsElement | null = null;
-    let edgeNameAngleElement: SVGGraphicsElement | null = null;
-    // get DOM element containing name
-    const nameElement: SVGGraphicsElement =
-        edgeNode.lastElementChild as SVGGraphicsElement;
-    if (
-        nameElement != null &&
-        nameElement.tagName == 'g' &&
-        (nameElement.id == null || nameElement.id.length == 0)
-    ) {
-        // get DOM element containing name position
-        const namePositionElement: SVGGraphicsElement =
-            nameElement.lastElementChild as SVGGraphicsElement;
-        if (
-            namePositionElement != null &&
-            namePositionElement.tagName == 'g' &&
-            (namePositionElement.id == null ||
-                namePositionElement.id.length == 0)
-        ) {
-            edgeNamePositionElement = namePositionElement;
-            // get DOM element containing name angle
-            const nameAngleElement: SVGGraphicsElement =
-                namePositionElement.lastElementChild as SVGGraphicsElement;
-            if (
-                nameAngleElement != null &&
-                nameAngleElement.tagName == 'text'
-            ) {
-                edgeNameAngleElement = nameAngleElement;
-            }
-        }
-    }
-    return [edgeNamePositionElement, edgeNameAngleElement];
-}
-
 // get the angle of a edge name between two points
 export function getEdgeNameAngle(point1: Point, point2: Point): number {
     const angle = getAngle(point1, point2);
