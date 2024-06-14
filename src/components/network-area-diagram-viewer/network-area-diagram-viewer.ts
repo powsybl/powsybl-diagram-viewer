@@ -10,6 +10,7 @@ import '@svgdotjs/svg.panzoom.js';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
+enum THRESHOLD_STATUS { BELOW, ABOVE};
 
 export class NetworkAreaDiagramViewer {
     container: HTMLElement;
@@ -23,81 +24,81 @@ export class NetworkAreaDiagramViewer {
     dynamicCssRules = [
         {
             cssSelector: ".nad-edge-infos", // data on edges (arrows and values)
-            activeCssDeclaration: {"display": "block"},
-            inactiveCssDeclaration: {"display": "none"},
-            threshold: 0.07,
-            active: false,
+            belowThresholdCssDeclaration: {"display": "block"},
+            aboveThresholdCssDeclaration: {"display": "none"},
+            threshold: 2200,// 0.07,
+            thresholdStatus: THRESHOLD_STATUS.ABOVE,
         },
         {
             cssSelector: ".nad-label-box", // tooltips linked to nodes
-            activeCssDeclaration: {"display": "block"},
-            inactiveCssDeclaration: {"display": "none"},
-            threshold: 0.05,
-            active: false,
+            belowThresholdCssDeclaration: {"display": "block"},
+            aboveThresholdCssDeclaration: {"display": "none"},
+            threshold: 3000,// 0.05,
+            thresholdStatus: THRESHOLD_STATUS.ABOVE,
         },
         {
             cssSelector: ".nad-text-edges", // visual link between nodes and their tooltip
-            activeCssDeclaration: {"display": "block"},
-            inactiveCssDeclaration: {"display": "none"},
-            threshold: 0.05,
-            active: false,
+            belowThresholdCssDeclaration: {"display": "block"},
+            aboveThresholdCssDeclaration: {"display": "none"},
+            threshold: 3000,// 0.05,
+            thresholdStatus: THRESHOLD_STATUS.ABOVE,
         },
         {
             cssSelector: '[class^="nad-vl0to30"], [class*=" nad-vl0to30"]',
-            activeCssDeclaration: {"display": "block"},
-            inactiveCssDeclaration: {"display": "none"},
-            threshold: 0.03,
-            active: false,
+            belowThresholdCssDeclaration: {"display": "block"},
+            aboveThresholdCssDeclaration: {"display": "none"},
+            threshold: 4000,// 0.03,
+            thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         {
             cssSelector: '[class^="nad-vl30to50"], [class*=" nad-vl30to50"]',
-            activeCssDeclaration: {"display": "block"},
-            inactiveCssDeclaration: {"display": "none"},
-            threshold: 0.03,
-            active: false,
+            belowThresholdCssDeclaration: {"display": "block"},
+            aboveThresholdCssDeclaration: {"display": "none"},
+            threshold: 4000,// 0.03,
+            thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         {
             cssSelector: '[class^="nad-vl50to70"], [class*=" nad-vl50to70"]',
-            activeCssDeclaration: {"display": "block"},
-            inactiveCssDeclaration: {"display": "none"},
-            threshold: 0.02,
-            active: false,
+            belowThresholdCssDeclaration: {"display": "block"},
+            aboveThresholdCssDeclaration: {"display": "none"},
+            threshold: 9000,// 0.02,
+            thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         {
             cssSelector: '[class^="nad-vl70to120"], [class*=" nad-vl70to120"]',
-            activeCssDeclaration: {"display": "block"},
-            inactiveCssDeclaration: {"display": "none"},
-            threshold: 0.02,
-            active: false,
+            belowThresholdCssDeclaration: {"display": "block"},
+            aboveThresholdCssDeclaration: {"display": "none"},
+            threshold: 9000,// 0.02,
+            thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         {
             cssSelector: '[class^="nad-vl120to180"], [class*=" nad-vl120to180"]',
-            activeCssDeclaration: {"display": "block"},
-            inactiveCssDeclaration: {"display": "none"},
-            threshold: 0.015,
-            active: false,
+            belowThresholdCssDeclaration: {"display": "block"},
+            aboveThresholdCssDeclaration: {"display": "none"},
+            threshold: 12000,// 0.015,
+            thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         {
             cssSelector: '[class^="nad-vl180to300"], [class*=" nad-vl180to300"]',
-            activeCssDeclaration: {"display": "block"},
-            inactiveCssDeclaration: {"display": "none"},
-            threshold: 0.01,
-            active: false,
+            belowThresholdCssDeclaration: {"display": "block"},
+            aboveThresholdCssDeclaration: {"display": "none"},
+            threshold: 20000,// 0.01,
+            thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
-        {
+        /*{
             cssSelector: '[class^="nad-vl180to300"] .nad-edge-path.nad-edge-path, [class*=" nad-vl180to300"] .nad-edge-path.nad-edge-path',
-            activeCssDeclaration: {"stroke-width": "5px"},
-            inactiveCssDeclaration: {"stroke-width": "10px"},
+            belowThresholdCssDeclaration: {"stroke-width": "5px"},
+            aboveThresholdCssDeclaration: {"stroke-width": "10px"},
             threshold: 0.015,
-            active: false,
+            thresholdStatus: THRESHOLD_STATUS.ABOVE,
         },
         {
             cssSelector: '[class^="nad-vl300to500"] .nad-edge-path.nad-edge-path, [class*=" nad-vl300to500"] .nad-edge-path.nad-edge-path',
-            activeCssDeclaration: {"stroke-width": "5px"},
-            inactiveCssDeclaration: {"stroke-width": "15px"},
+            belowThresholdCssDeclaration: {"stroke-width": "5px"},
+            aboveThresholdCssDeclaration: {"stroke-width": "15px"},
             threshold: 0.015,
-            active: false,
-        },
+            thresholdStatus: THRESHOLD_STATUS.ABOVE,
+        },*/
     ];
 
     constructor(
@@ -108,6 +109,7 @@ export class NetworkAreaDiagramViewer {
         maxWidth: number,
         maxHeight: number
     ) {
+        console.debug("NAD DIAGRAM VIEWER CONSTRUCTOR");
         this.container = container;
         this.svgContent = svgContent;
         this.width = 0;
@@ -180,13 +182,14 @@ export class NetworkAreaDiagramViewer {
     }
 
     public updateSvgCssDisplayValue(svg: any, cssSelector: String, cssDeclaration) {
-        const svgStyles = svg.querySelectorAll('svg style');
+        const innerSvg = svg.querySelector('svg');
+        let svgStyles = innerSvg.querySelectorAll('style');
         let ruleFound = false;
-        for (const svgStyle: SVGStyleElement of svgStyles) {
+        for (const svgStyle of svgStyles) {
             if(!svgStyle?.sheet?.cssRules) {
                 continue;
             }
-            for (const rule: any of svgStyle.sheet.cssRules) {
+            for (const rule of svgStyle.sheet.cssRules) {
                 if (rule.selectorText === cssSelector) {
                     const key = Object.keys(cssDeclaration)[0];
                     const value = cssDeclaration[key];
@@ -200,17 +203,28 @@ export class NetworkAreaDiagramViewer {
             }
         }
         if (!ruleFound) {
-            console.info(cssSelector+" do not exist yet")
-            let svgStyle = svgStyles[svgStyles.length - 1]; // Adds the new rule to the last <style> tag in the SVG
             const key = Object.keys(cssDeclaration)[0];
             const value = cssDeclaration[key];
-            svgStyle.sheet.insertRule(`${cssSelector} {${key}: ${value};}`);
+            console.info(cssSelector+" do not exist yet")
+            let styleTag = svgStyles[svgStyles.length - 1]; // Adds the new rule to the last <style> tag in the SVG
+            if (!styleTag) {
+                innerSvg.appendChild(document.createElement('style'));
+                console.debug("[updateSvgCssDisplayValue] Style tag missing from SVG file. It has been created.");
+                styleTag = innerSvg.querySelector('style');
+            }
+            styleTag.textContent = `${cssSelector} {${key}: ${value};}\n` + styleTag.textContent;
         }
+    }
+
+    public initializeDynamicCssRules(maxDisplayedSize: number) {
+        this.getDynamicCssRules().forEach((rule) => {
+            rule.thresholdStatus = maxDisplayedSize < rule.threshold ? THRESHOLD_STATUS.BELOW : THRESHOLD_STATUS.ABOVE;
+        });
     }
 
     public injectDynamicCssRules(htmlElementSvg: HTMLElement) {
         let rules = this.getDynamicCssRules().map(rule => {
-            const ruleToInject = rule.active ? rule.activeCssDeclaration : rule.inactiveCssDeclaration;
+            const ruleToInject = rule.thresholdStatus === THRESHOLD_STATUS.BELOW ? rule.belowThresholdCssDeclaration : rule.aboveThresholdCssDeclaration;
             const key = Object.keys(ruleToInject)[0];
             const value = ruleToInject[key];
             return `${rule.cssSelector} {${key}: ${value};}`;
@@ -219,23 +233,29 @@ export class NetworkAreaDiagramViewer {
         let styleTag = htmlElementSvg.querySelector('style');
         if (!styleTag) {
             htmlElementSvg.appendChild(document.createElement('style'));
-            console.debug("Style tag missing from SVG file. It has been created.");
+            console.debug("[injectDynamicCssRules] Style tag missing from SVG file. It has been created.");
             styleTag = htmlElementSvg.querySelector('style');
         }
         styleTag.textContent = rules + styleTag.textContent;
     }
 
-    public checkLevelOfDetail(event: CustomEvent) {
-        console.debug("zoom level "+event.detail.level);
+    public getCurrentlyMaxDisplayedSize(): number {
+        const viewbox = this.getViewBox();
+        const maxValue = Math.max(viewbox.height, viewbox.width);
+        return maxValue;
+    }
+
+    public checkLevelOfDetail(svg: any) {
+        const maxDisplayedSize = this.getCurrentlyMaxDisplayedSize();
         this.getDynamicCssRules().forEach((rule) => {
-            if (rule.active && event.detail.level < rule.threshold) {
-                console.debug("CSS Rule "+rule.cssSelector+" below threshold");
-                rule.active = false;
-                this.updateSvgCssDisplayValue(event.target, rule.cssSelector, rule.inactiveCssDeclaration);
-            } else if (!rule.active && event.detail.level >= rule.threshold) {
-                console.debug("CSS Rule "+rule.cssSelector+" above threshold");
-                rule.active = true;
-                this.updateSvgCssDisplayValue(event.target, rule.cssSelector, rule.activeCssDeclaration);
+            if (rule.thresholdStatus === THRESHOLD_STATUS.ABOVE && maxDisplayedSize < rule.threshold) {
+                console.debug("CSS Rule "+rule.cssSelector+" 🟢 below threshold "+maxDisplayedSize+" < "+rule.threshold);
+                rule.thresholdStatus = THRESHOLD_STATUS.BELOW;
+                this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.belowThresholdCssDeclaration);
+            } else if (rule.thresholdStatus === THRESHOLD_STATUS.BELOW && maxDisplayedSize >= rule.threshold) {
+                console.debug("CSS Rule "+rule.cssSelector+" 🔴 above threshold "+maxDisplayedSize+" >= "+rule.threshold);
+                rule.thresholdStatus = THRESHOLD_STATUS.ABOVE;
+                this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.aboveThresholdCssDeclaration);
             }
         });
     }
@@ -249,6 +269,7 @@ export class NetworkAreaDiagramViewer {
         if (!this.container || !this.svgContent) {
             return;
         }
+        console.debug("NAD DIAGRAM VIEWER INIT");
 
         const dimensions: DIMENSIONS | null = this.getDimensionsFromSvg();
 
@@ -289,12 +310,17 @@ export class NetworkAreaDiagramViewer {
             )
             .panZoom({
                 panning: true,
-                zoomMin: 0.5 / ratio,
-                zoomMax: 30 * ratio,
+                zoomMin: 0.5 / ratio, // maximum zoom OUT ratio (0.5 = at best, the displayed area is twice the SVG's size)
+                zoomMax: 20 * ratio, // maximum zoom IN ratio (20 = at best, the displayed area is only 1/20th of the SVG's size)
                 zoomFactor: 0.2,
                 margins: { top: 0, left: 0, right: 0, bottom: 0 },
             })
-            .on('zoom', (event: CustomEvent) => this.checkLevelOfDetail(event));
+            .on('zoom', (event: CustomEvent) => {
+                setTimeout(
+                    () => this.checkLevelOfDetail(event.target),
+                    10 // The new viewbox is only correctly calculated after this event ends, so we use a timeout here. Maybe there's a better solution ?
+                );
+            });
 
         const drawnSvg: HTMLElement = <HTMLElement>(
             draw.svg(this.svgContent).node.firstElementChild
@@ -307,8 +333,9 @@ export class NetworkAreaDiagramViewer {
         firstChild.removeAttribute('height');
 
         // We insert custom CSS to hide details before first load, in order to improve performances
+        this.initializeDynamicCssRules(Math.max(dimensions.viewbox.width, dimensions.viewbox.height));
         this.injectDynamicCssRules(firstChild);
-
+        draw.fire('zoom'); // Forces a new dynamic zoom check to correctly update the dynamic CSS
         this.svgDraw = draw;
     }
 
