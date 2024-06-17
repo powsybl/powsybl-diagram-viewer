@@ -55,10 +55,7 @@ export class NetworkAreaDiagramViewer {
         this.originalWidth = 0;
         this.originalHeight = 0;
         this.init(minWidth, minHeight, maxWidth, maxHeight);
-        // get the SVG parameters
-        // so far, they are hardcoded in the class
-        // the idea is to read them from the metadata included in the SVG
-        this.svgParameters = new SvgParameters();
+        this.svgParameters = this.getSvgParameters();
         this.onNodeCallback = onNodeCallback;
     }
 
@@ -236,6 +233,12 @@ export class NetworkAreaDiagramViewer {
         this.svgDraw?.panZoom({
             panning: false,
         });
+    }
+
+    private getSvgParameters(): SvgParameters {
+        const svgParametersElement: SVGGraphicsElement | null =
+            this.container.querySelector('nad\\:svgparameters');
+        return new SvgParameters(svgParametersElement);
     }
 
     private startDrag(event: Event) {
@@ -480,10 +483,7 @@ export class NetworkAreaDiagramViewer {
             const angle = DiagramUtils.getAngle(point1, point2);
             const nbForks = edges.length;
             const angleStep =
-                DiagramUtils.degToRad(
-                    this.svgParameters.getEdgeForkAperture()
-                ) /
-                (nbForks - 1);
+                this.svgParameters.getEdgesForkAperture() / (nbForks - 1);
             let i = 0;
             edges.forEach((edge) => {
                 if (2 * i + 1 == nbForks) {
@@ -512,21 +512,18 @@ export class NetworkAreaDiagramViewer {
                     }
                     // compute moved edge data: polyline points
                     const alpha =
-                        -DiagramUtils.degToRad(
-                            this.svgParameters.getEdgeForkAperture()
-                        ) /
-                            2 +
+                        -this.svgParameters.getEdgesForkAperture() / 2 +
                         i * angleStep;
                     const angleFork1 = angle - alpha;
                     const angleFork2 = angle + Math.PI + alpha;
                     const edgeFork1 = DiagramUtils.getEdgeFork(
                         point1,
-                        this.svgParameters.getEdgeForkLength(),
+                        this.svgParameters.getEdgesForkLength(),
                         angleFork1
                     );
                     const edgeFork2 = DiagramUtils.getEdgeFork(
                         point2,
-                        this.svgParameters.getEdgeForkLength(),
+                        this.svgParameters.getEdgesForkLength(),
                         angleFork2
                     );
                     const busNodeId1 = edge.getAttribute('busnode1');
@@ -777,7 +774,7 @@ export class NetworkAreaDiagramViewer {
             ? DiagramUtils.getPointAtDistance(
                   endPolyline,
                   middlePolyline == null ? startPolyline : middlePolyline,
-                  1.5 * this.svgParameters.getTransfomerCircleRadius()
+                  1.5 * this.svgParameters.getTransformerCircleRadius()
               )
             : endPolyline;
         const polylinePoints: string = DiagramUtils.getFormattedPolyline(
@@ -871,7 +868,7 @@ export class NetworkAreaDiagramViewer {
             DiagramUtils.getPointAtDistance(
                 endPolyline1,
                 startPolyline1,
-                1.5 * this.svgParameters.getTransfomerCircleRadius()
+                1.5 * this.svgParameters.getTransformerCircleRadius()
             )
         );
         this.moveTransformerCircle(
@@ -880,7 +877,7 @@ export class NetworkAreaDiagramViewer {
             DiagramUtils.getPointAtDistance(
                 endPolyline2,
                 startPolyline2,
-                1.5 * this.svgParameters.getTransfomerCircleRadius()
+                1.5 * this.svgParameters.getTransformerCircleRadius()
             )
         );
         // if phase shifting transformer move transformer arrow
@@ -904,7 +901,7 @@ export class NetworkAreaDiagramViewer {
         const circleCenter: Point = DiagramUtils.getPointAtDistance(
             endPolyline,
             startPolyline,
-            -this.svgParameters.getTransfomerCircleRadius()
+            -this.svgParameters.getTransformerCircleRadius()
         );
         transformerCircle.setAttribute(
             'cx',
@@ -928,7 +925,7 @@ export class NetworkAreaDiagramViewer {
             startPolyline,
             endPolyline,
             transformerCenter,
-            this.svgParameters.getTransfomerCircleRadius()
+            this.svgParameters.getTransformerCircleRadius()
         );
         arrowPath?.setAttribute('transform', 'matrix(' + matrix + ')');
     }
