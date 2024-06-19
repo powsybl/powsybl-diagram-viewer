@@ -176,6 +176,9 @@
             <g class="nad-glued-center">
                 <circle class="nad-vl0to30-line nad-winding" cx="-354.51" cy="-128.15" r="20.00"/>
                 <circle class="nad-vl300to500-line nad-winding" cx="-343.35" cy="-111.56" r="20.00"/>
+                <g class="nad-edge-label" transform="translate(-348.93,-119.86)">
+                    <text transform="rotate(56.08)" x="0.00" style="text-anchor:middle">NGEN_NHV1</text>
+                </g>
             </g>
         </g>
         <g id="9">
@@ -203,6 +206,11 @@
                     </g>
                 </g>
             </g>
+            <g class="nad-glued-center">
+                <g class="nad-edge-label" transform="translate(-54.98,86.38)">
+                    <text transform="rotate(3.61)" x="0.00" style="text-anchor:middle">NHV1_NHV2_1</text>
+                </g>
+            </g>
         </g>
         <g id="10">
             <g id="10.1" class="nad-vl300to500-line">
@@ -227,6 +235,11 @@
                         </g>
                         <text transform="rotate(-356.39)" x="-19.00" style="text-anchor:end">-300</text>
                     </g>
+                </g>
+            </g>
+            <g class="nad-glued-center">
+                <g class="nad-edge-label" transform="translate(-49.95,6.53)">
+                    <text transform="rotate(3.61)" x="0.00" style="text-anchor:middle">NHV1_NHV2_2</text>
                 </g>
             </g>
         </g>
@@ -258,6 +271,9 @@
             <g class="nad-glued-center">
                 <circle class="nad-vl300to500-line nad-winding" cx="277.81" cy="-51.47" r="20.00"/>
                 <circle class="nad-vl120to180-line nad-winding" cx="293.43" cy="-63.97" r="20.00"/>
+                <g class="nad-edge-label" transform="translate(285.62,-57.72)">
+                    <text transform="rotate(-38.68)" x="0.00" style="text-anchor:middle">NHV2_NLOAD</text>
+                </g>
             </g>
         </g>
     </g>

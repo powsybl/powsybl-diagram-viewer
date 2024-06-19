@@ -436,3 +436,10 @@ export function getBoundarySemicircle(
         getCirclePath(busOuterRadius, startAngle, startAngle + Math.PI, true)
     );
 }
+
+// get the angle of a edge name between two points
+export function getEdgeNameAngle(point1: Point, point2: Point): number {
+    const angle = getAngle(point1, point2);
+    const textFlipped = Math.cos(angle) < 0;
+    return radToDeg(textFlipped ? angle - Math.PI : angle);
+}

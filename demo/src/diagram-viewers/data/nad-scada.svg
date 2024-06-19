@@ -176,6 +176,11 @@
                     </g>
                 </g>
             </g>
+            <g class="nad-glued-center">
+                <g class="nad-edge-label" transform="translate(7.93,87.69)">
+                    <text transform="rotate(-1.33)" x="0.00" style="text-anchor:middle">line</text>
+                </g>
+            </g>
         </g>
         <g id="6">
             <g id="6.1" class="nad-vl300to500-line">
@@ -206,6 +211,9 @@
                 <circle class="nad-vl300to500-line nad-winding" cx="18.86" cy="127.44" r="20.00"/>
                 <circle class="nad-vl180to300-line nad-winding" cx="-1.13" cy="127.91" r="20.00"/>
                 <path d="M60.00,0 0,60.00 M52.00,0 60.00,0 60.00,8.00" transform="matrix(-1.00,0.02,-0.02,-1.00,39.55,156.97)" class="nad-pst-arrow"/>
+                <g class="nad-edge-label" transform="translate(8.86,127.68)">
+                    <text transform="rotate(-1.33)" x="0.00" style="text-anchor:middle">tw2t</text>
+                </g>
             </g>
         </g>
         <g id="13" class="nad-dangling-line-edge">
@@ -252,6 +260,9 @@
             </g>
             <g class="nad-glued-center">
                 <polyline points="44.78,166.85 -25.20,168.48" class="nad-hvdc"/>
+                <g class="nad-edge-label" transform="translate(9.79,167.67)">
+                    <text transform="rotate(-1.33)" x="0.00" style="text-anchor:middle">hvdcline</text>
+                </g>
             </g>
         </g>
     </g>

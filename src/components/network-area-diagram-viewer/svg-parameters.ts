@@ -18,6 +18,7 @@ export class SvgParameters {
     converterStationWidth = 70.0;
     nodeHollowWidth = 15.0;
     unknownBusNodeExtraRadius = 10.0;
+    edgeNameDisplayed = true;
 
     public getVoltageLevelCircleRadius(): number {
         return this.voltageLevelCircleRadius;
@@ -57,5 +58,9 @@ export class SvgParameters {
 
     public getUnknownBusNodeExtraRadius(): number {
         return this.unknownBusNodeExtraRadius;
+    }
+
+    public getEdgeNameDisplayed(): boolean {
+        return this.edgeNameDisplayed;
     }
 }

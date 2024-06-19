@@ -731,6 +731,14 @@ export class NetworkAreaDiagramViewer {
                 edgeMiddle
             );
         }
+        // if present, move edge name
+        if (this.svgParameters.getEdgeNameDisplayed()) {
+            this.moveEdgeName(
+                edgeNode,
+                edgeMiddle,
+                edgeFork1 == null ? edgeStart1 : edgeFork1
+            );
+        }
         // store edge angles, to use them for bus node redrawing
         this.edgeAngles.set(
             edgeNode.id + '.1',
@@ -958,6 +966,37 @@ export class NetworkAreaDiagramViewer {
             }
             this.moveSvgElement(edgeId, this.getTranslation(mousePosition));
         });
+    }
+
+    moveEdgeName(
+        edgeNode: SVGGraphicsElement,
+        anchorPoint: Point,
+        edgeStart: Point
+    ) {
+        const positionElement: SVGGraphicsElement | null =
+            edgeNode.querySelector('.nad-edge-label') as SVGGraphicsElement;
+        if (positionElement != null) {
+            // move edge name position
+            positionElement.setAttribute(
+                'transform',
+                'translate(' + DiagramUtils.getFormattedPoint(anchorPoint) + ')'
+            );
+            const angleElement: SVGGraphicsElement | null =
+                positionElement.querySelector('text') as SVGGraphicsElement;
+            if (angleElement != null) {
+                // change edge name angle
+                const edgeNameAngle = DiagramUtils.getEdgeNameAngle(
+                    edgeStart,
+                    anchorPoint
+                );
+                angleElement.setAttribute(
+                    'transform',
+                    'rotate(' +
+                        DiagramUtils.getFormattedValue(edgeNameAngle) +
+                        ')'
+                );
+            }
+        }
     }
 
     private redrawVoltageLevelNode(
