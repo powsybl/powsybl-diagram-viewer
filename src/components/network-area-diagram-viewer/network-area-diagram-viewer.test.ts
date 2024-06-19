@@ -19,7 +19,8 @@ describe('Test network-area-diagram-viewer.ts', () => {
             0,
             0,
             0,
-            null
+            null,
+            false
         );
 
         expect(container.getElementsByTagName('svg').length).toBe(0);
