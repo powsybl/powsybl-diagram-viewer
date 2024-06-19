@@ -46,7 +46,8 @@ export class NetworkAreaDiagramViewer {
         minHeight: number,
         maxWidth: number,
         maxHeight: number,
-        onNodeCallback: OnMoveNodeCallbackType | null
+        onNodeCallback: OnMoveNodeCallbackType | null,
+        enableNodeMoving: boolean
     ) {
         this.container = container;
         this.svgContent = svgContent;
@@ -54,7 +55,7 @@ export class NetworkAreaDiagramViewer {
         this.height = 0;
         this.originalWidth = 0;
         this.originalHeight = 0;
-        this.init(minWidth, minHeight, maxWidth, maxHeight);
+        this.init(minWidth, minHeight, maxWidth, maxHeight, enableNodeMoving);
         this.svgParameters = this.getSvgParameters();
         this.onNodeCallback = onNodeCallback;
     }
@@ -121,7 +122,8 @@ export class NetworkAreaDiagramViewer {
         minWidth: number,
         minHeight: number,
         maxWidth: number,
-        maxHeight: number
+        maxHeight: number,
+        enableNodeMoving: boolean
     ): void {
         if (!this.container || !this.svgContent) {
             return;
@@ -165,18 +167,20 @@ export class NetworkAreaDiagramViewer {
         drawnSvg.style.overflow = 'visible';
 
         // add events
-        this.svgDraw.on('mousedown', (e: Event) => {
-            this.startDrag(e);
-        });
-        this.svgDraw.on('mousemove', (e: Event) => {
-            this.drag(e);
-        });
-        this.svgDraw.on('mouseup', (e: Event) => {
-            this.endDrag(e);
-        });
-        this.svgDraw.on('mouseleave', (e: Event) => {
-            this.endDrag(e);
-        });
+        if (enableNodeMoving) {
+            this.svgDraw.on('mousedown', (e: Event) => {
+                this.startDrag(e);
+            });
+            this.svgDraw.on('mousemove', (e: Event) => {
+                this.drag(e);
+            });
+            this.svgDraw.on('mouseup', (e: Event) => {
+                this.endDrag(e);
+            });
+            this.svgDraw.on('mouseleave', (e: Event) => {
+                this.endDrag(e);
+            });
+        }
         this.svgDraw.on('panStart', function () {
             if (drawnSvg.parentElement != undefined) {
                 drawnSvg.parentElement.style.cursor = 'move';
