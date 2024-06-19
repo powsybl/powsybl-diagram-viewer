@@ -205,6 +205,17 @@ export class NetworkAreaDiagramViewer {
         firstChild.removeAttribute('viewBox');
         firstChild.removeAttribute('width');
         firstChild.removeAttribute('height');
+
+        if (enableNodeMoving) {
+            // fill empty elements: unknown buses and three windings transformers
+            const emptyElements: NodeListOf<SVGGraphicsElement> =
+                this.container.querySelectorAll(
+                    '.nad-unknown-busnode, .nad-3wt-nodes .nad-winding'
+                );
+            emptyElements.forEach((emptyElement) => {
+                emptyElement.style.fill = '#0000';
+            });
+        }
     }
 
     public getDimensionsFromSvg(): DIMENSIONS | null {
