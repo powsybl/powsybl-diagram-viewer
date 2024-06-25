@@ -10,7 +10,18 @@ import '@svgdotjs/svg.panzoom.js';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
-enum THRESHOLD_STATUS { BELOW, ABOVE};
+type CSSDECLARATION = Record<string, string>; //{ [key: string]: string };
+type CSSRULE = {
+    cssSelector: string;
+    belowThresholdCssDeclaration: CSSDECLARATION;
+    aboveThresholdCssDeclaration: CSSDECLARATION;
+    threshold: number;
+    thresholdStatus: THRESHOLD_STATUS;
+};
+enum THRESHOLD_STATUS {
+    BELOW,
+    ABOVE,
+}
 
 export class NetworkAreaDiagramViewer {
     container: HTMLElement;
@@ -21,68 +32,70 @@ export class NetworkAreaDiagramViewer {
     originalHeight: number;
     svgDraw: Svg | undefined;
 
-    dynamicCssRules = [
+    dynamicCssRules: CSSRULE[] = [
         {
-            cssSelector: ".nad-edge-infos", // data on edges (arrows and values)
-            belowThresholdCssDeclaration: {"display": "block"},
-            aboveThresholdCssDeclaration: {"display": "none"},
-            threshold: 2200,// 0.07,
+            cssSelector: '.nad-edge-infos', // data on edges (arrows and values)
+            belowThresholdCssDeclaration: { display: 'block' },
+            aboveThresholdCssDeclaration: { display: 'none' },
+            threshold: 2200, // 0.07,
             thresholdStatus: THRESHOLD_STATUS.ABOVE,
         },
         {
-            cssSelector: ".nad-label-box", // tooltips linked to nodes
-            belowThresholdCssDeclaration: {"display": "block"},
-            aboveThresholdCssDeclaration: {"display": "none"},
-            threshold: 3000,// 0.05,
+            cssSelector: '.nad-label-box', // tooltips linked to nodes
+            belowThresholdCssDeclaration: { display: 'block' },
+            aboveThresholdCssDeclaration: { display: 'none' },
+            threshold: 3000, // 0.05,
             thresholdStatus: THRESHOLD_STATUS.ABOVE,
         },
         {
-            cssSelector: ".nad-text-edges", // visual link between nodes and their tooltip
-            belowThresholdCssDeclaration: {"display": "block"},
-            aboveThresholdCssDeclaration: {"display": "none"},
-            threshold: 3000,// 0.05,
+            cssSelector: '.nad-text-edges', // visual link between nodes and their tooltip
+            belowThresholdCssDeclaration: { display: 'block' },
+            aboveThresholdCssDeclaration: { display: 'none' },
+            threshold: 3000, // 0.05,
             thresholdStatus: THRESHOLD_STATUS.ABOVE,
         },
         {
             cssSelector: '[class^="nad-vl0to30"], [class*=" nad-vl0to30"]',
-            belowThresholdCssDeclaration: {"display": "block"},
-            aboveThresholdCssDeclaration: {"display": "none"},
-            threshold: 4000,// 0.03,
+            belowThresholdCssDeclaration: { display: 'block' },
+            aboveThresholdCssDeclaration: { display: 'none' },
+            threshold: 4000, // 0.03,
             thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         {
             cssSelector: '[class^="nad-vl30to50"], [class*=" nad-vl30to50"]',
-            belowThresholdCssDeclaration: {"display": "block"},
-            aboveThresholdCssDeclaration: {"display": "none"},
-            threshold: 4000,// 0.03,
+            belowThresholdCssDeclaration: { display: 'block' },
+            aboveThresholdCssDeclaration: { display: 'none' },
+            threshold: 4000, // 0.03,
             thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         {
             cssSelector: '[class^="nad-vl50to70"], [class*=" nad-vl50to70"]',
-            belowThresholdCssDeclaration: {"display": "block"},
-            aboveThresholdCssDeclaration: {"display": "none"},
-            threshold: 9000,// 0.02,
+            belowThresholdCssDeclaration: { display: 'block' },
+            aboveThresholdCssDeclaration: { display: 'none' },
+            threshold: 9000, // 0.02,
             thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         {
             cssSelector: '[class^="nad-vl70to120"], [class*=" nad-vl70to120"]',
-            belowThresholdCssDeclaration: {"display": "block"},
-            aboveThresholdCssDeclaration: {"display": "none"},
-            threshold: 9000,// 0.02,
+            belowThresholdCssDeclaration: { display: 'block' },
+            aboveThresholdCssDeclaration: { display: 'none' },
+            threshold: 9000, // 0.02,
             thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         {
-            cssSelector: '[class^="nad-vl120to180"], [class*=" nad-vl120to180"]',
-            belowThresholdCssDeclaration: {"display": "block"},
-            aboveThresholdCssDeclaration: {"display": "none"},
-            threshold: 12000,// 0.015,
+            cssSelector:
+                '[class^="nad-vl120to180"], [class*=" nad-vl120to180"]',
+            belowThresholdCssDeclaration: { display: 'block' },
+            aboveThresholdCssDeclaration: { display: 'none' },
+            threshold: 12000, // 0.015,
             thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         {
-            cssSelector: '[class^="nad-vl180to300"], [class*=" nad-vl180to300"]',
-            belowThresholdCssDeclaration: {"display": "block"},
-            aboveThresholdCssDeclaration: {"display": "none"},
-            threshold: 20000,// 0.01,
+            cssSelector:
+                '[class^="nad-vl180to300"], [class*=" nad-vl180to300"]',
+            belowThresholdCssDeclaration: { display: 'block' },
+            aboveThresholdCssDeclaration: { display: 'none' },
+            threshold: 20000, // 0.01,
             thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         /*{
@@ -171,89 +184,149 @@ export class NetworkAreaDiagramViewer {
     }
 
     public setViewBox(viewBox: ViewBoxLike): void {
-        if (viewBox !== undefined && viewBox !== null) {
-            this.svgDraw?.viewbox(viewBox);
-        }
+        this.svgDraw?.viewbox(viewBox);
     }
 
     public getDynamicCssRules() {
         return this.dynamicCssRules;
     }
 
-    public updateSvgCssDisplayValue(svg: any, cssSelector: String, cssDeclaration) {
+    public updateSvgCssDisplayValue(
+        svg: SVGSVGElement,
+        cssSelector: string,
+        cssDeclaration: CSSDECLARATION
+    ) {
         const innerSvg = svg.querySelector('svg');
-        let svgStyles = innerSvg.querySelectorAll('style');
+        if (!innerSvg) {
+            console.error('Cannot find the SVG to update!');
+            return;
+        }
+
         let ruleFound = false;
-        for (const svgStyle of svgStyles) {
-            if(!svgStyle?.sheet?.cssRules) {
-                continue;
-            }
-            for (const rule of svgStyle.sheet.cssRules) {
-                if (rule.selectorText === cssSelector) {
-                    const key = Object.keys(cssDeclaration)[0];
-                    const value = cssDeclaration[key];
-                    rule.style.setProperty(key, value);
-                    ruleFound = true;
+
+        let svgStyles = innerSvg.querySelectorAll('style');
+
+        if (svgStyles) {
+            for (const svgStyle of svgStyles) {
+                if (!svgStyle?.sheet?.cssRules) {
+                    continue;
+                }
+                for (const rule of svgStyle.sheet.cssRules) {
+                    const styleRule = rule as CSSStyleRule;
+                    if (styleRule.selectorText === cssSelector) {
+                        const key = Object.keys(cssDeclaration)[0];
+                        const value = cssDeclaration[key];
+                        styleRule.style.setProperty(key, value);
+                        ruleFound = true;
+                        break;
+                    }
+                }
+                if (ruleFound) {
                     break;
                 }
             }
-            if (ruleFound) {
-                break;
+        } else {
+            innerSvg.appendChild(document.createElement('style'));
+            console.debug(
+                '[updateSvgCssDisplayValue] Style tag missing from SVG file. It has been created.'
+            );
+            svgStyles = innerSvg.querySelectorAll('style');
+            if (!svgStyles) {
+                console.error('Failed to create a style tag in the SVG!');
+                return;
             }
         }
+
         if (!ruleFound) {
             const key = Object.keys(cssDeclaration)[0];
             const value = cssDeclaration[key];
-            let styleTag = svgStyles[svgStyles.length - 1]; // Adds the new rule to the last <style> tag in the SVG
-            if (!styleTag) {
-                innerSvg.appendChild(document.createElement('style'));
-                console.debug("[updateSvgCssDisplayValue] Style tag missing from SVG file. It has been created.");
-                styleTag = innerSvg.querySelector('style');
-            }
-            styleTag.textContent = `${cssSelector} {${key}: ${value};}\n` + styleTag.textContent;
+            const styleTag = svgStyles[svgStyles.length - 1]; // Adds the new rule to the last <style> tag in the SVG
+            styleTag.textContent =
+                `${cssSelector} {${key}: ${value};}\n` + styleTag.textContent;
         }
     }
 
     public initializeDynamicCssRules(maxDisplayedSize: number) {
         this.getDynamicCssRules().forEach((rule) => {
-            rule.thresholdStatus = maxDisplayedSize < rule.threshold ? THRESHOLD_STATUS.BELOW : THRESHOLD_STATUS.ABOVE;
+            rule.thresholdStatus =
+                maxDisplayedSize < rule.threshold
+                    ? THRESHOLD_STATUS.BELOW
+                    : THRESHOLD_STATUS.ABOVE;
         });
     }
 
     public injectDynamicCssRules(htmlElementSvg: HTMLElement) {
-        let rules = this.getDynamicCssRules().map(rule => {
-            const ruleToInject = rule.thresholdStatus === THRESHOLD_STATUS.BELOW ? rule.belowThresholdCssDeclaration : rule.aboveThresholdCssDeclaration;
-            const key = Object.keys(ruleToInject)[0];
-            const value = ruleToInject[key];
-            return `${rule.cssSelector} {${key}: ${value};}`;
-        }).join('\n');
+        const rules = this.getDynamicCssRules()
+            .map((rule) => {
+                const ruleToInject =
+                    rule.thresholdStatus === THRESHOLD_STATUS.BELOW
+                        ? rule.belowThresholdCssDeclaration
+                        : rule.aboveThresholdCssDeclaration;
+                const key = Object.keys(ruleToInject)[0];
+                const value = ruleToInject[key];
+                return `${rule.cssSelector} {${key}: ${value};}`;
+            })
+            .join('\n');
 
         let styleTag = htmlElementSvg.querySelector('style');
         if (!styleTag) {
             htmlElementSvg.appendChild(document.createElement('style'));
-            console.debug("[injectDynamicCssRules] Style tag missing from SVG file. It has been created.");
+            console.debug(
+                '[injectDynamicCssRules] Style tag missing from SVG file. It has been created.'
+            );
             styleTag = htmlElementSvg.querySelector('style');
         }
-        styleTag.textContent = rules + styleTag.textContent;
+        if (styleTag && 'textContent' in styleTag) {
+            styleTag.textContent = rules + styleTag.textContent;
+        } else {
+            console.error('Failed to create Style tag in SVG file!');
+        }
     }
 
     public getCurrentlyMaxDisplayedSize(): number {
         const viewbox = this.getViewBox();
-        const maxValue = Math.max(viewbox.height, viewbox.width);
-        return maxValue;
+        return Math.max(viewbox?.height || 0, viewbox?.width || 0);
     }
 
-    public checkLevelOfDetail(svg: any) {
+    public checkLevelOfDetail(svg: SVGSVGElement) {
         const maxDisplayedSize = this.getCurrentlyMaxDisplayedSize();
         this.getDynamicCssRules().forEach((rule) => {
-            if (rule.thresholdStatus === THRESHOLD_STATUS.ABOVE && maxDisplayedSize < rule.threshold) {
-                console.debug("CSS Rule "+rule.cssSelector+" below threshold "+maxDisplayedSize+" < "+rule.threshold);
+            if (
+                rule.thresholdStatus === THRESHOLD_STATUS.ABOVE &&
+                maxDisplayedSize < rule.threshold
+            ) {
+                console.debug(
+                    'CSS Rule ' +
+                        rule.cssSelector +
+                        ' below threshold ' +
+                        maxDisplayedSize +
+                        ' < ' +
+                        rule.threshold
+                );
                 rule.thresholdStatus = THRESHOLD_STATUS.BELOW;
-                this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.belowThresholdCssDeclaration);
-            } else if (rule.thresholdStatus === THRESHOLD_STATUS.BELOW && maxDisplayedSize >= rule.threshold) {
-                console.debug("CSS Rule "+rule.cssSelector+" above threshold "+maxDisplayedSize+" >= "+rule.threshold);
+                this.updateSvgCssDisplayValue(
+                    svg,
+                    rule.cssSelector,
+                    rule.belowThresholdCssDeclaration
+                );
+            } else if (
+                rule.thresholdStatus === THRESHOLD_STATUS.BELOW &&
+                maxDisplayedSize >= rule.threshold
+            ) {
+                console.debug(
+                    'CSS Rule ' +
+                        rule.cssSelector +
+                        ' above threshold ' +
+                        maxDisplayedSize +
+                        ' >= ' +
+                        rule.threshold
+                );
                 rule.thresholdStatus = THRESHOLD_STATUS.ABOVE;
-                this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.aboveThresholdCssDeclaration);
+                this.updateSvgCssDisplayValue(
+                    svg,
+                    rule.cssSelector,
+                    rule.aboveThresholdCssDeclaration
+                );
             }
         });
     }
@@ -325,15 +398,17 @@ export class NetworkAreaDiagramViewer {
         firstChild.removeAttribute('height');
 
         // We insert custom CSS to hide details before first load, in order to improve performances
-        this.initializeDynamicCssRules(Math.max(dimensions.viewbox.width, dimensions.viewbox.height));
+        this.initializeDynamicCssRules(
+            Math.max(dimensions.viewbox.width, dimensions.viewbox.height)
+        );
         this.injectDynamicCssRules(firstChild);
         draw.fire('zoom'); // Forces a new dynamic zoom check to correctly update the dynamic CSS
 
         // We add an observer to track when the SVG's viewBox is updated by panzoom
         // (we have to do this instead of using panzoom's 'zoom' event to have accurate viewBox updates)
-        const targetNode = draw.node;
+        const targetNode: SVGSVGElement = draw.node;
         // Callback function to execute when mutations are observed
-        const observerCallback = (mutationList, observer) => {
+        const observerCallback = (mutationList: MutationRecord[]) => {
             for (const mutation of mutationList) {
                 if (mutation.attributeName === 'viewBox') {
                     this.checkLevelOfDetail(targetNode);
@@ -341,7 +416,7 @@ export class NetworkAreaDiagramViewer {
             }
         };
         const observer = new MutationObserver(observerCallback);
-        observer.observe(targetNode, { attributeFilter: ['viewBox']});
+        observer.observe(targetNode, { attributeFilter: ['viewBox'] });
 
         this.svgDraw = draw;
     }
