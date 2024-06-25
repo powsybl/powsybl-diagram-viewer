@@ -7,6 +7,14 @@
 
 import { Point } from '@svgdotjs/svg.js';
 
+// node move: original and new position
+export type NODEMOVE = {
+    xOrig: string;
+    yOrig: string;
+    xNew: string;
+    yNew: string;
+};
+
 export enum EdgeType {
     LINE,
     TWO_WINDINGS_TRANSFORMER,
@@ -253,7 +261,18 @@ function classIsContainerOfDraggables(element: SVGElement): boolean {
     return (
         element.classList.contains('nad-vl-nodes') ||
         element.classList.contains('nad-boundary-nodes') ||
-        element.classList.contains('nad-3wt-nodes')
+        element.classList.contains('nad-3wt-nodes') ||
+        element.classList.contains('nad-text-nodes')
+    );
+}
+
+// get radius of voltage level
+export function getVoltageLevelCircleRadius(
+    nbNeighbours: number,
+    voltageLevelCircleRadius: number
+): number {
+    return (
+        Math.min(Math.max(nbNeighbours + 1, 1), 2) * voltageLevelCircleRadius
     );
 }
 
@@ -264,8 +283,10 @@ export function getNodeRadius(
     busIndex: number,
     interAnnulusSpace: number
 ): [number, number, number] {
-    const vlCircleRadius: number =
-        Math.min(Math.max(nbNeighbours + 1, 1), 2) * voltageLevelCircleRadius;
+    const vlCircleRadius: number = getVoltageLevelCircleRadius(
+        nbNeighbours,
+        voltageLevelCircleRadius
+    );
     const unitaryRadius = vlCircleRadius / (nbNeighbours + 1);
     return [
         busIndex == 0 ? 0 : busIndex * unitaryRadius + interAnnulusSpace / 2,
@@ -442,4 +463,119 @@ export function getEdgeNameAngle(point1: Point, point2: Point): number {
     const angle = getAngle(point1, point2);
     const textFlipped = Math.cos(angle) < 0;
     return radToDeg(textFlipped ? angle - Math.PI : angle);
+}
+
+// check if a DOM element is a text node
+export function isTextNode(element: SVGGraphicsElement | null): boolean {
+    return (
+        element != null &&
+        element.parentElement != null &&
+        element.parentElement?.classList.contains('nad-text-nodes')
+    );
+}
+
+// get text node id of a vl node
+export function getTextNodeId(voltageLevelNodeId: string | undefined): string {
+    return voltageLevelNodeId + '-textnode';
+}
+
+// get text edge id of a vl node
+export function getTextEdgeId(voltageLevelNodeId: string | undefined): string {
+    return voltageLevelNodeId + '-textedge';
+}
+
+// get vl node id of a text node
+export function getVoltageLevelNodeId(textNodeId: string | undefined): string {
+    return textNodeId !== undefined
+        ? textNodeId.replace('-textnode', '')
+        : '-1';
+}
+
+// compute text edge end w.r.t. textbox and vlnode positions (angle)
+export function getTextEdgeEnd(
+    textNodePosition: Point,
+    vlNodePosition: Point,
+    detailedTextNodeYShift: number,
+    height: number,
+    width: number
+): Point {
+    const angle = radToDeg(getAngle(vlNodePosition, textNodePosition));
+    if (angle > 60 && angle < 175) {
+        return new Point(
+            textNodePosition.x + detailedTextNodeYShift,
+            textNodePosition.y
+        );
+    }
+    if (angle < -70 && angle > -155) {
+        return new Point(
+            textNodePosition.x + detailedTextNodeYShift,
+            textNodePosition.y + height
+        );
+    }
+    if (angle >= 175 || angle <= -155) {
+        return new Point(
+            textNodePosition.x + width,
+            textNodePosition.y + detailedTextNodeYShift
+        );
+    }
+    return new Point(
+        textNodePosition.x,
+        textNodePosition.y + detailedTextNodeYShift
+    );
+}
+
+// get position of angle of a text box computing from the centre position
+export function getTextNodeAngleFromCentre(
+    textNode: SVGGraphicsElement | null,
+    centrePosition: Point
+): Point {
+    const scrollWidth = textNode?.firstElementChild?.scrollWidth ?? 0;
+    const scrollHeight = textNode?.firstElementChild?.scrollHeight ?? 0;
+    return new Point(
+        centrePosition.x - scrollWidth / 2,
+        centrePosition.y - scrollHeight / 2
+    );
+}
+
+// get the position of a translated text box
+export function getTextNodeTranslatedPosition(
+    textNode: SVGGraphicsElement | null,
+    translation: Point
+) {
+    const textNodeX = textNode?.getAttribute('x') ?? '0';
+    const textNodeY = textNode?.getAttribute('y') ?? '0';
+    return new Point(+textNodeX + translation.x, +textNodeY + translation.y);
+}
+
+// get text node position
+export function getTextNodePosition(
+    textNode: SVGGraphicsElement | null
+): Point {
+    const textNodeX = textNode?.getAttribute('x') ?? '0';
+    const textNodeY = textNode?.getAttribute('y') ?? '0';
+    return new Point(+textNodeX, +textNodeY);
+}
+
+// get text node move (original and new position)
+export function getTextNodeMove(
+    initialTextPosition: Point,
+    textPosition: Point
+): NODEMOVE {
+    const xOrig = getFormattedValue(initialTextPosition.x);
+    const yOrig = getFormattedValue(initialTextPosition.y);
+    const xNew = getFormattedValue(textPosition.x);
+    const yNew = getFormattedValue(textPosition.y);
+    return { xOrig: xOrig, yOrig: yOrig, xNew: xNew, yNew: yNew };
+}
+
+// get node move (original and new position)
+export function getNodeMove(
+    node: SVGGraphicsElement,
+    nodePosition: Point
+): NODEMOVE {
+    const xOrig = node.getAttribute('x') ?? '0';
+    const yOrig = node.getAttribute('y') ?? '0';
+    const xNew = getFormattedValue(nodePosition.x);
+    const yNew = getFormattedValue(nodePosition.y);
+    return { xOrig: xOrig, yOrig: yOrig, xNew: xNew, yNew: yNew };
 }

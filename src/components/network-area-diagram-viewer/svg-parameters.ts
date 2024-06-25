@@ -21,6 +21,8 @@ export class SvgParameters {
     static readonly UNKNOWN_BUS_NODE_EXTRA_RADIUS_PARAMETER_NAME =
         'unknownbusnodeextraradius';
     static readonly EDGE_NAME_DISPLAYED_PARAMETER_NAME = 'edgenamedisplayed';
+    static readonly DETAILED_TEXT_NODE_Y_SHIFT_PARAMETER_NAME =
+        'detailedtextnodeyshift';
 
     static readonly VOLTAGE_LEVEL_CIRCLE_RADIUS_DEFAULT = 30.0;
     static readonly INTER_ANNULUS_SPACE_DEFAULT = 5.0;
@@ -33,6 +35,7 @@ export class SvgParameters {
     static readonly NODE_HOLLOW_WIDTH_DEFAULT = 15.0;
     static readonly UNKNOWN_BUS_NODE_EXTRA_RADIUS_DEFAULT = 10.0;
     static readonly EDGE_NAME_DISPLAYED_DEFAULT = true;
+    static readonly DETAILED_TEXT_NODE_Y_SHIFT_DEFAULT = 25.0;
 
     voltageLevelCircleRadius: number;
     interAnnulusSpace: number;
@@ -45,6 +48,7 @@ export class SvgParameters {
     nodeHollowWidth: number;
     unknownBusNodeExtraRadius: number;
     edgeNameDisplayed: boolean;
+    detailedTextNodeYShift: number;
 
     constructor(svgParametersElement: SVGGraphicsElement | null) {
         this.voltageLevelCircleRadius = this.getNumberParameter(
@@ -101,6 +105,11 @@ export class SvgParameters {
             svgParametersElement,
             SvgParameters.EDGE_NAME_DISPLAYED_PARAMETER_NAME,
             SvgParameters.EDGE_NAME_DISPLAYED_DEFAULT
+        );
+        this.detailedTextNodeYShift = this.getNumberParameter(
+            svgParametersElement,
+            SvgParameters.DETAILED_TEXT_NODE_Y_SHIFT_PARAMETER_NAME,
+            SvgParameters.DETAILED_TEXT_NODE_Y_SHIFT_DEFAULT
         );
     }
 
@@ -168,5 +177,9 @@ export class SvgParameters {
 
     public getEdgeNameDisplayed(): boolean {
         return this.edgeNameDisplayed;
+    }
+
+    public getDetailedTextNodeYShift(): number {
+        return this.detailedTextNodeYShift;
     }
 }
