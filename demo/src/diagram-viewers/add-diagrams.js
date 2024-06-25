@@ -31,6 +31,7 @@ export const addNadToDemo = () => {
                 1000,
                 1200,
                 handleNodeMove,
+                handleTextNodeMove,
                 true
             );
 
@@ -51,6 +52,7 @@ export const addNadToDemo = () => {
                 1000,
                 1200,
                 handleNodeMove,
+                handleTextNodeMove,
                 false
             );
 
@@ -71,6 +73,7 @@ export const addNadToDemo = () => {
                 1000,
                 1200,
                 handleNodeMove,
+                handleTextNodeMove,
                 true
             );
 
@@ -91,6 +94,7 @@ export const addNadToDemo = () => {
                 1000,
                 1200,
                 handleNodeMove,
+                handleTextNodeMove,
                 true
             );
 
@@ -111,6 +115,7 @@ export const addNadToDemo = () => {
                 1000,
                 1200,
                 handleNodeMove,
+                handleTextNodeMove,
                 true
             );
 
@@ -131,6 +136,7 @@ export const addNadToDemo = () => {
                 1000,
                 1200,
                 handleNodeMove,
+                handleTextNodeMove,
                 true
             );
 
@@ -151,6 +157,7 @@ export const addNadToDemo = () => {
                 1000,
                 1200,
                 handleNodeMove,
+                handleTextNodeMove,
                 true
             );
 
@@ -297,6 +304,34 @@ const handleTogglePopover = (
 const handleNodeMove = (equipmentId, nodeId, x, y, xOrig, yOrig) => {
     const msg =
         'Node ' +
+        nodeId +
+        ' equipment ' +
+        equipmentId +
+        ' moved from [' +
+        xOrig +
+        ', ' +
+        yOrig +
+        '] to [' +
+        x +
+        ', ' +
+        y +
+        ']';
+    console.log(msg);
+};
+
+const handleTextNodeMove = (
+    equipmentId,
+    nodeId,
+    textNodeId,
+    x,
+    y,
+    xOrig,
+    yOrig
+) => {
+    const msg =
+        'TextNode ' +
+        textNodeId +
+        ' Node ' +
         nodeId +
         ' equipment ' +
         equipmentId +
