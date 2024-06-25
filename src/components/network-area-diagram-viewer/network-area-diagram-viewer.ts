@@ -20,9 +20,6 @@ export class NetworkAreaDiagramViewer {
     originalWidth: number;
     originalHeight: number;
     svgDraw: Svg | undefined;
-    //currentZoomLevel: number;
-    //histo: any;
-    //previousLvl: number;
 
     dynamicCssRules = [
         {
@@ -112,15 +109,12 @@ export class NetworkAreaDiagramViewer {
         maxWidth: number,
         maxHeight: number
     ) {
-        console.debug("NAD DIAGRAM VIEWER CONSTRUCTOR");
         this.container = container;
         this.svgContent = svgContent;
         this.width = 0;
         this.height = 0;
         this.originalWidth = 0;
         this.originalHeight = 0;
-        //this.currentZoomLevel = 0;
-        //this.histo = [];
         this.init(minWidth, minHeight, maxWidth, maxHeight);
     }
 
@@ -182,27 +176,9 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    /*public getCurrentZoomLevel(): number {
-        return this.currentZoomLevel;
-    }
-
-    public setCurrentZoomLevel(newZoomLevel: number): void {
-        this.currentZoomLevel = newZoomLevel;
-    }*/
-
     public getDynamicCssRules() {
         return this.dynamicCssRules;
     }
-
-    /*public logHisto(level: number, maxSize: number): void {
-        if(this.histo == undefined) {
-            this.histo=[];
-        }
-        this.histo.push({level: level, maxSize: maxSize});
-        if(this.histo.length % 10 === 0) {
-            console.warn("CHARLY HISTO", this.histo);
-        }
-    }*/
 
     public updateSvgCssDisplayValue(svg: any, cssSelector: String, cssDeclaration) {
         const innerSvg = svg.querySelector('svg');
@@ -218,7 +194,6 @@ export class NetworkAreaDiagramViewer {
                     const value = cssDeclaration[key];
                     rule.style.setProperty(key, value);
                     ruleFound = true;
-                    console.warn("CHARLY => "+cssSelector+" updated to "+value);
                     break;
                 }
             }
@@ -229,7 +204,6 @@ export class NetworkAreaDiagramViewer {
         if (!ruleFound) {
             const key = Object.keys(cssDeclaration)[0];
             const value = cssDeclaration[key];
-            console.info(cssSelector+" do not exist yet")
             let styleTag = svgStyles[svgStyles.length - 1]; // Adds the new rule to the last <style> tag in the SVG
             if (!styleTag) {
                 innerSvg.appendChild(document.createElement('style'));
@@ -272,11 +246,11 @@ export class NetworkAreaDiagramViewer {
     public checkLevelOfDetail(svg: any) {
         const maxDisplayedSize = this.getCurrentlyMaxDisplayedSize();
         this.getDynamicCssRules().forEach((rule) => {
-            if (/*rule.thresholdStatus === THRESHOLD_STATUS.ABOVE && */maxDisplayedSize < rule.threshold) {
+            if (rule.thresholdStatus === THRESHOLD_STATUS.ABOVE && maxDisplayedSize < rule.threshold) {
                 console.debug("CSS Rule "+rule.cssSelector+" below threshold "+maxDisplayedSize+" < "+rule.threshold);
                 rule.thresholdStatus = THRESHOLD_STATUS.BELOW;
                 this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.belowThresholdCssDeclaration);
-            } else if (/*rule.thresholdStatus === THRESHOLD_STATUS.BELOW && */maxDisplayedSize >= rule.threshold) {
+            } else if (rule.thresholdStatus === THRESHOLD_STATUS.BELOW && maxDisplayedSize >= rule.threshold) {
                 console.debug("CSS Rule "+rule.cssSelector+" above threshold "+maxDisplayedSize+" >= "+rule.threshold);
                 rule.thresholdStatus = THRESHOLD_STATUS.ABOVE;
                 this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.aboveThresholdCssDeclaration);
@@ -293,7 +267,6 @@ export class NetworkAreaDiagramViewer {
         if (!this.container || !this.svgContent) {
             return;
         }
-        console.debug("NAD DIAGRAM VIEWER INIT");
 
         const dimensions: DIMENSIONS | null = this.getDimensionsFromSvg();
 
@@ -338,113 +311,37 @@ export class NetworkAreaDiagramViewer {
                 zoomMax: 20 * ratio, // maximum zoom IN ratio (20 = at best, the displayed area is only 1/20th of the SVG's size)
                 zoomFactor: 0.2,
                 margins: { top: 0, left: 0, right: 0, bottom: 0 },
-            })
-            .on('zoom', (event: CustomEvent) => {
-                /*const newLvl = event.detail?.level;
-                if (newLvl) {
-                    let zoomAction;
-                    if (newLvl < this.previousLvl) {
-                        zoomAction = 'in';
-                    } else {
-                        zoomAction = 'out';
-                    }
-                    this.previousLvl = newLvl
-                    const oldMaxDisplayedSize = this.getCurrentlyMaxDisplayedSize();
-                    let newMaxDisplayedSize;
-                    if(zoomAction === 'in') {
-                        newMaxDisplayedSize = oldMaxDisplayedSize * 0.8;
-                    } else {
-                        newMaxDisplayedSize = oldMaxDisplayedSize * 1.2;
-                    }
-                    console.warn("CHARLY => newMaxDisplayedSize "+newMaxDisplayedSize);
-
-                    //console.warn("CHARLY level="+event.detail?.level+" viewBox="+this.getCurrentlyMaxDisplayedSize());
-                    //this.logHisto(event.detail?.level || 0,  newMaxDisplayedSize);
-
-                    this.checkLevelOfDetail(event.target, newMaxDisplayedSize);
-                }*/
-
-                console.warn("CHARLY ZOOM FROM PANZOOM "+event.detail?.level);
-                /*setTimeout(
-                    () => this.checkLevelOfDetail(event.target),
-                    200 // The new viewbox is only correctly calculated after this event ends, so we use a timeout here. Maybe there's a better solution ?
-                );*/
             });
 
         const drawnSvg: HTMLElement = <HTMLElement>(
             draw.svg(this.svgContent).node.firstElementChild
         );
         drawnSvg.style.overflow = 'visible';
+
         // PowSyBl NAD introduced server side calculated SVG viewbox. This viewBox attribute can be removed as it is copied in the panzoom svg tag.
         const firstChild: HTMLElement = <HTMLElement>draw.node.firstChild;
         firstChild.removeAttribute('viewBox');
         firstChild.removeAttribute('width');
         firstChild.removeAttribute('height');
 
-        /*// TODO CHARLY remove this debug thing
-        let currentLineNumber = 1;
-        function charlyShowOutline() {
-            let outline = '<rect x="'+dimensions.viewbox.x+'" y="'+dimensions.viewbox.y+'" width="'+dimensions.viewbox.width+'" height="'+dimensions.viewbox.height+'" fill="none" style="stroke-width: 30px; stroke: gold;"/>';
-            firstChild.insertAdjacentHTML('beforeend', outline);
-        }
-        function enhanceOutsideBox() {
-            let mask = '<mask id="outsideMask">';
-            mask+= '<rect x="'+(dimensions.viewbox.x - dimensions.viewbox.width)+'" y="'+(dimensions.viewbox.y - dimensions.viewbox.height)+'" width="'+(3* dimensions.viewbox.width )+'" height="'+(3* dimensions.viewbox.height )+'" fill="white"/>';
-            mask+= '<rect x="'+dimensions.viewbox.x+'" y="'+dimensions.viewbox.y+'" width="'+dimensions.viewbox.width+'" height="'+dimensions.viewbox.height+'" fill="black"/>';
-            mask+= '</mask>';
-            mask+= '<rect x="'+(dimensions.viewbox.x - dimensions.viewbox.width)+'" y="'+(dimensions.viewbox.y - dimensions.viewbox.height)+'" width="'+(3* dimensions.viewbox.width )+'" height="'+(3* dimensions.viewbox.height )+'" fill="rgba(0,0,0,0.5)" mask="url(#outsideMask)"/>';
-            firstChild.insertAdjacentHTML('beforeend', mask);
-        }
-        function charlyDebug(toDisplay: String) {
-            let newLine = '<text x="'+(dimensions.viewbox.x + 40)+'" y="'+(dimensions.viewbox.y + (currentLineNumber++ * (80+20)))+'" font-size="80" style="fill: gold;">';
-            newLine+=toDisplay;
-            newLine+='</text>';
-            firstChild.insertAdjacentHTML('beforeend', newLine);
-        }
-        charlyShowOutline();
-        //enhanceOutsideBox();
-        charlyDebug("VIEWBOX");
-        charlyDebug('x='+Math.round(dimensions.viewbox.x));
-        charlyDebug('y='+Math.round(dimensions.viewbox.y));
-        charlyDebug('w='+Math.round(dimensions.viewbox.width));
-        charlyDebug('h='+Math.round(dimensions.viewbox.height));
-
-        charlyDebug('dimensions.width='+Math.round(dimensions.width));
-        charlyDebug('dimensions.height='+Math.round(dimensions.height));
-
-        charlyDebug('this.getWidth()='+Math.round(this.getWidth()));
-        charlyDebug('this.getHeight()='+Math.round(this.getHeight()));
-        charlyDebug('ratio='+Math.round(ratio));*/
-
         // We insert custom CSS to hide details before first load, in order to improve performances
         this.initializeDynamicCssRules(Math.max(dimensions.viewbox.width, dimensions.viewbox.height));
         this.injectDynamicCssRules(firstChild);
         draw.fire('zoom'); // Forces a new dynamic zoom check to correctly update the dynamic CSS
 
-
-
-
-        // Select the node that will be observed for mutations
+        // We add an observer to track when the SVG's viewBox is updated by panzoom
+        // (we have to do this instead of using panzoom's 'zoom' event to have accurate viewBox updates)
         const targetNode = draw.node;
-        // Options for the observer (which mutations to observe)
-        const config = { attributes: true, childList: false, subtree: false };
         // Callback function to execute when mutations are observed
-        const callback = (mutationList, observer) => {
+        const observerCallback = (mutationList, observer) => {
             for (const mutation of mutationList) {
-                if (mutation.type === "attributes" && mutation.attributeName === 'viewBox') {
-                    //console.log(`CHARLY => The ${mutation.attributeName} attribute was modified.`);
-                    //if (mutation.attributeName === 'viewBox') {
-                    //    console.log('CHARLY => LETS GO CHECK LEVEL OF DETAIL');
-                        this.checkLevelOfDetail(targetNode);
-                    //}
+                if (mutation.attributeName === 'viewBox') {
+                    this.checkLevelOfDetail(targetNode);
                 }
             }
         };
-        // Create an observer instance linked to the callback function
-        const observer = new MutationObserver(callback);
-        // Start observing the target node for configured mutations
-        observer.observe(targetNode, config);
-
+        const observer = new MutationObserver(observerCallback);
+        observer.observe(targetNode, { attributeFilter: ['viewBox']});
 
         this.svgDraw = draw;
     }
