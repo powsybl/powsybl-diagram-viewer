@@ -10,7 +10,7 @@ import '@svgdotjs/svg.panzoom.js';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
-type CSSDECLARATION = Record<string, string>; //{ [key: string]: string };
+type CSSDECLARATION = Record<string, string>;
 type CSSRULE = {
     cssSelector: string;
     belowThresholdCssDeclaration: CSSDECLARATION;
@@ -37,49 +37,49 @@ export class NetworkAreaDiagramViewer {
             cssSelector: '.nad-edge-infos', // data on edges (arrows and values)
             belowThresholdCssDeclaration: { display: 'block' },
             aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 2200, // 0.07,
+            threshold: 2200,
             thresholdStatus: THRESHOLD_STATUS.ABOVE,
         },
         {
             cssSelector: '.nad-label-box', // tooltips linked to nodes
             belowThresholdCssDeclaration: { display: 'block' },
             aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 3000, // 0.05,
+            threshold: 3000,
             thresholdStatus: THRESHOLD_STATUS.ABOVE,
         },
         {
             cssSelector: '.nad-text-edges', // visual link between nodes and their tooltip
             belowThresholdCssDeclaration: { display: 'block' },
             aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 3000, // 0.05,
+            threshold: 3000,
             thresholdStatus: THRESHOLD_STATUS.ABOVE,
         },
         {
             cssSelector: '[class^="nad-vl0to30"], [class*=" nad-vl0to30"]',
             belowThresholdCssDeclaration: { display: 'block' },
             aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 4000, // 0.03,
+            threshold: 4000,
             thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         {
             cssSelector: '[class^="nad-vl30to50"], [class*=" nad-vl30to50"]',
             belowThresholdCssDeclaration: { display: 'block' },
             aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 4000, // 0.03,
+            threshold: 4000,
             thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         {
             cssSelector: '[class^="nad-vl50to70"], [class*=" nad-vl50to70"]',
             belowThresholdCssDeclaration: { display: 'block' },
             aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 9000, // 0.02,
+            threshold: 9000,
             thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         {
             cssSelector: '[class^="nad-vl70to120"], [class*=" nad-vl70to120"]',
             belowThresholdCssDeclaration: { display: 'block' },
             aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 9000, // 0.02,
+            threshold: 9000,
             thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         {
@@ -87,7 +87,7 @@ export class NetworkAreaDiagramViewer {
                 '[class^="nad-vl120to180"], [class*=" nad-vl120to180"]',
             belowThresholdCssDeclaration: { display: 'block' },
             aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 12000, // 0.015,
+            threshold: 12000,
             thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         {
@@ -102,14 +102,14 @@ export class NetworkAreaDiagramViewer {
             cssSelector: '[class^="nad-vl180to300"] .nad-edge-path.nad-edge-path, [class*=" nad-vl180to300"] .nad-edge-path.nad-edge-path',
             belowThresholdCssDeclaration: {"stroke-width": "5px"},
             aboveThresholdCssDeclaration: {"stroke-width": "10px"},
-            threshold: 0.015,
+            threshold: 12000,
             thresholdStatus: THRESHOLD_STATUS.ABOVE,
         },
         {
             cssSelector: '[class^="nad-vl300to500"] .nad-edge-path.nad-edge-path, [class*=" nad-vl300to500"] .nad-edge-path.nad-edge-path',
             belowThresholdCssDeclaration: {"stroke-width": "5px"},
             aboveThresholdCssDeclaration: {"stroke-width": "15px"},
-            threshold: 0.015,
+            threshold: 12000,
             thresholdStatus: THRESHOLD_STATUS.ABOVE,
         },*/
     ];
