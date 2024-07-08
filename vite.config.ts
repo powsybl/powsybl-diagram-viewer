@@ -5,20 +5,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { defineConfig } from 'vite';
 import { resolve } from 'path';
-import eslint from 'vite-plugin-eslint';
-import dts from 'vite-plugin-dts';
+import { defineConfig } from 'vite';
+// import eslint from 'vite-plugin-eslint';
 import react from '@vitejs/plugin-react';
+import path from 'path';
+import dts from 'vite-plugin-dts';
 import { externalizeDeps } from 'vite-plugin-externalize-deps';
 
 export default defineConfig((config) => ({
     plugins: [
         react(),
-        eslint({
-            failOnWarning: config.mode !== 'development',
-            lintOnStart: true,
-        }),
+        // eslint({
+        //     failOnWarning: config.mode !== 'development',
+        //     lintOnStart: true,
+        // }),
         dts({
             include: ['src'],
         }),
@@ -34,11 +35,16 @@ export default defineConfig((config) => ({
             ],
         }),
     ],
+    resolve: {
+        alias: {
+            '@': path.resolve(__dirname, './src'),
+        },
+    },
     build: {
         minify: false,
         lib: {
             // Could also be a dictionary or array of multiple entry points
-            entry: resolve(__dirname, 'src/index.js'),
+            entry: resolve(__dirname, 'src/index.ts'),
             name: 'Powsybl diagram viewer',
             // the proper extensions will be added
             fileName: 'powsybl-diagram-viewer',

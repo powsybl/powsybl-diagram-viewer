@@ -4,9 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { PathLayer } from 'deck.gl';
+import { DefaultProps } from '@deck.gl/core';
+import { RenderPass, UniformValue } from '@luma.gl/core';
+import { Accessor, PathLayer, PathLayerProps } from 'deck.gl';
 
-const defaultProps = {
+type _ParallelPathLayerProps<DataT = unknown> = {
+    getLineParallelIndex?: Accessor<DataT, number>;
+    getLineAngle?: Accessor<DataT, number>;
+    distanceBetweenLines?: number;
+    maxParallelOffset?: number;
+    minParallelOffset?: number;
+};
+
+export type ParallelPathLayerProps<DataT = unknown> =
+    _ParallelPathLayerProps<DataT> & PathLayerProps<DataT>;
+
+const defaultProps: DefaultProps<ParallelPathLayerProps> = {
     getLineParallelIndex: { type: 'accessor', value: 0 },
     getLineAngle: { type: 'accessor', value: 0 },
     distanceBetweenLines: { type: 'number', value: 1000 },
@@ -26,7 +39,13 @@ const defaultProps = {
  *         maxParallelOffset: max pixel distance
  *         minParallelOffset: min pixel distance
  */
-export default class ParallelPathLayer extends PathLayer {
+export default class ParallelPathLayer<DataT = unknown> extends PathLayer<
+    DataT,
+    Required<_ParallelPathLayerProps<DataT>>
+> {
+    static layerName = 'ParallelPathLayer';
+    static defaultProps = defaultProps;
+
     getShaders() {
         const shaders = super.getShaders();
         shaders.inject = Object.assign({}, shaders.inject, {
@@ -55,7 +74,7 @@ export default class ParallelPathLayer extends PathLayer {
 //       also has the downside that you can't update one attribute and reconstruct
 //       only its buffer, so it hurts performance a bit in this case.
 //       But this is a rare case for us (changing parameters) so it doesn't matter much.
-attribute vec4 instanceExtraAttributes;
+in vec4 instanceExtraAttributes;
 uniform float distanceBetweenLines;
 uniform float maxParallelOffset;
 uniform float minParallelOffset;
@@ -103,8 +122,7 @@ gl_Position += project_common_position_to_clipspace(trans) - project_uCenter;
     initializeState() {
         super.initializeState();
 
-        const attributeManager = this.getAttributeManager();
-        attributeManager.addInstanced({
+        this.getAttributeManager()?.addInstanced({
             // too much instances variables need to compact some...
             instanceExtraAttributes: {
                 size: 4,
@@ -114,7 +132,12 @@ gl_Position += project_common_position_to_clipspace(trans) - project_uCenter;
         });
     }
 
-    draw({ uniforms }) {
+    draw({
+        uniforms,
+    }: {
+        uniforms: Record<string, UniformValue>;
+        renderPass: RenderPass;
+    }) {
         super.draw({
             uniforms: {
                 ...uniforms,
@@ -125,6 +148,3 @@ gl_Position += project_common_position_to_clipspace(trans) - project_uCenter;
         });
     }
 }
-
-ParallelPathLayer.layerName = 'ParallelPathLayer';
-ParallelPathLayer.defaultProps = defaultProps;

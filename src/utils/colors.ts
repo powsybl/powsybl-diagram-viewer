@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-export function getNominalVoltageColor(nominalVoltage) {
+import { Color } from 'deck.gl';
+
+export function getNominalVoltageColor(nominalVoltage: number): Color {
     if (nominalVoltage >= 300) {
         return [255, 0, 0];
     } else if (nominalVoltage >= 170 && nominalVoltage < 300) {

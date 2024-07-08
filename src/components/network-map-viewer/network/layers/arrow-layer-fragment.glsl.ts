@@ -6,18 +6,17 @@
  */
 
 const fs = `\
+#version 300 es
 #define SHADER_NAME arrow-layer-fragment-shader
-
 precision highp float;
-
-varying vec4 vFillColor;
-varying float shouldDiscard;
-
+in vec4 vFillColor;
+in float shouldDiscard;
+out vec4 fragmentColor;
 void main(void) {
     if (shouldDiscard > 0.0) {
         discard;
     }
-    gl_FragColor = vFillColor;
+    fragmentColor = vFillColor;
 }
 `;
 export default fs;

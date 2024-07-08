@@ -6,10 +6,11 @@
  */
 
 import { useCallback } from 'react';
+import { Substation } from './equipment-types';
 
-export const useNameOrId = (useName) => {
+export const useNameOrId = (useName: boolean) => {
     const getNameOrId = useCallback(
-        (infos) => {
+        (infos: Substation) => {
             if (infos != null) {
                 const name = infos.name;
                 return useName && name != null && name.trim() !== ''

@@ -5,21 +5,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import React, { useEffect, useRef } from 'react';
-import { NetworkMap, GeoData } from '../../src/';
 import {
-    createTheme,
-    ThemeProvider,
     StyledEngineProvider,
+    ThemeProvider,
+    createTheme,
 } from '@mui/material/styles';
+import { useEffect, useRef } from 'react';
+import { GeoData, NetworkMap } from '../../src';
 
 import DemoMapEquipments from './map-viewer/demo-map-equipments';
 
-import sposdata from './map-viewer/data/spos.json';
+import { NetworkMapRef } from '@/components/network-map-viewer/network/network-map';
+import { addNadToDemo, addSldToDemo } from './diagram-viewers/add-diagrams';
+import lmapdata from './map-viewer/data/lmap.json';
 import lposdata from './map-viewer/data/lpos.json';
 import smapdata from './map-viewer/data/smap.json';
-import lmapdata from './map-viewer/data/lmap.json';
-import { addNadToDemo, addSldToDemo } from './diagram-viewers/add-diagrams';
+import sposdata from './map-viewer/data/spos.json';
 
 function App() {
     const INITIAL_ZOOM = 9;
@@ -78,7 +79,7 @@ function App() {
         };
     }, []);
 
-    const networkMapRef = useRef();
+    const networkMapRef = useRef<NetworkMapRef>(null);
     const filteredNominalVoltages = [380.0, 225.0, 110.0];
 
     return (
@@ -138,12 +139,12 @@ function App() {
                             onPolygonChanged={() => {
                                 console.log(
                                     'Selected Substations: ',
-                                    networkMapRef.current.getSelectedSubstations()
+                                    networkMapRef.current!.getSelectedSubstations()
                                         .length
                                 );
                                 console.log(
                                     'Selected Lines: ',
-                                    networkMapRef.current.getSelectedLines()
+                                    networkMapRef.current!.getSelectedLines()
                                         .length
                                 );
                             }}

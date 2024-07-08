@@ -50,16 +50,22 @@ const ARROW_SVG =
 const ARROW_HOVER_SVG =
     '<svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg"><path class="arrow-hover" fill-rule="evenodd" clip-rule="evenodd" d="M22 35C29.1797 35 35 29.1797 35 22C35 14.8203 29.1797 9 22 9C14.8203 9 9 14.8203 9 22C9 29.1797 14.8203 35 22 35ZM17.2358 25.3171L16 24.0163L21.9837 18L28 24.0163L26.7317 25.3171L21.9837 20.5691L17.2358 25.3171Z"/>';
 
+type Label = {
+    id: string;
+    positionName: string;
+};
+
 export interface SLDMetadataNode {
     id: string;
     vid: string;
-    nextVId: string;
-    componentType: string;
+    nextVId?: string;
+    componentType?: string;
     rotationAngle?: number;
     open: boolean;
-    direction: string;
+    direction?: string;
     vlabel: boolean;
-    equipmentId: string;
+    equipmentId?: string;
+    labels: Label[];
 }
 
 export interface SLDMetadataComponentSize {
@@ -67,13 +73,25 @@ export interface SLDMetadataComponentSize {
     height: number;
 }
 
+export type AnchorPoint = {
+    x: number;
+    y: number;
+    orientation: string; //'VERTICAL' | 'HORIZONTAL';
+};
+
+export type Transformation = {
+    LEFT?: string;
+    RIGHT?: string;
+    DOWN?: string;
+};
+
 export interface SLDMetadataComponent {
     type: string;
-    vid: string;
-    anchorPoints: unknown[];
+    vid?: string;
+    anchorPoints?: AnchorPoint[];
     size: SLDMetadataComponentSize;
-    transformations: unknown;
-    styleClass: string;
+    transformations?: Transformation;
+    styleClass?: string;
 }
 
 //models just the metadata subelements that are actually used(nodes)
@@ -82,7 +100,7 @@ export interface SLDMetadata {
     nodes: SLDMetadataNode[];
     wires: unknown[];
     lines: unknown[];
-    arrows: unknown[];
+    arrows?: unknown[];
     layoutParams: unknown;
 }
 
@@ -128,7 +146,7 @@ export class SingleLineDiagramViewer {
     onBreakerCallback: OnBreakerCallbackType | null;
     onFeederCallback: OnFeederCallbackType | null;
     onBusCallback: OnBusCallbackType | null;
-    selectionBackColor: string;
+    selectionBackColor: string | null;
     svgType: string;
     arrowSvg: string;
     arrowHoverSvg: string;
@@ -148,8 +166,8 @@ export class SingleLineDiagramViewer {
         onBreakerCallback: OnBreakerCallbackType | null,
         onFeederCallback: OnFeederCallbackType | null,
         onBusCallback: OnBusCallbackType | null,
-        selectionBackColor: string,
-        handleTogglePopover: handleTogglePopoverType
+        selectionBackColor: string | null,
+        handleTogglePopover: handleTogglePopoverType | null
     ) {
         this.container = container;
         this.svgType = svgType;
@@ -400,7 +418,7 @@ export class SingleLineDiagramViewer {
 
             //remove arrows if the arrow points to the current svg
             navigable = navigable?.filter((element) => {
-                return vlList?.indexOf(element.nextVId) === -1;
+                return vlList?.indexOf(element!.nextVId!) === -1;
             });
 
             const highestY = new Map();
@@ -450,7 +468,7 @@ export class SingleLineDiagramViewer {
                             )?.size.width || 0;
                         this.createSvgArrow(
                             elementById,
-                            element.direction,
+                            element!.direction!,
                             x + feederWidth / 2,
                             highestY.get(element.vid),
                             lowestY.get(element.vid)
@@ -514,7 +532,11 @@ export class SingleLineDiagramViewer {
 
             // handling the navigation between voltage levels
             group.style.cursor = 'pointer';
-            this.setArrowsStyle(group, 'currentColor', this.selectionBackColor);
+            this.setArrowsStyle(
+                group,
+                'currentColor',
+                this.selectionBackColor!
+            );
             let dragged = false;
             group.addEventListener('mousedown', () => {
                 dragged = false;
@@ -530,7 +552,7 @@ export class SingleLineDiagramViewer {
                     (other) => other.id === element.id
                 );
                 if (meta !== undefined && meta !== null) {
-                    this.onNextVoltageCallback?.(meta.nextVId);
+                    this.onNextVoltageCallback?.(meta.nextVId!);
                 }
             });
 
@@ -538,7 +560,7 @@ export class SingleLineDiagramViewer {
             group.addEventListener('mouseenter', (e: Event) => {
                 this.setArrowsStyle(
                     e.target as SVGElement,
-                    this.selectionBackColor,
+                    this.selectionBackColor!,
                     'currentColor'
                 );
             });
@@ -547,7 +569,7 @@ export class SingleLineDiagramViewer {
                 this.setArrowsStyle(
                     e.target as SVGElement,
                     'currentColor',
-                    this.selectionBackColor
+                    this.selectionBackColor!
                 );
             });
         }
@@ -557,7 +579,7 @@ export class SingleLineDiagramViewer {
         // handling the click on a switch
         if (this.onBreakerCallback != null) {
             const switches = this.svgMetadata?.nodes.filter((element) =>
-                SWITCH_COMPONENT_TYPES.has(element.componentType)
+                SWITCH_COMPONENT_TYPES.has(element.componentType!)
             );
             switches?.forEach((aSwitch) => {
                 const domEl: HTMLElement | null = this.container.querySelector(
@@ -579,7 +601,7 @@ export class SingleLineDiagramViewer {
                         const switchId = aSwitch.equipmentId;
                         const open = aSwitch.open;
                         this.onBreakerCallback?.(
-                            switchId,
+                            switchId!,
                             !open,
                             event.currentTarget
                         );
@@ -679,7 +701,7 @@ export class SingleLineDiagramViewer {
             const feeders = this.svgMetadata?.nodes.filter((element) => {
                 return (
                     element.vid !== '' &&
-                    FEEDER_COMPONENT_TYPES.has(element.componentType)
+                    FEEDER_COMPONENT_TYPES.has(element.componentType!)
                 );
             });
             feeders?.forEach((feeder) => {
@@ -690,7 +712,7 @@ export class SingleLineDiagramViewer {
                 if (svgText !== undefined && svgText !== null) {
                     svgText.style.cursor = 'pointer';
                     svgText.addEventListener('mouseenter', () => {
-                        showFeederSelection(svgText, this.selectionBackColor);
+                        showFeederSelection(svgText, this.selectionBackColor!);
                     });
                     svgText.addEventListener('mouseleave', () => {
                         hideFeederSelection(svgText);
@@ -699,8 +721,8 @@ export class SingleLineDiagramViewer {
                         event.preventDefault();
                         event.stopPropagation();
                         this.onFeederCallback?.(
-                            feeder.equipmentId,
-                            feeder.componentType,
+                            feeder.equipmentId!,
+                            feeder.componentType!,
                             feeder.id,
                             event.x,
                             event.y
@@ -720,7 +742,7 @@ export class SingleLineDiagramViewer {
 
         // handling the hover on the equipments
         const svgEquipments = this.svgMetadata?.nodes.filter((node) =>
-            equipmentsWithPopover.includes(node.componentType)
+            equipmentsWithPopover.includes(node.componentType!)
         );
         svgEquipments?.forEach((equipment) => {
             const svgEquipment = this.container?.querySelector(
@@ -734,8 +756,8 @@ export class SingleLineDiagramViewer {
                 this.handleTogglePopover?.(
                     true,
                     event.currentTarget,
-                    equipment.equipmentId,
-                    equipmentType
+                    equipment.equipmentId!,
+                    equipmentType!
                 );
             });
             svgEquipment?.addEventListener('mouseout', () => {
@@ -746,7 +768,7 @@ export class SingleLineDiagramViewer {
 
     private addBusHandler() {
         const buses = this.svgMetadata?.nodes.filter((element) =>
-            BUSBAR_SECTION_TYPES.has(element.componentType)
+            BUSBAR_SECTION_TYPES.has(element.componentType!)
         );
         buses?.forEach((bus) => {
             const svgBus: HTMLElement | null = this.container?.querySelector(
@@ -758,7 +780,7 @@ export class SingleLineDiagramViewer {
                     event.preventDefault();
                     event.stopPropagation();
                     this.onBusCallback?.(
-                        bus.equipmentId,
+                        bus.equipmentId!,
                         bus.id,
                         event.x,
                         event.y

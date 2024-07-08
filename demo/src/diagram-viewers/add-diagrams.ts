@@ -6,10 +6,10 @@
  */
 
 import NadSvgExample from './data/nad-example.svg';
+import SldSvgExampleMeta from './data/sld-example-meta.json' assert { type: 'json' };
 import SldSvgExample from './data/sld-example.svg';
-import SldSvgExampleMeta from './data/sld-example-meta.json';
+import SldSvgSubExampleMeta from './data/sld-sub-example-meta.json' assert { type: 'json' };
 import SldSvgSubExample from './data/sld-sub-example.svg';
-import SldSvgSubExampleMeta from './data/sld-sub-example-meta.json';
 
 import { NetworkAreaDiagramViewer } from '../../../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
 import { SingleLineDiagramViewer } from '../../../src/components/single-line-diagram-viewer/single-line-diagram-viewer';
@@ -19,7 +19,7 @@ export const addNadToDemo = () => {
         .then((response) => response.text())
         .then((svgContent) => {
             new NetworkAreaDiagramViewer(
-                document.getElementById('svg-container'),
+                document.getElementById('svg-container')!,
                 svgContent,
                 500,
                 600,
@@ -28,7 +28,7 @@ export const addNadToDemo = () => {
             );
 
             document
-                .getElementById('svg-container')
+                .getElementById('svg-container')!
                 .getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
         });
@@ -39,7 +39,7 @@ export const addSldToDemo = () => {
         .then((response) => response.text())
         .then((svgContent) => {
             new SingleLineDiagramViewer(
-                document.getElementById('svg-container-sld'),
+                document.getElementById('svg-container-sld')!,
                 svgContent, //svg content
                 null, //svg metadata
                 'voltage-level',
@@ -56,7 +56,7 @@ export const addSldToDemo = () => {
             );
 
             document
-                .getElementById('svg-container-sld')
+                .getElementById('svg-container-sld')!
                 .getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
         });
@@ -65,7 +65,7 @@ export const addSldToDemo = () => {
         .then((response) => response.text())
         .then((svgContent) => {
             new SingleLineDiagramViewer(
-                document.getElementById('svg-container-sld-with-callbacks'),
+                document.getElementById('svg-container-sld-with-callbacks')!,
                 svgContent, //svg content
                 SldSvgExampleMeta, //svg metadata
                 'voltage-level',
@@ -82,7 +82,7 @@ export const addSldToDemo = () => {
             );
 
             document
-                .getElementById('svg-container-sld-with-callbacks')
+                .getElementById('svg-container-sld-with-callbacks')!
                 .getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
         });
@@ -91,7 +91,7 @@ export const addSldToDemo = () => {
         .then((response) => response.text())
         .then((svgContent) => {
             new SingleLineDiagramViewer(
-                document.getElementById('svg-container-sldsub-with-callbacks'),
+                document.getElementById('svg-container-sldsub-with-callbacks')!,
                 svgContent, //svg content
                 SldSvgSubExampleMeta, //svg metadata
                 'substation',
@@ -108,29 +108,39 @@ export const addSldToDemo = () => {
             );
 
             document
-                .getElementById('svg-container-sldsub-with-callbacks')
+                .getElementById('svg-container-sldsub-with-callbacks')!
                 .getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
         });
 };
 
-const handleNextVL = (id) => {
+const handleNextVL = (id: string) => {
     const msg = 'Clicked on navigation arrow, dest VL is ' + id;
     console.log(msg);
 };
 
-const handleSwitch = (id, switch_status, element) => {
+const handleSwitch = (
+    id: string,
+    switch_status: boolean,
+    element: EventTarget | null
+) => {
     const msg =
         'Clicked on switch: ' +
         id +
         ', switch_status: ' +
         (switch_status ? 'close' : 'open') +
         '. elementId: ' +
-        element.id;
+        element!.id;
     console.log(msg);
 };
 
-const handleFeeder = (id, feederType, svgId, x, y) => {
+const handleFeeder = (
+    id: string,
+    feederType: string | null,
+    svgId: string,
+    x: number,
+    y: number
+) => {
     const msg =
         'Clicked on feeder: ' +
         id +
@@ -145,17 +155,17 @@ const handleFeeder = (id, feederType, svgId, x, y) => {
     console.log(msg);
 };
 
-const handleBus = (id, svgId, x, y) => {
+const handleBus = (id: string, svgId: string, x: number, y: number) => {
     const msg =
         'Clicked on bus: ' + id + ', svgId: ' + svgId + 'x: ' + x + ', y: ' + y;
     console.log(msg);
 };
 
 const handleTogglePopover = (
-    shouldDisplay,
-    anchorEl,
-    equipmentId,
-    equipmentType
+    shouldDisplay: boolean,
+    anchorEl: EventTarget | null,
+    equipmentId: string,
+    equipmentType: string
 ) => {
     if (shouldDisplay) {
         const msg =

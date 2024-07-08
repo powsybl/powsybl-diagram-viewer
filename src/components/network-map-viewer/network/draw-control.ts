@@ -8,8 +8,8 @@ import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { useCallback } from 'react';
 import { useControl } from 'react-map-gl';
 
-import type { ControlPosition } from 'react-map-gl';
 import { EventedListener } from 'mapbox-gl';
+import type { ControlPosition } from 'react-map-gl';
 
 let mapDrawerController: MapboxDraw | undefined = undefined;
 
@@ -28,13 +28,29 @@ type DrawControlProps = ConstructorParameters<typeof MapboxDraw>[0] & {
     position?: ControlPosition;
     readyToDisplay: boolean;
     onDrawPolygonModeActive: (polygoneDrawing: DRAW_MODES) => void;
-    onCreate: EventedListener;
-    onUpdate: EventedListener;
-    onDelete: EventedListener;
+    onCreate?: EventedListener;
+    onUpdate?: EventedListener;
+    onDelete?: EventedListener;
+};
+
+const DefaultProps = {
+    onCreate: () => {},
+    onUpdate: () => {},
+    onDelete: () => {},
 };
 
 export default function DrawControl(props: DrawControlProps) {
-    const { onDrawPolygonModeActive } = props;
+    const {
+        onDrawPolygonModeActive,
+        position,
+        onCreate,
+        onUpdate,
+        onDelete,
+        ...mapboxProps
+    } = {
+        ...DefaultProps,
+        ...props,
+    };
     const onModeChange = useCallback(
         (e: { mode: DRAW_MODES }) => {
             onDrawPolygonModeActive(e.mode);
@@ -45,33 +61,27 @@ export default function DrawControl(props: DrawControlProps) {
     useControl<MapboxDraw>(
         //onCreate
         () => {
-            mapDrawerController = new MapboxDraw({ ...props });
+            mapDrawerController = new MapboxDraw({ ...mapboxProps });
             return mapDrawerController;
         },
         //on add
         ({ map }) => {
-            map.on('draw.create', props.onCreate);
-            map.on('draw.update', props.onUpdate);
-            map.on('draw.delete', props.onDelete);
+            map.on('draw.create', onCreate);
+            map.on('draw.update', onUpdate);
+            map.on('draw.delete', onDelete);
             map.on('draw.modechange', onModeChange);
         },
         //onRemove
         ({ map }) => {
-            map.off('draw.create', props.onCreate);
-            map.off('draw.update', props.onUpdate);
-            map.off('draw.delete', props.onDelete);
+            map.off('draw.create', onCreate);
+            map.off('draw.update', onUpdate);
+            map.off('draw.delete', onDelete);
             map.off('draw.modechange', onModeChange);
         },
         {
-            position: props.position,
+            position,
         }
     );
 
     return null;
 }
-
-DrawControl.defaultProps = {
-    onCreate: () => {},
-    onUpdate: () => {},
-    onDelete: () => {},
-};

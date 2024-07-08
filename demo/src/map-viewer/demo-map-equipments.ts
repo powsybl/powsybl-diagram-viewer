@@ -5,15 +5,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { MapEquipments } from '../../../src';
+import {
+    Line,
+    Substation,
+} from '@/components/network-map-viewer/utils/equipment-types';
+import { MapEquipments } from '@/index';
 
 export default class DemoMapEquipments extends MapEquipments {
-    initEquipments(smapdata, lmapdata) {
+    initEquipments(smapdata: Substation[], lmapdata: Line[]) {
         this.updateSubstations(smapdata, true);
         this.updateLines(lmapdata, true);
     }
 
-    constructor(smapdata, lmapdata) {
+    constructor(smapdata: Substation[], lmapdata: Line[]) {
         super();
         this.initEquipments(smapdata, lmapdata);
     }

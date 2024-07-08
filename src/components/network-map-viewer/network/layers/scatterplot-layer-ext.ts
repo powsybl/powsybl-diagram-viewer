@@ -4,16 +4,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { ScatterplotLayer } from 'deck.gl';
+import { DefaultProps } from '@deck.gl/core';
+import { Accessor, ScatterplotLayer, ScatterplotLayerProps } from 'deck.gl';
 
-const defaultProps = {
+type _ScatterplotLayerExtProps<DataT = unknown> = {
+    getRadiusMaxPixels: Accessor<DataT, number>;
+};
+export type ScatterplotLayerExtProps<DataT = unknown> =
+    _ScatterplotLayerExtProps<DataT> & ScatterplotLayerProps<DataT>;
+
+const defaultProps: DefaultProps<ScatterplotLayerExtProps> = {
     getRadiusMaxPixels: { type: 'accessor', value: 1 },
 };
 
 /**
  * An extended scatter plot layer that allows a radius max pixels to be different for each object.
  */
-export default class ScatterplotLayerExt extends ScatterplotLayer {
+export default class ScatterplotLayerExt<
+    DataT = unknown
+> extends ScatterplotLayer<Required<_ScatterplotLayerExtProps<DataT>>> {
+    static layerName = 'ScatterplotLayerExt';
+    static defaultProps = defaultProps;
+
     getShaders() {
         const shaders = super.getShaders();
         return Object.assign({}, shaders, {
@@ -23,7 +35,7 @@ export default class ScatterplotLayerExt extends ScatterplotLayer {
             ), // hack to replace the uniform variable to corresponding attribute
             inject: {
                 'vs:#decl': `\
-attribute float instanceRadiusMaxPixels;
+in float instanceRadiusMaxPixels;
 `,
             },
         });
@@ -32,8 +44,7 @@ attribute float instanceRadiusMaxPixels;
     initializeState() {
         super.initializeState();
 
-        const attributeManager = this.getAttributeManager();
-        attributeManager.addInstanced({
+        this.getAttributeManager()?.addInstanced({
             instanceRadiusMaxPixels: {
                 size: 1,
                 transition: true,
@@ -44,6 +55,3 @@ attribute float instanceRadiusMaxPixels;
         });
     }
 }
-
-ScatterplotLayerExt.layerName = 'ScatterplotLayerExt';
-ScatterplotLayerExt.defaultProps = defaultProps;

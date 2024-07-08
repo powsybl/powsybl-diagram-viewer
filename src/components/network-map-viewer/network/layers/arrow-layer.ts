@@ -4,31 +4,91 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { Layer, project32, picking } from '@deck.gl/core';
+import {
+    Accessor,
+    DefaultProps,
+    Layer,
+    picking,
+    project32,
+} from '@deck.gl/core';
 import { GL } from '@luma.gl/constants';
-import { Model, Geometry } from '@luma.gl/engine';
+import type { Texture } from '@luma.gl/core';
+import { DeprecatedWebGLTextureProps } from '@luma.gl/core/src/adapter/resources/texture';
+import { Geometry, Model } from '@luma.gl/engine';
 
-import vs from './arrow-layer-vertex.glsl';
+import {
+    Device,
+    RenderPass,
+    TextureFormat,
+    TextureProps,
+    UniformValue,
+} from '@luma.gl/core';
+import {
+    Color,
+    LayerContext,
+    LayerProps,
+    Position,
+    UpdateParameters,
+} from 'deck.gl';
+import { Line } from '../../utils/equipment-types';
 import fs from './arrow-layer-fragment.glsl';
+import vs from './arrow-layer-vertex.glsl';
 
-const DEFAULT_COLOR = [0, 0, 0, 255];
+const DEFAULT_COLOR = [0, 0, 0, 255] satisfies Color;
 
 // this value has to be consistent with the one in vertex shader
 const MAX_LINE_POINT_COUNT = 2 ** 15;
 
-export const ArrowDirection = {
-    NONE: 'none',
-    FROM_SIDE_1_TO_SIDE_2: 'fromSide1ToSide2',
-    FROM_SIDE_2_TO_SIDE_1: 'fromSide2ToSide1',
+export enum ArrowDirection {
+    NONE = 'none',
+    FROM_SIDE_1_TO_SIDE_2 = 'fromSide1ToSide2',
+    FROM_SIDE_2_TO_SIDE_1 = 'fromSide2ToSide1',
+}
+
+export type Arrow = {
+    line: Line;
+    distance: number;
 };
 
-const defaultProps = {
+export type LayerDataSource<DataType> = DataType[];
+//   | LayerData<DataType>
+//   | string
+//   | AsyncIterable<DataType[]>
+//   | Promise<LayerData<DataType>>
+//   | null;
+
+type _ArrowLayerProps = {
+    data: Arrow[];
+    sizeMinPixels?: number;
+    sizeMaxPixels?: number;
+    getDistance: Accessor<Arrow, number>;
+    getLine: (arrow: Arrow) => Line;
+    getLinePositions: (line: Line) => Position[];
+    getSize?: Accessor<Arrow, number>;
+    getColor?: Accessor<Arrow, Color>;
+    getSpeedFactor?: Accessor<Arrow, number>;
+    getDirection?: Accessor<Arrow, ArrowDirection>;
+    animated?: boolean;
+    getLineParallelIndex?: Accessor<Arrow, number>;
+    getLineAngles?: Accessor<Arrow, number[]>;
+    getDistanceBetweenLines?: Accessor<Arrow, number>;
+    maxParallelOffset?: number;
+    minParallelOffset?: number;
+    opacity?: number;
+} & LayerProps;
+
+type ArrowLayerProps = _ArrowLayerProps & LayerProps;
+
+const defaultProps: DefaultProps<ArrowLayerProps> = {
     sizeMinPixels: { type: 'number', min: 0, value: 0 }, //  min size in pixels
     sizeMaxPixels: { type: 'number', min: 0, value: Number.MAX_SAFE_INTEGER }, // max size in pixels
 
-    getDistance: { type: 'accessor', value: (arrow) => arrow.distance },
-    getLine: { type: 'accessor', value: (arrow) => arrow.line },
-    getLinePositions: { type: 'accessor', value: (line) => line.positions },
+    // getDistance: { type: 'accessor', value: (arrow: Arrow) => arrow.distance },
+    getLine: { type: 'function', value: (arrow: Arrow) => arrow.line },
+    // getLinePositions: {
+    //     type: 'function',
+    //     value: (line: Line) => line.positions,
+    // },
     getSize: { type: 'accessor', value: 1 },
     getColor: { type: 'accessor', value: DEFAULT_COLOR },
     getSpeedFactor: { type: 'accessor', value: 1.0 },
@@ -36,11 +96,32 @@ const defaultProps = {
     animated: { type: 'boolean', value: true },
     getLineParallelIndex: { type: 'accessor', value: 0 },
     getLineAngles: { type: 'accessor', value: [0, 0, 0] },
-    distanceBetweenLines: { type: 'number', value: 1000 },
     maxParallelOffset: { type: 'number', value: 100 },
     minParallelOffset: { type: 'number', value: 3 },
     opacity: { type: 'number', value: 1.0 },
+    getDistanceBetweenLines: { type: 'accessor', value: 1000 },
 };
+type LineAttributes = {
+    distance: number;
+    positionsTextureOffset: number;
+    distancesTextureOffset: number;
+    pointCount: number;
+};
+
+// const isAccessorFunction = <In, Out>(
+//     accessor: Accessor<In, Out>
+// ): accessor is AccessorFunction<In, Out> => typeof accessor === 'function';
+
+// const getValue = <In, Out>(
+//     accessor: Accessor<In, Out>,
+//     object: In,
+//     objectInfo: AccessorContext<In>
+// ) => {
+//     if (isAccessorFunction(accessor)) {
+//         return accessor(object, objectInfo);
+//     }
+//     return accessor;
+// };
 
 /**
  * A layer that draws arrows over the lines between voltage levels. The arrows are drawn on a direct line
@@ -52,12 +133,24 @@ const defaultProps = {
  *         maxParallelOffset: max pixel distance
  *         minParallelOffset: min pixel distance
  */
-export class ArrowLayer extends Layer {
+export class ArrowLayer extends Layer<Required<_ArrowLayerProps>> {
+    static layerName = 'ArrowLayer';
+    static defaultProps = defaultProps;
+
+    declare state: {
+        linePositionsTexture: Texture;
+        lineDistancesTexture: Texture;
+        lineAttributes: Map<Line, LineAttributes>;
+        model?: Model;
+        timestamp: number;
+        stop: boolean;
+        maxTextureSize: number;
+    };
     getShaders() {
         return super.getShaders({ vs, fs, modules: [project32, picking] });
     }
 
-    getArrowLineAttributes(arrow) {
+    getArrowLineAttributes(arrow: Arrow): LineAttributes {
         const line = this.props.getLine(arrow);
         if (!line) {
             throw new Error('Invalid line');
@@ -69,21 +162,25 @@ export class ArrowLayer extends Layer {
         return attributes;
     }
 
-    initializeState(context) {
-        const { device } = context;
+    initializeState() {
+        const { device } = this.context;
 
         if (!device.features.has('texture-blend-float-webgl')) {
             throw new Error('Arrow layer not supported on this browser');
         }
 
-        const maxTextureSize = device.getParametersWebGL(GL.MAX_TEXTURE_SIZE);
+        const maxTextureSize = device.getParametersWebGL(
+            GL.MAX_TEXTURE_SIZE
+        ) as number;
+
         this.state = {
             maxTextureSize,
-        };
+        } as this['state'];
 
-        this.getAttributeManager().addInstanced({
+        this.getAttributeManager()?.addInstanced({
             instanceSize: {
                 size: 1,
+                type: 'float32',
                 transition: true,
                 accessor: 'getSize',
                 defaultValue: 1,
@@ -91,13 +188,13 @@ export class ArrowLayer extends Layer {
             instanceColor: {
                 size: this.props.colorFormat.length,
                 transition: true,
-                normalized: true,
-                type: GL.UNSIGNED_BYTE,
+                type: 'unorm8', // normalized: true,
                 accessor: 'getColor',
                 defaultValue: [0, 0, 0, 255],
             },
             instanceSpeedFactor: {
                 size: 1,
+                type: 'float32',
                 transition: true,
                 accessor: 'getSpeedFactor',
                 defaultValue: 1.0,
@@ -111,6 +208,7 @@ export class ArrowLayer extends Layer {
             },
             instanceArrowDirection: {
                 size: 1,
+                type: 'float32',
                 transition: true,
                 accessor: 'getDirection',
                 transform: (direction) => {
@@ -130,83 +228,95 @@ export class ArrowLayer extends Layer {
             instanceLineDistance: {
                 size: 1,
                 transition: true,
-                type: GL.FLOAT,
-                accessor: (arrow) =>
+                type: 'float32',
+                accessor: (arrow: Arrow) =>
                     this.getArrowLineAttributes(arrow).distance,
             },
             instanceLinePositionsTextureOffset: {
                 size: 1,
                 transition: true,
-                type: GL.FLOAT,
-                accessor: (arrow) =>
+                type: 'sint32',
+                accessor: (arrow: Arrow) =>
                     this.getArrowLineAttributes(arrow).positionsTextureOffset,
             },
             instanceLineDistancesTextureOffset: {
                 size: 1,
                 transition: true,
-                type: GL.FLOAT,
-                accessor: (arrow) =>
+                type: 'sint32',
+                accessor: (arrow: Arrow) =>
                     this.getArrowLineAttributes(arrow).distancesTextureOffset,
             },
             instanceLinePointCount: {
                 size: 1,
                 transition: true,
-                type: GL.FLOAT,
-                accessor: (arrow) =>
+                type: 'sint32',
+                accessor: (arrow: Arrow) =>
                     this.getArrowLineAttributes(arrow).pointCount,
             },
             instanceLineParallelIndex: {
                 size: 1,
                 accessor: 'getLineParallelIndex',
-                type: GL.FLOAT,
+                type: 'float32',
             },
             instanceLineAngles: {
                 size: 3,
                 accessor: 'getLineAngles',
-                type: GL.FLOAT,
+                type: 'float32',
             },
             instanceProximityFactors: {
                 size: 2,
-                accessor: 'getProximityFactors',
-                type: GL.FLOAT,
+                accessor: 'getProximityFactors', //TODO where is it ???
+                type: 'float32',
+            },
+            instanceDistanceBetweenLines: {
+                size: 1,
+                transition: true,
+                accessor: 'getDistanceBetweenLines',
+                type: 'float32',
+                defaultValue: 1000,
             },
         });
     }
 
-    finalizeState(context) {
+    finalizeState(context: LayerContext) {
         super.finalizeState(context);
         // we do not use setState to avoid a redraw, it is just used to stop the animation
         this.state.stop = true;
     }
 
-    createTexture2D(device, data, elementSize, format, dataFormat) {
+    createTexture2D(
+        device: Device,
+        data: Array<number>,
+        elementSize: number,
+        format: TextureFormat
+    ) {
         const start = performance.now();
 
-        // we calculate the smallest square texture that is a power of 2 but less or equals to MAX_TEXTURE_SIZE
+        const { maxTextureSize } = this.state;
+        // we calculate the smallest texture width less or equals to MAX_TEXTURE_SIZE
         // (which is an property of the graphic card)
         const elementCount = data.length / elementSize;
-        const n = Math.ceil(Math.log2(elementCount) / 2);
-        const textureSize = 2 ** n;
-        const { maxTextureSize } = this.state;
-        if (textureSize > maxTextureSize) {
+        const width = Math.min(maxTextureSize, elementCount);
+        const height = Math.ceil(elementCount / width);
+        if (height > maxTextureSize) {
             throw new Error(
-                `Texture size (${textureSize}) cannot be greater than ${maxTextureSize}`
+                `Texture size ${width}*${height} cannot be greater than ${maxTextureSize}`
             );
         }
 
         // data length needs to be width * height (otherwise we get an error), so we pad the data array with zero until
         // reaching the correct size.
-        if (data.length < textureSize * textureSize * elementSize) {
+        const newLength = width * height * elementSize;
+        if (data.length < newLength) {
             const oldLength = data.length;
-            data.length = textureSize * textureSize * elementSize;
-            data.fill(0, oldLength, textureSize * textureSize * elementSize);
+            data.length = newLength;
+            data.fill(0, oldLength, newLength);
         }
 
         const texture2d = device.createTexture({
-            width: textureSize,
-            height: textureSize,
-            format: format,
-            dataFormat: dataFormat,
+            width,
+            height,
+            format,
             type: GL.FLOAT,
             data: new Float32Array(data),
             parameters: {
@@ -216,11 +326,11 @@ export class ArrowLayer extends Layer {
                 [GL.TEXTURE_WRAP_T]: GL.CLAMP_TO_EDGE,
             },
             mipmaps: false,
-        });
+        } satisfies TextureProps | DeprecatedWebGLTextureProps as TextureProps);
 
         const stop = performance.now();
         console.info(
-            `Texture of ${elementCount} elements (${textureSize} * ${textureSize}) created in ${
+            `Texture of ${newLength} elements (${width} * ${height}) created in ${
                 stop - start
             } ms`
         );
@@ -228,11 +338,11 @@ export class ArrowLayer extends Layer {
         return texture2d;
     }
 
-    createTexturesStructure(props) {
+    createTexturesStructure(props: this['props']) {
         const start = performance.now();
 
-        const linePositionsTextureData = [];
-        const lineDistancesTextureData = [];
+        const linePositionsTextureData: number[] = [];
+        const lineDistancesTextureData: number[] = [];
         const lineAttributes = new Map();
         let lineDistance = 0;
 
@@ -251,7 +361,7 @@ export class ArrowLayer extends Layer {
             const lineDistancesTextureOffset = lineDistancesTextureData.length;
             let linePointCount = 0;
             if (positions.length > 0) {
-                positions.forEach((position) => {
+                positions.forEach((position: Position) => {
                     // fill line positions texture
                     linePositionsTextureData.push(position[0]);
                     linePositionsTextureData.push(position[1]);
@@ -287,7 +397,7 @@ export class ArrowLayer extends Layer {
         };
     }
 
-    updateGeometry({ props, changeFlags }) {
+    updateGeometry({ props, changeFlags }: UpdateParameters<this>) {
         const geometryChanged =
             changeFlags.dataChanged ||
             (changeFlags.updateTriggersChanged &&
@@ -307,15 +417,13 @@ export class ArrowLayer extends Layer {
                 device,
                 linePositionsTextureData,
                 2,
-                this.state.webgl2 ? GL.RG32F : GL.LUMINANCE_ALPHA,
-                this.state.webgl2 ? GL.RG : GL.LUMINANCE_ALPHA
+                'rg32float' //GL.RG32F,
             );
             const lineDistancesTexture = this.createTexture2D(
                 device,
                 lineDistancesTextureData,
                 1,
-                this.state.webgl2 ? GL.R32F : GL.LUMINANCE,
-                this.state.webgl2 ? GL.RED : GL.LUMINANCE
+                'r32float' //GL.R32F,
             );
 
             this.setState({
@@ -325,29 +433,29 @@ export class ArrowLayer extends Layer {
             });
 
             if (!changeFlags.dataChanged) {
-                this.getAttributeManager().invalidateAll();
+                this.getAttributeManager()?.invalidateAll();
             }
         }
     }
 
-    updateModel({ changeFlags }) {
+    updateModel({ changeFlags }: UpdateParameters<this>) {
         if (changeFlags.somethingChanged) {
             const { device } = this.context;
 
             const { model } = this.state;
             if (model) {
-                model.delete();
+                model.destroy();
             }
 
             this.setState({
                 model: this._getModel(device),
             });
 
-            this.getAttributeManager().invalidateAll();
+            this.getAttributeManager()?.invalidateAll();
         }
     }
 
-    updateState(updateParams) {
+    updateState(updateParams: UpdateParameters<this>) {
         super.updateState(updateParams);
 
         this.updateGeometry(updateParams);
@@ -366,7 +474,7 @@ export class ArrowLayer extends Layer {
         }
     }
 
-    animate(timestamp) {
+    animate(timestamp: number) {
         if (this.state.stop) {
             return;
         }
@@ -380,41 +488,49 @@ export class ArrowLayer extends Layer {
         window.requestAnimationFrame((timestamp) => this.animate(timestamp));
     }
 
-    draw({ uniforms }) {
-        const { sizeMinPixels, sizeMaxPixels } = this.props;
+    draw({
+        uniforms,
+        renderPass,
+    }: {
+        uniforms: Record<string, UniformValue>;
+        renderPass: RenderPass;
+    }) {
+        const { sizeMinPixels, sizeMaxPixels, opacity } = this.props;
 
         const {
             model,
             linePositionsTexture,
             lineDistancesTexture,
             timestamp,
-            webgl2,
+            // maxTextureSize,
         } = this.state;
+        model!.setBindings({
+            linePositionsTexture,
+            lineDistancesTexture,
+        });
 
-        model.setUniforms({
+        model!.setUniforms({
             ...uniforms,
             sizeMinPixels,
             sizeMaxPixels,
-            linePositionsTexture,
-            lineDistancesTexture,
+            // maxTextureSize,
             linePositionsTextureSize: [
                 linePositionsTexture.width,
                 linePositionsTexture.height,
             ],
+            opacity,
             lineDistancesTextureSize: [
                 lineDistancesTexture.width,
                 lineDistancesTexture.height,
             ],
             timestamp,
-            webgl2,
-            distanceBetweenLines: this.props.getDistanceBetweenLines,
             maxParallelOffset: this.props.maxParallelOffset,
             minParallelOffset: this.props.minParallelOffset,
         });
-        model.draw();
+        model!.draw(renderPass);
     }
 
-    _getModel(device) {
+    _getModel(device: Device) {
         const positions = [
             -1, -1, 0, 0, 1, 0, 0, -0.6, 0, 1, -1, 0, 0, 1, 0, 0, -0.6, 0,
         ];
@@ -423,6 +539,7 @@ export class ArrowLayer extends Layer {
             device,
             Object.assign(this.getShaders(), {
                 id: this.props.id,
+                bufferLayout: this.getAttributeManager()!.getBufferLayouts(),
                 geometry: new Geometry({
                     topology: 'triangle-list',
                     vertexCount: 6,
@@ -438,6 +555,3 @@ export class ArrowLayer extends Layer {
         );
     }
 }
-
-ArrowLayer.layerName = 'ArrowLayer';
-ArrowLayer.defaultProps = defaultProps;

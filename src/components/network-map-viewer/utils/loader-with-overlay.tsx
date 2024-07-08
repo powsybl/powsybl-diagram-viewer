@@ -5,10 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import React from 'react';
 import { CircularProgress } from '@mui/material';
-import { FormattedMessage } from 'react-intl';
 import { Box } from '@mui/system';
+import { FormattedMessage } from 'react-intl';
 
 const styles = {
     overlay: {
@@ -28,12 +27,19 @@ const styles = {
     },
 };
 
+type LoaderWithOverlayProps = {
+    color: 'primary' | 'secondary' | 'inherit';
+    loaderSize: number;
+    loadingMessageText: string;
+    isFixed: boolean;
+};
+
 const LoaderWithOverlay = ({
     color,
     loaderSize,
     loadingMessageText,
     isFixed,
-}) => {
+}: LoaderWithOverlayProps) => {
     return (
         <Box
             sx={styles.overlay}

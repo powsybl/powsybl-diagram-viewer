@@ -1,17 +1,23 @@
 {
-  "compilerOptions": {
-    "module": "esnext",
-    "target": "es6",
-    "declaration": true,
-    "outDir": "./dist",
-    "strict": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "allowSyntheticDefaultImports": true,
-    "noFallthroughCasesInSwitch": true,
-    "moduleResolution": "node",
-    "noEmit": true
-  },
-  "include": ["src", "demo"] // we can let demo because the file generation is managed my vite and we have noEmit anyway
+    "compilerOptions": {
+        "module": "esnext",
+        "lib": ["ES2022"],
+        "target": "ESNext",
+        "declaration": true,
+        "outDir": "./dist",
+        "strict": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "allowSyntheticDefaultImports": true,
+        "noFallthroughCasesInSwitch": true,
+        "moduleResolution": "node",
+        "noEmit": true,
+        "jsx": "react-jsx",
+        "resolveJsonModule": true,
+        "paths": {
+            "@/*": ["./src/*"]
+        }
+    },
+    "include": ["src", "demo"] // we can let demo because the file generation is managed my vite and we have noEmit anyway
 }
