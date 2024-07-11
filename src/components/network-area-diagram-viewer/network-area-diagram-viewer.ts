@@ -26,10 +26,14 @@ export type OnMoveTextNodeCallbackType = (
     equipmentId: string,
     vlNodeId: string,
     textNodeId: string,
-    x: number,
-    y: number,
-    XOrig: number,
-    yOrig: number
+    shiftX: number,
+    shiftY: number,
+    shiftXOrig: number,
+    shiftYOrig: number,
+    connectionShiftX: number,
+    connectionShiftY: number,
+    connectionShiftXOrig: number,
+    connectionShiftYOrig: number
 ) => void;
 
 export class NetworkAreaDiagramViewer {
@@ -49,6 +53,8 @@ export class NetworkAreaDiagramViewer {
     edgeAngles: Map<string, number> = new Map<string, number>();
     textNodeSelected: boolean = false;
     initialTextNodePosition: Point = new Point(0, 0);
+    initialEndTextEdge: Point = new Point(0, 0);
+    endTextEdge: Point = new Point(0, 0);
     onMoveNodeCallback: OnMoveNodeCallbackType | null;
     onMoveTextNodeCallback: OnMoveTextNodeCallbackType | null;
 
@@ -317,7 +323,7 @@ export class NetworkAreaDiagramViewer {
             if (this.textNodeSelected) {
                 this.callMoveTextNodeCallback(mousePosition);
             } else {
-                this.updateMetadataCallCallbacks(mousePosition);
+                this.updateNodeMetadataCallCallback(mousePosition);
             }
             const svg: HTMLElement = <HTMLElement>(
                 this.svgDraw?.node.firstElementChild?.parentElement
@@ -329,6 +335,8 @@ export class NetworkAreaDiagramViewer {
             this.initialPosition = new Point(0, 0);
             this.textNodeSelected = false;
             this.initialTextNodePosition = new Point(0, 0);
+            this.initialEndTextEdge = new Point(0, 0);
+            this.endTextEdge = new Point(0, 0);
             this.enablePanzoom();
         }
     }
@@ -374,13 +382,6 @@ export class NetworkAreaDiagramViewer {
                         DiagramUtils.getTextNodeId(this.selectedElement?.id) +
                         "']"
                 );
-            if (
-                this.initialTextNodePosition.x == 0 &&
-                this.initialTextNodePosition.y == 0
-            ) {
-                this.initialTextNodePosition =
-                    DiagramUtils.getTextNodePosition(textNode);
-            }
             this.moveText(
                 textNode,
                 this.selectedElement,
@@ -456,7 +457,7 @@ export class NetworkAreaDiagramViewer {
                 );
             // compute text edge start and end
             const vlNodePosition = DiagramUtils.getPosition(vlNode);
-            const endTextEdge = DiagramUtils.getTextEdgeEnd(
+            this.endTextEdge = DiagramUtils.getTextEdgeEnd(
                 textNodePosition,
                 vlNodePosition,
                 this.svgParameters.getDetailedTextNodeYShift(),
@@ -465,14 +466,25 @@ export class NetworkAreaDiagramViewer {
             );
             const startTextEdge = DiagramUtils.getPointAtDistance(
                 vlNodePosition,
-                endTextEdge,
+                this.endTextEdge,
                 voltageLevelCircleRadius
             );
+            if (
+                this.initialEndTextEdge.x == 0 &&
+                this.initialEndTextEdge.y == 0
+            ) {
+                const points = DiagramUtils.getPolylinePoints(
+                    textEdge as unknown as HTMLElement
+                );
+                if (points != null) {
+                    this.initialEndTextEdge = points[points.length - 1];
+                }
+            }
             // update text edge polyline
             const polyline = DiagramUtils.getFormattedPolyline(
                 startTextEdge,
                 null,
-                endTextEdge
+                this.endTextEdge
             );
             textEdge.setAttribute('points', polyline);
         }
@@ -1391,7 +1403,7 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private updateMetadataCallCallbacks(mousePosition: Point) {
+    private updateNodeMetadataCallCallback(mousePosition: Point) {
         // get moved node from metadata
         const node: SVGGraphicsElement | null = this.container.querySelector(
             'nad\\:node[svgid="' + this.selectedElement?.id + '"]'
@@ -1411,36 +1423,6 @@ export class NetworkAreaDiagramViewer {
                     +nodeMove.xOrig,
                     +nodeMove.yOrig
                 );
-            }
-            if (this.onMoveTextNodeCallback != null) {
-                // get text node
-                const textNode: SVGGraphicsElement | null =
-                    this.container.querySelector(
-                        "[id='" +
-                            DiagramUtils.getTextNodeId(
-                                this.selectedElement?.id
-                            ) +
-                            "']"
-                    );
-                if (textNode != null) {
-                    // get new text node position
-                    const textPosition =
-                        DiagramUtils.getTextNodePosition(textNode);
-                    const textNodeMove = DiagramUtils.getTextNodeMove(
-                        this.initialTextNodePosition,
-                        textPosition
-                    );
-                    // call the text node move callback, if defined
-                    this.onMoveTextNodeCallback(
-                        node.getAttribute('equipmentid') ?? '',
-                        node.getAttribute('svgid') ?? '',
-                        textNode.id ?? '',
-                        +textNodeMove.xNew,
-                        +textNodeMove.yNew,
-                        +textNodeMove.xOrig,
-                        +textNodeMove.yOrig
-                    );
-                }
             }
         }
     }
@@ -1464,7 +1446,13 @@ export class NetworkAreaDiagramViewer {
                 );
                 const textNodeMove = DiagramUtils.getTextNodeMove(
                     this.initialTextNodePosition,
-                    textPosition
+                    textPosition,
+                    node
+                );
+                const textConnectionMove = DiagramUtils.getTextNodeMove(
+                    this.initialEndTextEdge,
+                    this.endTextEdge,
+                    node
                 );
                 // call the node move callback, if defined
                 this.onMoveTextNodeCallback(
@@ -1474,7 +1462,11 @@ export class NetworkAreaDiagramViewer {
                     +textNodeMove.xNew,
                     +textNodeMove.yNew,
                     +textNodeMove.xOrig,
-                    +textNodeMove.yOrig
+                    +textNodeMove.yOrig,
+                    +textConnectionMove.xNew,
+                    +textConnectionMove.yNew,
+                    +textConnectionMove.xOrig,
+                    +textConnectionMove.yOrig
                 );
             }
         }

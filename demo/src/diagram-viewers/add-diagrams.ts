@@ -336,10 +336,14 @@ const handleTextNodeMove = (
     equipmentId,
     nodeId,
     textNodeId,
-    x,
-    y,
-    xOrig,
-    yOrig
+    shiftX,
+    shiftY,
+    shiftXOrig,
+    shiftYOrig,
+    connectionShiftX,
+    connectionShiftY,
+    connectionShiftXOrig,
+    connectionShiftYOrig
 ) => {
     const msg =
         'TextNode ' +
@@ -348,14 +352,22 @@ const handleTextNodeMove = (
         nodeId +
         ' equipment ' +
         equipmentId +
-        ' moved from [' +
-        xOrig +
+        ' position shift changed from [' +
+        shiftXOrig +
         ', ' +
-        yOrig +
+        shiftYOrig +
         '] to [' +
-        x +
+        shiftX +
         ', ' +
-        y +
+        shiftY +
+        '] connection shift changed from [' +
+        connectionShiftXOrig +
+        ', ' +
+        connectionShiftYOrig +
+        '] to [' +
+        connectionShiftX +
+        ', ' +
+        connectionShiftY +
         ']';
     console.log(msg);
 };

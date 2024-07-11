@@ -556,15 +556,18 @@ export function getTextNodePosition(
     return new Point(+textNodeX, +textNodeY);
 }
 
-// get text node move (original and new position)
+// get text node move (original and new shift of position)
 export function getTextNodeMove(
     initialTextPosition: Point,
-    textPosition: Point
+    textPosition: Point,
+    vlNode: SVGGraphicsElement
 ): NODEMOVE {
-    const xOrig = getFormattedValue(initialTextPosition.x);
-    const yOrig = getFormattedValue(initialTextPosition.y);
-    const xNew = getFormattedValue(textPosition.x);
-    const yNew = getFormattedValue(textPosition.y);
+    const xNode = vlNode.getAttribute('x') ?? '0';
+    const yNode = vlNode.getAttribute('y') ?? '0';
+    const xOrig = getFormattedValue(initialTextPosition.x - +xNode);
+    const yOrig = getFormattedValue(initialTextPosition.y - +yNode);
+    const xNew = getFormattedValue(textPosition.x - +xNode);
+    const yNew = getFormattedValue(textPosition.y - +yNode);
     return { xOrig: xOrig, yOrig: yOrig, xNew: xNew, yNew: yNew };
 }
 
