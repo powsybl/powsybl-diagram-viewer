@@ -4,8 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+import { Color } from 'deck.gl';
 
-export function getNominalVoltageColor(nominalVoltage) {
+export function getNominalVoltageColor(nominalVoltage: number): Color {
     if (nominalVoltage >= 300) {
         return [255, 0, 0];
     } else if (nominalVoltage >= 170 && nominalVoltage < 300) {
