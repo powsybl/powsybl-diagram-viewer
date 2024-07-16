@@ -28,7 +28,7 @@ export default defineConfig((config) => ({
         minify: false, // easier to debug on the apps using this lib
         lib: {
             // Could also be a dictionary or array of multiple entry points
-            entry: path.resolve(__dirname, 'src/index.js'),
+            entry: path.resolve(__dirname, 'src/index.ts'),
             name: 'PowSyBl diagram viewer',
             // the proper extensions will be added
             fileName: 'powsybl-diagram-viewer',
