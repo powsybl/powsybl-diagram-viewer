@@ -14,18 +14,6 @@ export enum LineFlowColorMode {
     OVERLOADS = 'overloads',
 }
 
-export enum LineLoadingZone {
-    UNKNOWN = 0,
-    SAFE = 1,
-    WARNING = 2,
-    OVERLOAD = 3,
-}
-
-export function getLineLoadingZone(
-    line: Line,
-    lineFlowAlertThreshold: number
-): number;
-
 type _LineLayerProps = {
     network?: unknown | null;
     geoData?: GeoData | null;

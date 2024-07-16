@@ -11,8 +11,6 @@ export { GeoData } from './components/network-map-viewer/network/geo-data';
 export {
     LineFlowMode,
     LineFlowColorMode,
-    LineLoadingZone,
-    getLineLoadingZone,
 } from './components/network-map-viewer/network/line-layer';
 export { MapEquipments } from './components/network-map-viewer/network/map-equipments';
 export {
