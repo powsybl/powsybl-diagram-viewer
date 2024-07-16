@@ -11,14 +11,22 @@ import SldSvgExampleMeta from './data/sld-example-meta.json';
 import SldSvgSubExample from './data/sld-sub-example.svg';
 import SldSvgSubExampleMeta from './data/sld-sub-example-meta.json';
 
-import { NetworkAreaDiagramViewer } from '../../../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
-import { SingleLineDiagramViewer } from '../../../src/components/single-line-diagram-viewer/single-line-diagram-viewer';
+import {
+    NetworkAreaDiagramViewer,
+    SingleLineDiagramViewer,
+    HandleTogglePopoverType,
+    OnBreakerCallbackType,
+    OnBusCallbackType,
+    OnFeederCallbackType,
+    OnNextVoltageCallbackType,
+} from '../../../src';
 
 export const addNadToDemo = () => {
     fetch(NadSvgExample)
         .then((response) => response.text())
         .then((svgContent) => {
             new NetworkAreaDiagramViewer(
+                // @ts-expect-error: we know it's not null in the demo
                 document.getElementById('svg-container'),
                 svgContent,
                 500,
@@ -29,7 +37,7 @@ export const addNadToDemo = () => {
 
             document
                 .getElementById('svg-container')
-                .getElementsByTagName('svg')[0]
+                ?.getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
         });
 };
@@ -39,6 +47,7 @@ export const addSldToDemo = () => {
         .then((response) => response.text())
         .then((svgContent) => {
             new SingleLineDiagramViewer(
+                // @ts-expect-error: we know it's not null in the demo
                 document.getElementById('svg-container-sld'),
                 svgContent, //svg content
                 null, //svg metadata
@@ -57,7 +66,7 @@ export const addSldToDemo = () => {
 
             document
                 .getElementById('svg-container-sld')
-                .getElementsByTagName('svg')[0]
+                ?.getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
         });
 
@@ -65,6 +74,7 @@ export const addSldToDemo = () => {
         .then((response) => response.text())
         .then((svgContent) => {
             new SingleLineDiagramViewer(
+                // @ts-expect-error: we know it's not null in the demo
                 document.getElementById('svg-container-sld-with-callbacks'),
                 svgContent, //svg content
                 SldSvgExampleMeta, //svg metadata
@@ -83,7 +93,7 @@ export const addSldToDemo = () => {
 
             document
                 .getElementById('svg-container-sld-with-callbacks')
-                .getElementsByTagName('svg')[0]
+                ?.getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
         });
 
@@ -91,6 +101,7 @@ export const addSldToDemo = () => {
         .then((response) => response.text())
         .then((svgContent) => {
             new SingleLineDiagramViewer(
+                // @ts-expect-error: we know it's not null in the demo
                 document.getElementById('svg-container-sldsub-with-callbacks'),
                 svgContent, //svg content
                 SldSvgSubExampleMeta, //svg metadata
@@ -109,28 +120,29 @@ export const addSldToDemo = () => {
 
             document
                 .getElementById('svg-container-sldsub-with-callbacks')
-                .getElementsByTagName('svg')[0]
+                ?.getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
         });
 };
 
-const handleNextVL = (id) => {
+const handleNextVL: OnNextVoltageCallbackType = (id: string) => {
     const msg = 'Clicked on navigation arrow, dest VL is ' + id;
     console.log(msg);
 };
 
-const handleSwitch = (id, switch_status, element) => {
+const handleSwitch: OnBreakerCallbackType = (id, switch_status, element) => {
     const msg =
         'Clicked on switch: ' +
         id +
         ', switch_status: ' +
         (switch_status ? 'close' : 'open') +
         '. elementId: ' +
-        element.id;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO no "id" prop existing
+        (element as any).id;
     console.log(msg);
 };
 
-const handleFeeder = (id, feederType, svgId, x, y) => {
+const handleFeeder: OnFeederCallbackType = (id, feederType, svgId, x, y) => {
     const msg =
         'Clicked on feeder: ' +
         id +
@@ -145,13 +157,13 @@ const handleFeeder = (id, feederType, svgId, x, y) => {
     console.log(msg);
 };
 
-const handleBus = (id, svgId, x, y) => {
+const handleBus: OnBusCallbackType = (id, svgId, x, y) => {
     const msg =
         'Clicked on bus: ' + id + ', svgId: ' + svgId + 'x: ' + x + ', y: ' + y;
     console.log(msg);
 };
 
-const handleTogglePopover = (
+const handleTogglePopover: HandleTogglePopoverType = (
     shouldDisplay,
     anchorEl,
     equipmentId,

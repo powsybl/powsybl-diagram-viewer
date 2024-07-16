@@ -1,4 +1,10 @@
-import { ForwardRefExoticComponent, ReactNode, RefObject } from 'react';
+import {
+    ForwardRefExoticComponent,
+    PropsWithoutRef,
+    ReactNode,
+    RefAttributes,
+    RefObject,
+} from 'react';
 import { GeoData } from './geo-data';
 import {
     Equipment,
@@ -11,6 +17,7 @@ import { LineFlowColorMode, LineFlowMode, LineLayerProps } from './line-layer';
 import { DrawControlProps } from './draw-control';
 import { Feature } from 'geojson';
 import { ButtonProps } from '@mui/material';
+import MapboxDraw from '@mapbox/mapbox-gl-draw';
 
 export enum DRAW_EVENT {
     CREATE = 1,
@@ -18,7 +25,7 @@ export enum DRAW_EVENT {
     DELETE = 0,
 }
 
-type MenuClickFunction<T extends Equipment> = (
+export type MenuClickFunction<T extends Equipment> = (
     equipment: T,
     eventX: number,
     eventY: number
@@ -79,4 +86,14 @@ type NetworkMapProps = {
     onDrawEvent?: (drawEvent: DRAW_EVENT) => void;
 };
 
-export default ForwardRefExoticComponent<NetworkMapProps>;
+export type NetworkMapRef = {
+    getSelectedSubstations: () => Substation[];
+    getSelectedLines: () => Line[];
+    cleanDraw: () => void;
+    getMapDrawer: () => MapboxDraw | undefined;
+};
+
+const NetworkMap: ForwardRefExoticComponent<
+    PropsWithoutRef<NetworkMapProps> & RefAttributes<NetworkMapRef>
+>;
+export default NetworkMap;

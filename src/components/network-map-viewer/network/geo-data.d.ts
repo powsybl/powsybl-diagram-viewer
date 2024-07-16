@@ -271,7 +271,7 @@ export type Line = Equipment & {
 
 // https://github.com/gridsuite/geo-data-server/blob/main/src/main/java/org/gridsuite/geodata/server/dto/SubstationGeoData.java
 export type Substation = Equipment & {
-    country: Country;
+    country?: Country;
     coordinate: Coordinate;
 };
 

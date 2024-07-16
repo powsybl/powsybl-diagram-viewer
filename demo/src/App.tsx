@@ -6,22 +6,22 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { NetworkMap, GeoData } from '../../src/';
 import {
     createTheme,
-    ThemeProvider,
     StyledEngineProvider,
+    ThemeProvider,
 } from '@mui/material/styles';
-
+import { GeoData, NetworkMap, NetworkMapRef } from '../../src';
+import { Equipment } from '../../src/components/network-map-viewer/network/map-equipments';
+import { addNadToDemo, addSldToDemo } from './diagram-viewers/add-diagrams';
 import DemoMapEquipments from './map-viewer/demo-map-equipments';
 
 import sposdata from './map-viewer/data/spos.json';
 import lposdata from './map-viewer/data/lpos.json';
 import smapdata from './map-viewer/data/smap.json';
 import lmapdata from './map-viewer/data/lmap.json';
-import { addNadToDemo, addSldToDemo } from './diagram-viewers/add-diagrams';
 
-function App() {
+export default function App() {
     const INITIAL_ZOOM = 9;
     const LABELS_ZOOM_THRESHOLD = 9;
     const ARROWS_ZOOM_THRESHOLD = 7;
@@ -33,7 +33,12 @@ function App() {
     }, []);
 
     //called after a click (right mouse click) on an equipment (line or substation)
-    function showEquipmentMenu(equipment, x, y, type) {
+    function showEquipmentMenu(
+        equipment: Equipment,
+        x: number,
+        y: number,
+        type: string
+    ) {
         console.log(
             '# Show equipment menu: ' +
                 JSON.stringify(equipment) +
@@ -46,6 +51,7 @@ function App() {
         palette: {
             mode: 'dark',
         },
+        // @ts-expect-error: TODO not present in ThemeOptions
         link: {
             color: 'green',
         },
@@ -69,7 +75,7 @@ function App() {
     const mapEquipments = new DemoMapEquipments(smapdata, lmapdata);
 
     useEffect(() => {
-        const handleContextmenu = (e) => {
+        const handleContextmenu = (e: MouseEvent) => {
             e.preventDefault();
         };
         document.addEventListener('contextmenu', handleContextmenu);
@@ -78,7 +84,7 @@ function App() {
         };
     }, []);
 
-    const networkMapRef = useRef();
+    const networkMapRef = useRef<NetworkMapRef>(null);
     const filteredNominalVoltages = [380.0, 225.0, 110.0];
 
     return (
@@ -138,12 +144,12 @@ function App() {
                             onPolygonChanged={() => {
                                 console.log(
                                     'Selected Substations: ',
-                                    networkMapRef.current.getSelectedSubstations()
+                                    networkMapRef.current?.getSelectedSubstations()
                                         .length
                                 );
                                 console.log(
                                     'Selected Lines: ',
-                                    networkMapRef.current.getSelectedLines()
+                                    networkMapRef.current?.getSelectedLines()
                                         .length
                                 );
                             }}
@@ -154,5 +160,3 @@ function App() {
         </div>
     );
 }
-
-export default App;
