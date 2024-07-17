@@ -149,7 +149,7 @@ export class SingleLineDiagramViewer {
         onFeederCallback: OnFeederCallbackType | null,
         onBusCallback: OnBusCallbackType | null,
         selectionBackColor: string,
-        handleTogglePopover: HandleTogglePopoverType
+        handleTogglePopover: HandleTogglePopoverType | null
     ) {
         this.container = container;
         this.svgType = svgType;

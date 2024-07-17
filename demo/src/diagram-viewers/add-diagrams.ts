@@ -26,8 +26,7 @@ export const addNadToDemo = () => {
         .then((response) => response.text())
         .then((svgContent) => {
             new NetworkAreaDiagramViewer(
-                // @ts-expect-error: we know it's not null in the demo
-                document.getElementById('svg-container'),
+                document.getElementById('svg-container')!,
                 svgContent,
                 500,
                 600,
@@ -47,8 +46,7 @@ export const addSldToDemo = () => {
         .then((response) => response.text())
         .then((svgContent) => {
             new SingleLineDiagramViewer(
-                // @ts-expect-error: we know it's not null in the demo
-                document.getElementById('svg-container-sld'),
+                document.getElementById('svg-container-sld')!,
                 svgContent, //svg content
                 null, //svg metadata
                 'voltage-level',
@@ -60,6 +58,7 @@ export const addSldToDemo = () => {
                 null, //callback on the breakers
                 null, //callback on the feeders
                 null, //callback on the buses
+                // @ts-expect-error: TODO look if null is really possible in code
                 null, //arrows color
                 null //hovers on equipments callback
             );
@@ -74,9 +73,9 @@ export const addSldToDemo = () => {
         .then((response) => response.text())
         .then((svgContent) => {
             new SingleLineDiagramViewer(
-                // @ts-expect-error: we know it's not null in the demo
-                document.getElementById('svg-container-sld-with-callbacks'),
+                document.getElementById('svg-container-sld-with-callbacks')!,
                 svgContent, //svg content
+                // @ts-expect-error: incomplete data in example json
                 SldSvgExampleMeta, //svg metadata
                 'voltage-level',
                 500,
@@ -101,9 +100,9 @@ export const addSldToDemo = () => {
         .then((response) => response.text())
         .then((svgContent) => {
             new SingleLineDiagramViewer(
-                // @ts-expect-error: we know it's not null in the demo
-                document.getElementById('svg-container-sldsub-with-callbacks'),
+                document.getElementById('svg-container-sldsub-with-callbacks')!,
                 svgContent, //svg content
+                // @ts-expect-error: incomplete data in example json
                 SldSvgSubExampleMeta, //svg metadata
                 'substation',
                 500,

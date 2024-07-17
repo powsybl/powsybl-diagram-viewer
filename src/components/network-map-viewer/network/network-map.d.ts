@@ -71,7 +71,7 @@ type NetworkMapProps = {
     // resized, but not for programmatic resizes of the parent. For now in our
     // app, only study display mode resizes programmatically
     // use this prop to make the map resize when needed, each time this prop changes, map.resize() is trigged
-    triggerMapResizeOnChange: unknown;
+    triggerMapResizeOnChange?: unknown;
     updatedLines?: LineLayerProps['updatedLines'];
     useName?: boolean;
     visible?: boolean;
