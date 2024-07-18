@@ -5,7 +5,10 @@
     "author": "powsybl team",
     "homepage": "https://www.powsybl.org/",
     "license": "MPL-2.0",
-    "repository": "git://github.com/powsybl/powsybl-diagram-viewer.git",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/powsybl/powsybl-diagram-viewer.git"
+    },
     "type": "module",
     "types": "./dist/index.d.ts",
     "main": "./dist/powsybl-diagram-viewer.umd.cjs",
