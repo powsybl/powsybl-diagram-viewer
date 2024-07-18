@@ -1,8 +1,8 @@
 {
     "name": "@powsybl/diagram-viewer",
-    "version": "0.5.3",
-    "description": "Typescript library to integrate a powsybl svg diagram in a javascript project.",
-    "author": "powsybl team",
+    "version": "0.5.4",
+    "description": "TypeScript library to integrate a PowSyBl SVG diagram in a JavaScript project.",
+    "author": "PowSyBl team",
     "homepage": "https://www.powsybl.org/",
     "license": "MPL-2.0",
     "repository": {
