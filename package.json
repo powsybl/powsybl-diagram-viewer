@@ -25,6 +25,7 @@
     "scripts": {
         "watch": "vite watch",
         "build": "vite build",
+        "prepublishOnly": "$npm_execpath run build",
         "test": "jest",
         "start": "vite demo/ --config vite.config.ts --open",
         "lint": "eslint . --ext js,mjs,jsx,ts,mts,tsx --max-warnings 0",
