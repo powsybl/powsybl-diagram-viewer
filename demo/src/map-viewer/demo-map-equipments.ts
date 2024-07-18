@@ -7,13 +7,16 @@
 
 import { MapEquipments } from '../../../src';
 
+type SMap = typeof import('./data/smap.json');
+type LMap = typeof import('./data/lmap.json');
+
 export default class DemoMapEquipments extends MapEquipments {
-    initEquipments(smapdata, lmapdata) {
+    initEquipments(smapdata: SMap, lmapdata: LMap) {
         this.updateSubstations(smapdata, true);
         this.updateLines(lmapdata, true);
     }
 
-    constructor(smapdata, lmapdata) {
+    constructor(smapdata: SMap, lmapdata: LMap) {
         super();
         this.initEquipments(smapdata, lmapdata);
     }

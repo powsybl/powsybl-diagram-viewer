@@ -6,8 +6,9 @@
  */
 
 import PropTypes from 'prop-types';
-import React, {
+import {
     forwardRef,
+    memo,
     useCallback,
     useEffect,
     useImperativeHandle,
@@ -15,10 +16,7 @@ import React, {
     useRef,
     useState,
 } from 'react';
-
 import { Box, decomposeColor } from '@mui/system';
-import LoaderWithOverlay from '../utils/loader-with-overlay';
-
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import { Replay } from '@mui/icons-material';
 import { Button, useTheme } from '@mui/material';
@@ -27,18 +25,18 @@ import { Map, NavigationControl, useControl } from 'react-map-gl';
 import { getNominalVoltageColor } from '../../../utils/colors';
 import { useNameOrId } from '../utils/equipmentInfosHandler';
 import { GeoData } from './geo-data';
-import DrawControl, { getMapDrawer } from './draw-control.ts';
+import DrawControl, { getMapDrawer } from './draw-control';
 import { LineFlowColorMode, LineFlowMode, LineLayer } from './line-layer';
 import { MapEquipments } from './map-equipments';
 import { SubstationLayer } from './substation-layer';
-
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
+import LoaderWithOverlay from '../utils/loader-with-overlay';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
-import { EQUIPMENT_TYPES } from '../utils/equipment-types.js';
+import { EQUIPMENT_TYPES } from '../utils/equipment-types';
 
 // MouseEvent.button https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
 const MOUSE_EVENT_BUTTON_LEFT = 0;
@@ -57,7 +55,7 @@ export const DRAW_EVENT = {
 
 // Small boilerplate recommended by deckgl, to bridge to a react-map-gl control declaratively
 // see https://deck.gl/docs/api-reference/mapbox/mapbox-overlay#using-with-react-map-gl
-const DeckGLOverlay = React.forwardRef((props, ref) => {
+const DeckGLOverlay = forwardRef((props, ref) => {
     const overlay = useControl(() => new MapboxOverlay(props));
     overlay.setProps(props);
     useImperativeHandle(ref, () => overlay, [overlay]);
@@ -104,6 +102,7 @@ const INITIAL_CENTERED = {
 function getPolygonFeatures() {
     return getMapDrawer()?.getAll()?.features[0] ?? {};
 }
+
 const NetworkMap = forwardRef((props, ref) => {
     const [labelsVisible, setLabelsVisible] = useState(false);
     const [showLineFlow, setShowLineFlow] = useState(true);
@@ -797,7 +796,7 @@ NetworkMap.propTypes = {
     onDrawEvent: PropTypes.func,
 };
 
-export default React.memo(NetworkMap);
+export default memo(NetworkMap);
 
 function getSubstationsInPolygon(features, mapEquipments, geoData) {
     const polygonCoordinates = features?.geometry;

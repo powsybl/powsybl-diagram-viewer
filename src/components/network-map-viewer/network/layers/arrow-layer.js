@@ -15,8 +15,8 @@ import {
     isWebGL2,
 } from '@luma.gl/core';
 
-import vs from './arrow-layer-vertex.glsl';
-import fs from './arrow-layer-fragment.glsl';
+import vs from './arrow-layer-vertex.vert?raw';
+import fs from './arrow-layer-fragment.frag?raw';
 
 const DEFAULT_COLOR = [0, 0, 0, 255];
 
