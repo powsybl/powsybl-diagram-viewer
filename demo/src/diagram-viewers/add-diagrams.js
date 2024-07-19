@@ -30,7 +30,8 @@ export const addNadToDemo = () => {
                 600,
                 1000,
                 1200,
-                handleNodeMove
+                handleNodeMove,
+                true
             );
 
             document
@@ -39,21 +40,22 @@ export const addNadToDemo = () => {
                 .setAttribute('style', 'border:2px; border-style:solid;');
         });
 
-    fetch(NadSvgPstHvdcExample)
+    fetch(NadSvgExample)
         .then((response) => response.text())
         .then((svgContent) => {
             new NetworkAreaDiagramViewer(
-                document.getElementById('svg-container-nad-pst-hvdc'),
+                document.getElementById('svg-container-nad-no-moving'),
                 svgContent,
                 500,
                 600,
                 1000,
                 1200,
-                handleNodeMove
+                handleNodeMove,
+                false
             );
 
             document
-                .getElementById('svg-container-nad-pst-hvdc')
+                .getElementById('svg-container-nad-no-moving')
                 .getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
         });
@@ -68,7 +70,8 @@ export const addNadToDemo = () => {
                 600,
                 1000,
                 1200,
-                handleNodeMove
+                handleNodeMove,
+                true
             );
 
             document
@@ -87,11 +90,32 @@ export const addNadToDemo = () => {
                 600,
                 1000,
                 1200,
-                handleNodeMove
+                handleNodeMove,
+                true
             );
 
             document
                 .getElementById('svg-container-nad-multibus-vlnodes14')
+                .getElementsByTagName('svg')[0]
+                .setAttribute('style', 'border:2px; border-style:solid;');
+        });
+
+    fetch(NadSvgPstHvdcExample)
+        .then((response) => response.text())
+        .then((svgContent) => {
+            new NetworkAreaDiagramViewer(
+                document.getElementById('svg-container-nad-pst-hvdc'),
+                svgContent,
+                500,
+                600,
+                1000,
+                1200,
+                handleNodeMove,
+                true
+            );
+
+            document
+                .getElementById('svg-container-nad-pst-hvdc')
                 .getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
         });
@@ -106,7 +130,8 @@ export const addNadToDemo = () => {
                 600,
                 1000,
                 1200,
-                handleNodeMove
+                handleNodeMove,
+                true
             );
 
             document
@@ -125,7 +150,8 @@ export const addNadToDemo = () => {
                 600,
                 1000,
                 1200,
-                handleNodeMove
+                handleNodeMove,
+                true
             );
 
             document
