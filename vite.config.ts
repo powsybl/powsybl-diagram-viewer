@@ -67,6 +67,8 @@ export default defineConfig((config) => ({
                     '@luma.gl/constants': 'LumaGlConstants',
                     '@luma.gl/core': 'LumaGlCore',
                     '@svgdotjs/svg.js': 'SvgJs',
+                    '@mapbox/mapbox-gl-draw': 'MapboxGlDraw',
+                    '@turf/boolean-point-in-polygon': 'BooleanPointInPolygon',
                 },
             },
         },
