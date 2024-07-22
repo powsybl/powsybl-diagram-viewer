@@ -6,8 +6,9 @@
  */
 
 import PropTypes from 'prop-types';
-import React, {
+import {
     forwardRef,
+    memo,
     useCallback,
     useEffect,
     useImperativeHandle,
@@ -15,10 +16,7 @@ import React, {
     useRef,
     useState,
 } from 'react';
-
 import { Box, decomposeColor } from '@mui/system';
-import LoaderWithOverlay from '../utils/loader-with-overlay';
-
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import { Replay } from '@mui/icons-material';
 import { Button, useTheme } from '@mui/material';
@@ -27,26 +25,37 @@ import { Map, NavigationControl, useControl } from 'react-map-gl';
 import { getNominalVoltageColor } from '../../../utils/colors';
 import { useNameOrId } from '../utils/equipmentInfosHandler';
 import { GeoData } from './geo-data';
-import DrawControl, { getMapDrawer } from './draw-control.ts';
+import DrawControl, { getMapDrawer } from './draw-control';
 import { LineFlowColorMode, LineFlowMode, LineLayer } from './line-layer';
 import { MapEquipments } from './map-equipments';
 import { SubstationLayer } from './substation-layer';
-
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
+import LoaderWithOverlay from '../utils/loader-with-overlay';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
-import { EQUIPMENT_TYPES } from '../utils/equipment-types.js';
+import { EQUIPMENT_TYPES } from '../utils/equipment-types';
 
 // MouseEvent.button https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
 const MOUSE_EVENT_BUTTON_LEFT = 0;
 const MOUSE_EVENT_BUTTON_RIGHT = 2;
 
+/**
+ * Represents the draw event types for the network map.
+ * when a draw event is triggered, the event type is passed to the onDrawEvent callback
+ * On create, when the user create a new polygon (shape finished)
+ */
+export const DRAW_EVENT = {
+    CREATE: 1,
+    UPDATE: 2,
+    DELETE: 0,
+};
+
 // Small boilerplate recommended by deckgl, to bridge to a react-map-gl control declaratively
 // see https://deck.gl/docs/api-reference/mapbox/mapbox-overlay#using-with-react-map-gl
-const DeckGLOverlay = React.forwardRef((props, ref) => {
+const DeckGLOverlay = forwardRef((props, ref) => {
     const overlay = useControl(() => new MapboxOverlay(props));
     overlay.setProps(props);
     useImperativeHandle(ref, () => overlay, [overlay]);
@@ -89,6 +98,11 @@ const INITIAL_CENTERED = {
     centered: false,
 };
 
+// get polygon coordinates (features) or an empty object
+function getPolygonFeatures() {
+    return getMapDrawer()?.getAll()?.features[0] ?? {};
+}
+
 const NetworkMap = forwardRef((props, ref) => {
     const [labelsVisible, setLabelsVisible] = useState(false);
     const [showLineFlow, setShowLineFlow] = useState(true);
@@ -106,10 +120,15 @@ const NetworkMap = forwardRef((props, ref) => {
     }, [theme]);
     const [cursorType, setCursorType] = useState('grab');
     const [isDragging, setDragging] = useState(false);
-    const [isPolygonDrawingStarted, setPolygonDrawingStarted] = useState(false);
+
     //NOTE these constants are moved to the component's parameters list
     //const currentNode = useSelector((state) => state.currentTreeNode);
-    const { onPolygonChanged, centerOnSubstation, lineFullPath } = props;
+    const {
+        onPolygonChanged,
+        centerOnSubstation,
+        onDrawEvent,
+        shouldDisableToolTip,
+    } = props;
 
     const { getNameOrId } = useNameOrId(props.useName);
 
@@ -269,7 +288,7 @@ const NetworkMap = forwardRef((props, ref) => {
         return (
             tooltip &&
             tooltip.visible &&
-            !isPolygonDrawingStarted &&
+            !shouldDisableToolTip &&
             //As of now only LINE tooltip is implemented, the following condition is to be removed or tweaked once other types of line tooltip are implemented
             tooltip.equipmentType === EQUIPMENT_TYPES.LINE && (
                 <div
@@ -530,26 +549,18 @@ const NetworkMap = forwardRef((props, ref) => {
         setCentered(INITIAL_CENTERED);
     }, [mapLib?.key]);
 
-    const [polygonFeatures, setPolygonFeatures] = useState({});
+    const onUpdate = useCallback(() => {
+        onPolygonChanged(getPolygonFeatures());
+        onDrawEvent(DRAW_EVENT.UPDATE);
+    }, [onDrawEvent, onPolygonChanged]);
 
-    useEffect(() => {
-        onPolygonChanged(polygonFeatures);
-    }, [polygonFeatures, onPolygonChanged]);
-
-    const onUpdate = useCallback((e) => {
-        setPolygonFeatures((currFeatures) => {
-            const newFeatures = { ...currFeatures };
-            for (const f of e.features) {
-                newFeatures[f.id] = f;
-            }
-            return newFeatures;
-        });
-    }, []);
-
+    const onCreate = useCallback(() => {
+        onPolygonChanged(getPolygonFeatures());
+        onDrawEvent(DRAW_EVENT.CREATE);
+    }, [onDrawEvent, onPolygonChanged]);
     const getSelectedLines = useCallback(() => {
-        //check if polygon is defined correctly
-        const firstPolygonFeatures = Object.values(polygonFeatures)[0];
-        const polygonCoordinates = firstPolygonFeatures?.geometry;
+        const polygonFeatures = getPolygonFeatures();
+        const polygonCoordinates = polygonFeatures?.geometry;
         if (!polygonCoordinates || polygonCoordinates.coordinates < 3) {
             return [];
         }
@@ -558,8 +569,7 @@ const NetworkMap = forwardRef((props, ref) => {
             props.mapEquipments,
             mapEquipmentsLines,
             props.geoData,
-            polygonCoordinates,
-            lineFullPath
+            polygonCoordinates
         );
         return selectedLines.filter((line) => {
             return props.filteredNominalVoltages.some((nv) => {
@@ -576,17 +586,15 @@ const NetworkMap = forwardRef((props, ref) => {
             });
         });
     }, [
-        polygonFeatures,
         props.mapEquipments,
         mapEquipmentsLines,
         props.geoData,
         props.filteredNominalVoltages,
-        lineFullPath,
     ]);
 
     const getSelectedSubstations = useCallback(() => {
         const substations = getSubstationsInPolygon(
-            polygonFeatures,
+            getPolygonFeatures(),
             props.mapEquipments,
             props.geoData
         );
@@ -597,12 +605,7 @@ const NetworkMap = forwardRef((props, ref) => {
                 );
             }) ?? []
         );
-    }, [
-        polygonFeatures,
-        props.mapEquipments,
-        props.geoData,
-        props.filteredNominalVoltages,
-    ]);
+    }, [props.mapEquipments, props.geoData, props.filteredNominalVoltages]);
 
     useImperativeHandle(
         ref,
@@ -610,23 +613,25 @@ const NetworkMap = forwardRef((props, ref) => {
             getSelectedSubstations,
             getSelectedLines,
             cleanDraw() {
-                getMapDrawer()?.deleteAll();
                 //because deleteAll does not trigger a update of the polygonFeature callback
-                setPolygonFeatures({});
+                getMapDrawer()?.deleteAll();
+                onPolygonChanged(getPolygonFeatures());
+                onDrawEvent(DRAW_EVENT.DELETE);
             },
+            getMapDrawer,
         }),
-        [getSelectedSubstations, getSelectedLines]
+        [
+            onPolygonChanged,
+            getSelectedSubstations,
+            getSelectedLines,
+            onDrawEvent,
+        ]
     );
 
-    const onDelete = useCallback((e) => {
-        setPolygonFeatures((currFeatures) => {
-            const newFeatures = { ...currFeatures };
-            for (const f of e.features) {
-                delete newFeatures[f.id];
-            }
-            return newFeatures;
-        });
-    }, []);
+    const onDelete = useCallback(() => {
+        onPolygonChanged(getPolygonFeatures());
+        onDrawEvent(DRAW_EVENT.DELETE);
+    }, [onPolygonChanged, onDrawEvent]);
 
     return (
         mapLib && (
@@ -686,9 +691,9 @@ const NetworkMap = forwardRef((props, ref) => {
                     defaultMode="simple_select"
                     readyToDisplay={readyToDisplay}
                     onDrawPolygonModeActive={(polygon_draw) => {
-                        setPolygonDrawingStarted(polygon_draw);
                         props.onDrawPolygonModeActive(polygon_draw);
                     }}
+                    onCreate={onCreate}
                     onUpdate={onUpdate}
                     onDelete={onDelete}
                 />
@@ -723,6 +728,7 @@ NetworkMap.defaultProps = {
     updatedLines: [],
     useName: true,
     visible: true,
+    shouldDisableToolTip: false,
 
     onSubstationClick: () => {},
     onSubstationClickChooseVoltageLevel: () => {},
@@ -737,6 +743,7 @@ NetworkMap.defaultProps = {
     },
     onDrawPolygonModeActive: () => {},
     onPolygonChanged: () => {},
+    onDrawEvent: () => {},
 };
 
 NetworkMap.propTypes = {
@@ -774,6 +781,7 @@ NetworkMap.propTypes = {
     updatedLines: PropTypes.array,
     useName: PropTypes.bool,
     visible: PropTypes.bool,
+    shouldDisableToolTip: PropTypes.bool,
 
     onHvdcLineMenuClick: PropTypes.func,
     onLineMenuClick: PropTypes.func,
@@ -785,13 +793,13 @@ NetworkMap.propTypes = {
     onVoltageLevelMenuClick: PropTypes.func,
     onDrawPolygonModeActive: PropTypes.func,
     onPolygonChanged: PropTypes.func,
+    onDrawEvent: PropTypes.func,
 };
 
-export default React.memo(NetworkMap);
+export default memo(NetworkMap);
 
 function getSubstationsInPolygon(features, mapEquipments, geoData) {
-    const firstPolygonFeatures = Object.values(features)[0];
-    const polygonCoordinates = firstPolygonFeatures?.geometry;
+    const polygonCoordinates = features?.geometry;
     if (!polygonCoordinates || polygonCoordinates.coordinates < 3) {
         return [];
     }
@@ -809,8 +817,7 @@ function getSelectedLinesInPolygon(
     network,
     lines,
     geoData,
-    polygonCoordinates,
-    lineFullPath
+    polygonCoordinates
 ) {
     return lines.filter((line) => {
         try {
@@ -821,10 +828,8 @@ function getSelectedLinesInPolygon(
             if (linePos.length < 2) {
                 return false;
             }
-            const displayedPath = lineFullPath
-                ? linePos
-                : [linePos[0], linePos[linePos.length - 1]];
-            return displayedPath.some((pos) =>
+            const extremities = [linePos[0], linePos[linePos.length - 1]];
+            return extremities.some((pos) =>
                 booleanPointInPolygon(pos, polygonCoordinates)
             );
         } catch (error) {

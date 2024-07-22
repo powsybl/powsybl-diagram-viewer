@@ -3,6 +3,7 @@
 
 # distribution
 /dist
+/powsybl-diagram-viewer-*.tgz
 
 # distrib for demo
 /output

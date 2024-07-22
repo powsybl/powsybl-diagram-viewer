@@ -5,12 +5,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import React from 'react';
-import { CircularProgress } from '@mui/material';
+import {
+    CircularProgress,
+    CircularProgressProps,
+    SxProps,
+} from '@mui/material';
 import { FormattedMessage } from 'react-intl';
-import { Box } from '@mui/system';
+import { Box, Theme } from '@mui/system';
 
-const styles = {
+export type LoaderWithOverlayProps = {
+    color: CircularProgressProps['color'];
+    loaderSize: CircularProgressProps['size'];
+    loadingMessageText: string;
+    isFixed: boolean;
+};
+
+const styles: Record<string, SxProps<Theme>> = {
     overlay: {
         top: 0,
         bottom: 0,
@@ -28,12 +38,12 @@ const styles = {
     },
 };
 
-const LoaderWithOverlay = ({
+export default function LoaderWithOverlay({
     color,
     loaderSize,
     loadingMessageText,
     isFixed,
-}) => {
+}: Readonly<LoaderWithOverlayProps>) {
     return (
         <Box
             sx={styles.overlay}
@@ -43,6 +53,4 @@ const LoaderWithOverlay = ({
             <FormattedMessage id={loadingMessageText} />
         </Box>
     );
-};
-
-export default LoaderWithOverlay;
+}

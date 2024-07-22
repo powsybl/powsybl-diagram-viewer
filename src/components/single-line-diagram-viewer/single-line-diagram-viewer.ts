@@ -109,7 +109,7 @@ export type OnBusCallbackType = (
     y: number
 ) => void;
 
-export type handleTogglePopoverType = (
+export type HandleTogglePopoverType = (
     shouldDisplay: boolean,
     anchorEl: EventTarget | null,
     equipmentId: string,
@@ -133,7 +133,7 @@ export class SingleLineDiagramViewer {
     arrowSvg: string;
     arrowHoverSvg: string;
     svgDraw: Svg | undefined;
-    handleTogglePopover: handleTogglePopoverType | null;
+    handleTogglePopover: HandleTogglePopoverType | null;
 
     constructor(
         container: HTMLElement,
@@ -149,7 +149,7 @@ export class SingleLineDiagramViewer {
         onFeederCallback: OnFeederCallbackType | null,
         onBusCallback: OnBusCallbackType | null,
         selectionBackColor: string,
-        handleTogglePopover: handleTogglePopoverType
+        handleTogglePopover: HandleTogglePopoverType | null
     ) {
         this.container = container;
         this.svgType = svgType;

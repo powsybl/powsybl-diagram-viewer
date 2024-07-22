@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const fs = `\
 #define SHADER_NAME arrow-layer-fragment-shader
 
 precision highp float;
@@ -19,5 +18,3 @@ void main(void) {
     }
     gl_FragColor = vFillColor;
 }
-`;
-export default fs;

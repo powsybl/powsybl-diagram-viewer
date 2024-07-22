@@ -17,11 +17,18 @@ export function getMapDrawer() {
     return mapDrawerController;
 }
 
-//source: https://github.com/visgl/react-map-gl/blob/master/examples/draw-polygon/src/
-type DrawControlProps = ConstructorParameters<typeof MapboxDraw>[0] & {
+export enum DRAW_MODES {
+    DRAW_POLYGON = 'draw_polygon',
+    DRAW_POINT = 'draw_point',
+    SIMPLE_SELECT = 'simple_select',
+    DIRECT_SELECT = 'direct_select',
+}
+
+export type DrawControlProps = ConstructorParameters<typeof MapboxDraw>[0] & {
     position?: ControlPosition;
     readyToDisplay: boolean;
-    onDrawPolygonModeActive: (polygoneDrawing: boolean) => void;
+    onDrawPolygonModeActive: (polygoneDrawing: DRAW_MODES) => void;
+    onCreate: EventedListener;
     onUpdate: EventedListener;
     onDelete: EventedListener;
 };
@@ -29,13 +36,8 @@ type DrawControlProps = ConstructorParameters<typeof MapboxDraw>[0] & {
 export default function DrawControl(props: DrawControlProps) {
     const { onDrawPolygonModeActive } = props;
     const onModeChange = useCallback(
-        (e: { mode: string }) => {
-            if (e.mode === 'draw_polygon') {
-                onDrawPolygonModeActive(true);
-            } else {
-                // mode === 'simple_select'
-                onDrawPolygonModeActive(false);
-            }
+        (e: { mode: DRAW_MODES }) => {
+            onDrawPolygonModeActive(e.mode);
         },
         [onDrawPolygonModeActive]
     );
@@ -48,14 +50,14 @@ export default function DrawControl(props: DrawControlProps) {
         },
         //on add
         ({ map }) => {
-            map.on('draw.create', props.onUpdate);
+            map.on('draw.create', props.onCreate);
             map.on('draw.update', props.onUpdate);
             map.on('draw.delete', props.onDelete);
             map.on('draw.modechange', onModeChange);
         },
         //onRemove
         ({ map }) => {
-            map.off('draw.create', props.onUpdate);
+            map.off('draw.create', props.onCreate);
             map.off('draw.update', props.onUpdate);
             map.off('draw.delete', props.onDelete);
             map.off('draw.modechange', onModeChange);
@@ -69,6 +71,7 @@ export default function DrawControl(props: DrawControlProps) {
 }
 
 DrawControl.defaultProps = {
+    onCreate: () => {},
     onUpdate: () => {},
     onDelete: () => {},
 };
