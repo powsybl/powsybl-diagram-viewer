@@ -5,7 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import NadSvgExample from './data/nad-example.svg';
+import NadSvgExample from './data/nad-eurostag-tutorial-example1.svg';
+import NadSvgPstHvdcExample from './data/nad-four-substations.svg';
+import NadSvgMultibusVLNodesExample from './data/nad-ieee9-zeroimpedance-cdf.svg';
+import NadSvgMultibusVLNodes14Example from './data/nad-ieee14cdf-solved.svg';
+import NadSvgTrheeWTDanglingLineUnknownBusExample from './data/nad-scada.svg';
+import NadSvgPartialNetworkExample from './data/nad-ieee300cdf-VL9006.svg';
 import SldSvgExample from './data/sld-example.svg';
 import SldSvgExampleMeta from './data/sld-example-meta.json';
 import SldSvgSubExample from './data/sld-sub-example.svg';
@@ -26,16 +31,140 @@ export const addNadToDemo = () => {
         .then((response) => response.text())
         .then((svgContent) => {
             new NetworkAreaDiagramViewer(
-                document.getElementById('svg-container')!,
+                document.getElementById('svg-container-nad')!,
                 svgContent,
                 500,
                 600,
                 1000,
-                1200
+                1200,
+                handleNodeMove,
+                true
             );
 
             document
-                .getElementById('svg-container')
+                .getElementById('svg-container-nad')
+                ?.getElementsByTagName('svg')[0]
+                .setAttribute('style', 'border:2px; border-style:solid;');
+        });
+
+    fetch(NadSvgExample)
+        .then((response) => response.text())
+        .then((svgContent) => {
+            new NetworkAreaDiagramViewer(
+                document.getElementById('svg-container-nad-no-moving')!,
+                svgContent,
+                500,
+                600,
+                1000,
+                1200,
+                handleNodeMove,
+                false
+            );
+
+            document
+                .getElementById('svg-container-nad-no-moving')
+                ?.getElementsByTagName('svg')[0]
+                .setAttribute('style', 'border:2px; border-style:solid;');
+        });
+
+    fetch(NadSvgMultibusVLNodesExample)
+        .then((response) => response.text())
+        .then((svgContent) => {
+            new NetworkAreaDiagramViewer(
+                document.getElementById('svg-container-nad-multibus-vlnodes')!,
+                svgContent,
+                500,
+                600,
+                1000,
+                1200,
+                handleNodeMove,
+                true
+            );
+
+            document
+                .getElementById('svg-container-nad-multibus-vlnodes')
+                ?.getElementsByTagName('svg')[0]
+                .setAttribute('style', 'border:2px; border-style:solid;');
+        });
+
+    fetch(NadSvgMultibusVLNodes14Example)
+        .then((response) => response.text())
+        .then((svgContent) => {
+            new NetworkAreaDiagramViewer(
+                document.getElementById(
+                    'svg-container-nad-multibus-vlnodes14'
+                )!,
+                svgContent,
+                500,
+                600,
+                1000,
+                1200,
+                handleNodeMove,
+                true
+            );
+
+            document
+                .getElementById('svg-container-nad-multibus-vlnodes14')
+                ?.getElementsByTagName('svg')[0]
+                .setAttribute('style', 'border:2px; border-style:solid;');
+        });
+
+    fetch(NadSvgPstHvdcExample)
+        .then((response) => response.text())
+        .then((svgContent) => {
+            new NetworkAreaDiagramViewer(
+                document.getElementById('svg-container-nad-pst-hvdc')!,
+                svgContent,
+                500,
+                600,
+                1000,
+                1200,
+                handleNodeMove,
+                true
+            );
+
+            document
+                .getElementById('svg-container-nad-pst-hvdc')
+                ?.getElementsByTagName('svg')[0]
+                .setAttribute('style', 'border:2px; border-style:solid;');
+        });
+
+    fetch(NadSvgTrheeWTDanglingLineUnknownBusExample)
+        .then((response) => response.text())
+        .then((svgContent) => {
+            new NetworkAreaDiagramViewer(
+                document.getElementById('svg-container-nad-threewt-dl-ub')!,
+                svgContent,
+                500,
+                600,
+                1000,
+                1200,
+                handleNodeMove,
+                true
+            );
+
+            document
+                .getElementById('svg-container-nad-threewt-dl-ub')
+                ?.getElementsByTagName('svg')[0]
+                .setAttribute('style', 'border:2px; border-style:solid;');
+        });
+
+    fetch(NadSvgPartialNetworkExample)
+        .then((response) => response.text())
+        .then((svgContent) => {
+            new NetworkAreaDiagramViewer(
+                document.getElementById('svg-container-nad-partial-network')!,
+                svgContent,
+                500,
+                600,
+                1000,
+                1200,
+                handleNodeMove,
+                true
+            );
+
+            document
+                .getElementById('svg-container-nad-partial-network')
                 ?.getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
         });
@@ -176,4 +305,22 @@ const handleTogglePopover: HandleTogglePopoverType = (
             equipmentType;
         console.log(msg);
     }
+};
+
+const handleNodeMove = (equipmentId, nodeId, x, y, xOrig, yOrig) => {
+    const msg =
+        'Node ' +
+        nodeId +
+        ' equipment ' +
+        equipmentId +
+        ' moved from [' +
+        xOrig +
+        ', ' +
+        yOrig +
+        '] to [' +
+        x +
+        ', ' +
+        y +
+        ']';
+    console.log(msg);
 };
