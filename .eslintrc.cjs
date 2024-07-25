@@ -6,12 +6,20 @@ module.exports = {
         'plugin:react-hooks/recommended',
         'eslint:recommended',
         'plugin:@typescript-eslint/recommended',
-        'plugin:prettier/recommended'
+        'plugin:prettier/recommended',
     ],
     env: {
-        "browser": true
+        browser: true,
     },
     rules: {
-        "prettier/prettier": "warn",
+        'prettier/prettier': 'warn',
+        '@typescript-eslint/no-unused-vars': [
+            'error',
+            {
+                argsIgnorePattern: '^_',
+                varsIgnorePattern: '^_',
+                caughtErrorsIgnorePattern: '^_',
+            },
+        ],
     },
 };

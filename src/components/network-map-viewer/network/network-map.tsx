@@ -6,6 +6,7 @@
  */
 
 import React, {
+    ReactNode,
     forwardRef,
     useCallback,
     useEffect,
@@ -20,7 +21,7 @@ import LoaderWithOverlay from '../utils/loader-with-overlay';
 
 import { MapboxOverlay, MapboxOverlayProps } from '@deck.gl/mapbox';
 import { Replay } from '@mui/icons-material';
-import { Button, useTheme } from '@mui/material';
+import { Button, ButtonProps, useTheme } from '@mui/material';
 import { FormattedMessage } from 'react-intl';
 import {
     Map,
@@ -31,10 +32,20 @@ import {
     useMap,
 } from 'react-map-gl/maplibre';
 import { getNominalVoltageColor } from '../../../utils/colors';
+import { isLine, isSubstation, isVoltageLevel } from '../utils/equipment-types';
 import { useNameOrId } from '../utils/equipmentInfosHandler';
-import DrawControl, { DRAW_MODES, getMapDrawer } from './draw-control';
+import DrawControl, {
+    DRAW_MODES,
+    DrawControlProps,
+    getMapDrawer,
+} from './draw-control';
 import { GeoData } from './geo-data';
-import { LineFlowColorMode, LineFlowMode, LineLayer } from './line-layer';
+import {
+    LineFlowColorMode,
+    LineFlowMode,
+    LineLayer,
+    LineLayerProps,
+} from './line-layer';
 import { MapEquipments } from './map-equipments';
 import { SubstationLayer } from './substation-layer';
 
@@ -47,12 +58,11 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import {
     EQUIPMENT_TYPES,
     EquimentLine,
-    HvdcLine,
+    Equipment,
     HvdcLineEquimentLine,
     Line,
     LineEquimentLine,
     Substation,
-    TieLine,
     TieLineEquimentLine,
     VoltageLevel,
 } from '../utils/equipment-types';
@@ -66,11 +76,17 @@ const MOUSE_EVENT_BUTTON_RIGHT = 2;
  * when a draw event is triggered, the event type is passed to the onDrawEvent callback
  * On create, when the user create a new polygon (shape finished)
  */
-export const DRAW_EVENT = {
-    CREATE: 1,
-    UPDATE: 2,
-    DELETE: 0,
-};
+export enum DRAW_EVENT {
+    CREATE = 1,
+    UPDATE = 2,
+    DELETE = 0,
+}
+
+export type MenuClickFunction<T extends Equipment> = (
+    equipment: T,
+    eventX: number,
+    eventY: number
+) => void;
 
 // Small boilerplate recommended by deckgl, to bridge to a react-map-gl control declaratively
 // see https://deck.gl/docs/api-reference/mapbox/mapbox-overlay#using-with-react-map-gl
@@ -82,6 +98,14 @@ const DeckGLOverlay = React.forwardRef<MapboxOverlay, MapboxOverlayProps>(
         return null;
     }
 );
+
+type TooltipType = {
+    equipmentId: string;
+    equipmentType: string;
+    pointerX: number;
+    pointerY: number;
+    visible: boolean;
+};
 
 const PICKING_RADIUS = 5;
 
@@ -129,79 +153,74 @@ const INITIAL_CENTERED = {
 } satisfies Centered;
 
 // get polygon coordinates (features) or an empty object
-function getPolygonFeatures(): Partial<Feature> {
+function getPolygonFeatures(): Feature | Record<string, never> {
     return getMapDrawer()?.getAll()?.features[0] ?? {};
 }
 type NetworkMapProps = {
-    disabled: boolean;
-    geoData: GeoData;
-    mapBoxToken: string;
-    mapEquipments: MapEquipments;
-    mapLibrary: 'carto' | 'cartonolabel' | 'mapbox';
-    mapTheme: 'light' | 'dark';
-
-    areFlowsValid: boolean;
-    arrowsZoomThreshold: number;
-    centerOnSubstation: any;
-    displayOverlayLoader: boolean;
-    filteredNominalVoltages: number[] | null;
-    initialPosition: number[];
-    initialZoom: number;
-    isManualRefreshBackdropDisplayed: boolean;
-    labelsZoomThreshold: number;
-    lineFlowAlertThreshold: number;
-    lineFlowColorMode: 'nominalVoltage' | 'overloads';
-    lineFlowHidden: boolean;
-    lineFlowMode: 'staticArrows' | 'animatedArrows' | 'feeders';
-    lineFullPath: boolean;
-    lineParallelPath: boolean;
-    renderPopover: (eId: any) => any;
-    tooltipZoomThreshold: number;
+    disabled?: boolean;
+    geoData?: GeoData | null;
+    mapBoxToken?: string | null;
+    mapEquipments?: MapEquipments | null;
+    mapLibrary?: 'carto' | 'cartonolabel' | 'mapbox';
+    mapTheme?: 'light' | 'dark';
+    areFlowsValid?: boolean;
+    arrowsZoomThreshold?: number;
+    centerOnSubstation?: { to: string } | null;
+    displayOverlayLoader?: boolean;
+    filteredNominalVoltages?: number[] | null;
+    initialPosition?: [number, number];
+    initialZoom?: number;
+    isManualRefreshBackdropDisplayed?: boolean;
+    labelsZoomThreshold?: number;
+    lineFlowAlertThreshold?: number;
+    lineFlowColorMode?: LineFlowColorMode;
+    lineFlowHidden?: boolean;
+    lineFlowMode?: LineFlowMode;
+    lineFullPath?: boolean;
+    lineParallelPath?: boolean;
+    renderPopover?: (
+        equipmentId: string,
+        divRef: HTMLDivElement | null
+    ) => ReactNode;
+    tooltipZoomThreshold?: number;
     // With mapboxgl v2 (not a problem with maplibre), we need to call
     // map.resize() when the parent size has changed, otherwise the map is not
     // redrawn. It seems like this is autodetected when the browser window is
     // resized, but not for programmatic resizes of the parent. For now in our
     // app, only study display mode resizes programmatically
     // use this prop to make the map resize when needed, each time this prop changes, map.resize() is trigged
-    triggerMapResizeOnChange: any;
-    updatedLines: any[];
-    useName: boolean;
-    visible: boolean;
-    shouldDisableToolTip: boolean;
-
-    onHvdcLineMenuClick: (hvdcLine: HvdcLine, x: number, y: number) => void;
-    onLineMenuClick: (line: Line, x: number, y: number) => void;
-    onTieLineMenuClick: (tieLine: TieLine, x: number, y: number) => void;
-    onManualRefreshClick: () => void;
-    onSubstationClick: (voltageLevelId: any) => void;
-    onSubstationClickChooseVoltageLevel: (
-        substationId: any,
-        x: number,
-        y: number
+    triggerMapResizeOnChange?: unknown;
+    updatedLines?: LineLayerProps['updatedLines'];
+    useName?: boolean;
+    visible?: boolean;
+    shouldDisableToolTip?: boolean;
+    onHvdcLineMenuClick?: MenuClickFunction<Line>;
+    onLineMenuClick?: MenuClickFunction<Line>;
+    onTieLineMenuClick?: MenuClickFunction<Line>;
+    onManualRefreshClick?: ButtonProps['onClick'];
+    onSubstationClick?: (idVoltageLevel: string) => void;
+    onSubstationClickChooseVoltageLevel?: (
+        idSubstation: string,
+        eventX: number,
+        eventY: number
     ) => void;
-    onSubstationMenuClick: (
-        substation: Substation,
-        x: number,
-        y: number
+    onSubstationMenuClick?: MenuClickFunction<Substation>;
+    onVoltageLevelMenuClick?: MenuClickFunction<VoltageLevel>;
+    onDrawPolygonModeActive?: DrawControlProps['onDrawPolygonModeActive'];
+    onPolygonChanged?: (
+        polygoneFeature: Feature | Record<string, never>
     ) => void;
-    onVoltageLevelMenuClick: (
-        voltageLevel: VoltageLevel,
-        x: number,
-        y: number
-    ) => void;
-    onDrawPolygonModeActive: (polygon_draw: boolean) => void;
-    onPolygonChanged: (polygonFeatures: any) => void;
-    onDrawEvent: (drawEvent: number) => void;
+    onDrawEvent?: (drawEvent: DRAW_EVENT) => void;
 };
 
 export type NetworkMapRef = {
-    getSelectedSubstations: () => any;
-    getSelectedLines: () => any;
-    cleanDraw: () => any;
-    getMapDrawer: () => any;
+    getSelectedSubstations: () => Substation[];
+    getSelectedLines: () => Line[];
+    cleanDraw: () => void;
+    getMapDrawer: () => MapboxDraw | undefined;
 };
 
-const NetworkMap = forwardRef<NetworkMapRef, Partial<NetworkMapProps>>(
+const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
     (
         {
             areFlowsValid = true,
@@ -256,7 +275,9 @@ const NetworkMap = forwardRef<NetworkMapRef, Partial<NetworkMapProps>>(
         const deckRef = useRef<MapboxOverlay | null>(null);
         const [centered, setCentered] = useState<Centered>(INITIAL_CENTERED);
         const lastViewStateRef = useRef<ViewState>();
-        const [tooltip, setTooltip] = useState({});
+        const [tooltip, setTooltip] = useState<
+            TooltipType | Record<string, never> | null
+        >({});
         const theme = useTheme();
         const foregroundNeutralColor = useMemo(() => {
             const labelColor = decomposeColor(theme.palette.text.primary)
@@ -324,7 +345,7 @@ const NetworkMap = forwardRef<NetworkMapRef, Partial<NetworkMapProps>>(
             mapEquipments?.lines,
         ]) as EquimentLine[];
 
-        const divRef = useRef();
+        const divRef = useRef<HTMLDivElement>(null);
 
         const mToken = !mapBoxToken ? FALLBACK_MAPBOX_TOKEN : mapBoxToken;
 
@@ -425,7 +446,9 @@ const NetworkMap = forwardRef<NetworkMapRef, Partial<NetworkMapProps>>(
         function onViewStateChange(info: ViewStateChangeEvent) {
             lastViewStateRef.current = info.viewState;
             if (
+                // @ts-expect-error: TODO fix interactionState
                 !info.interactionState || // first event of before an animation (e.g. clicking the +/- buttons of the navigation controls, gives the target
+                // @ts-expect-error: TODO fix interactionState
                 (info.interactionState && !info.interactionState.inTransition) // Any event not part of a animation (mouse panning or zooming)
             ) {
                 if (
@@ -462,15 +485,17 @@ const NetworkMap = forwardRef<NetworkMapRef, Partial<NetworkMapProps>>(
                             top: tooltip.pointerY,
                         }}
                     >
-                        {renderPopover(tooltip.equipmentId, divRef.current)}
+                        {tooltip.equipmentId &&
+                            divRef.current &&
+                            renderPopover(tooltip.equipmentId, divRef.current)}
                     </div>
                 )
             );
         }
 
         function onClickHandler(
-            info: PickingInfo,
-            event: mapboxgl.MapLayerMouseEvent,
+            info: PickingInfo<Record<string, unknown>>,
+            event: mapboxgl.MapLayerMouseEvent | maplibregl.MapLayerMouseEvent,
             network: MapEquipments
         ) {
             const leftButton =
@@ -481,16 +506,16 @@ const NetworkMap = forwardRef<NetworkMapRef, Partial<NetworkMapProps>>(
                 info.layer &&
                 info.layer.id.startsWith(SUBSTATION_LAYER_PREFIX) &&
                 info.object &&
-                (info.object.substationId || info.object.voltageLevels) // is a voltage level marker, or a substation text
+                (isSubstation(info.object) || isVoltageLevel(info.object)) // is a voltage level marker, or a substation text
             ) {
                 let idVl;
                 let idSubstation;
-                if (info.object.substationId) {
+                if (isVoltageLevel(info.object)) {
                     idVl = info.object.id;
-                } else if (info.object.voltageLevels) {
+                } else if (isSubstation(info.object)) {
                     if (info.object.voltageLevels.length === 1) {
                         const idS = info.object.voltageLevels[0].substationId;
-                        const substation = network.getSubstation(idS);
+                        const substation = network?.getSubstation(idS);
                         if (substation && substation.voltageLevels.length > 1) {
                             idSubstation = idS;
                         } else {
@@ -506,7 +531,7 @@ const NetworkMap = forwardRef<NetworkMapRef, Partial<NetworkMapProps>>(
                         onSubstationClick(idVl);
                     } else if (onVoltageLevelMenuClick && rightButton) {
                         onVoltageLevelMenuClick(
-                            network.getVoltageLevel(idVl),
+                            network.getVoltageLevel(idVl)!,
                             event.originalEvent.x,
                             event.originalEvent.y
                         );
@@ -521,7 +546,7 @@ const NetworkMap = forwardRef<NetworkMapRef, Partial<NetworkMapProps>>(
                         );
                     } else if (onSubstationMenuClick && rightButton) {
                         onSubstationMenuClick(
-                            network.getSubstation(idSubstation),
+                            network.getSubstation(idSubstation)!,
                             event.originalEvent.x,
                             event.originalEvent.y
                         );
@@ -533,9 +558,7 @@ const NetworkMap = forwardRef<NetworkMapRef, Partial<NetworkMapProps>>(
                 info.layer &&
                 info.layer.id.startsWith(LINE_LAYER_PREFIX) &&
                 info.object &&
-                info.object.id &&
-                info.object.voltageLevelId1 &&
-                info.object.voltageLevelId2
+                isLine(info.object)
             ) {
                 // picked line properties are retrieved from network data and not from pickable object infos,
                 // because pickable object infos might not be up to date
@@ -561,7 +584,9 @@ const NetworkMap = forwardRef<NetworkMapRef, Partial<NetworkMapProps>>(
             }
         }
 
-        function onMapContextMenu(event: mapboxgl.MapLayerMouseEvent) {
+        function onMapContextMenu(
+            event: mapboxgl.MapLayerMouseEvent | maplibregl.MapLayerMouseEvent
+        ) {
             const info =
                 deckRef.current &&
                 deckRef.current.pickObject({
@@ -569,7 +594,7 @@ const NetworkMap = forwardRef<NetworkMapRef, Partial<NetworkMapProps>>(
                     y: event.point.y,
                     radius: PICKING_RADIUS,
                 });
-            info && onClickHandler(info, event, mapEquipments);
+            info && mapEquipments && onClickHandler(info, event, mapEquipments);
         }
 
         function cursorHandler() {
@@ -622,13 +647,17 @@ const NetworkMap = forwardRef<NetworkMapRef, Partial<NetworkMapProps>>(
                     labelColor: foregroundNeutralColor,
                     labelSize: LABEL_SIZE,
                     pickable: true,
-                    onHover: ({ object, x, y }) => {
-                        if (object) {
+                    onHover: ({
+                        object: lineObject,
+                        x,
+                        y,
+                    }: PickingInfo<Line>) => {
+                        if (lineObject) {
                             setCursorType('pointer');
-                            const lineObject = object?.line ?? object;
                             setTooltip({
                                 equipmentId: lineObject?.id,
-                                equipmentType: lineObject?.equipmentType,
+                                equipmentType: (lineObject as EquimentLine)
+                                    ?.equipmentType,
                                 pointerX: x,
                                 pointerY: y,
                                 visible: showTooltip,
@@ -662,7 +691,7 @@ const NetworkMap = forwardRef<NetworkMapRef, Partial<NetworkMapProps>>(
 
         useEffect(() => {
             mapRef.current?.resize();
-        }, [triggerMapResizeOnChange]);
+        }, [mapRef, triggerMapResizeOnChange]);
 
         const getMapStyle = (mapLibrary: MapLibrary, mapTheme: MapTheme) => {
             switch (mapLibrary) {
@@ -729,7 +758,7 @@ const NetworkMap = forwardRef<NetworkMapRef, Partial<NetworkMapProps>>(
                 mapEquipments,
                 mapEquipmentsLines,
                 geoData,
-                polygonCoordinates
+                polygonCoordinates as Polygon
             );
             return selectedLines.filter((line) => {
                 return filteredNominalVoltages!.some((nv) => {
@@ -828,6 +857,7 @@ const NetworkMap = forwardRef<NetworkMapRef, Partial<NetworkMapProps>>(
                 <DeckGLOverlay
                     ref={deckRef}
                     onClick={(info, event) => {
+                        //@ts-expect-error: TODO fix srcEvent
                         onClickHandler(info, event.srcEvent, mapEquipments);
                     }}
                     onAfterRender={onAfterRender} // TODO simplify this

@@ -6,15 +6,13 @@
  */
 
 import {
-    HvdcLine,
     Line,
     Substation,
-    TieLine,
     VoltageLevel,
 } from '@/components/network-map-viewer/utils/equipment-types';
-import { EQUIPMENT_TYPES, Equiment } from '../utils/equipment-types';
+import { EQUIPMENT_TYPES, Equipment } from '../utils/equipment-types';
 
-const elementIdIndexer = <T extends Equiment>(
+const elementIdIndexer = <T extends Equipment>(
     map: Map<string, T>,
     element: T
 ) => {
@@ -24,39 +22,28 @@ const elementIdIndexer = <T extends Equiment>(
 
 export class MapEquipments {
     substations: Substation[] = [];
-
     substationsById = new Map<string, Substation>();
-
     lines: Line[] = [];
-
     linesById = new Map<string, Line>();
-
-    tieLines: TieLine[] = [];
-
-    tieLinesById = new Map<string, TieLine>();
-
-    hvdcLines: HvdcLine[] = [];
-
-    hvdcLinesById = new Map<string, HvdcLine>();
-
+    tieLines: Line[] = [];
+    tieLinesById = new Map<string, Line>();
+    hvdcLines: Line[] = [];
+    hvdcLinesById = new Map<string, Line>();
     voltageLevels: VoltageLevel[] = [];
-
     voltageLevelsById = new Map<string, VoltageLevel>();
-
     nominalVoltages: number[] = [];
-
     intlRef = undefined;
 
     constructor() {
         // dummy constructor, to make children classes constructors happy
     }
 
-    newMapEquipmentForUpdate() {
+    newMapEquipmentForUpdate(): MapEquipments {
         /* shallow clone of the map-equipment https://stackoverflow.com/a/44782052 */
         return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     }
 
-    checkAndGetValues(equipments: Equiment[]) {
+    checkAndGetValues(equipments: Equipment[]) {
         return equipments ? equipments : [];
     }
 
@@ -94,7 +81,7 @@ export class MapEquipments {
         );
     }
 
-    updateEquipments<T extends Equiment>(
+    updateEquipments<T extends Equipment>(
         currentEquipments: T[],
         newEquipements: T[],
         _equipmentType: EQUIPMENT_TYPES
@@ -170,7 +157,7 @@ export class MapEquipments {
         }
     }
 
-    completeTieLinesInfos(equipementsToIndex: Equiment[]) {
+    completeTieLinesInfos(equipementsToIndex: Line[]) {
         if (equipementsToIndex?.length > 0) {
             equipementsToIndex.forEach((tieLine) => {
                 this.tieLinesById?.set(tieLine.id, tieLine);
@@ -195,7 +182,7 @@ export class MapEquipments {
         this.completeLinesInfos(fullReload ? [] : lines);
     }
 
-    updateTieLines(tieLines: TieLine[], fullReload: boolean) {
+    updateTieLines(tieLines: Line[], fullReload: boolean) {
         if (fullReload) {
             this.tieLines = [];
         }
@@ -207,7 +194,7 @@ export class MapEquipments {
         this.completeTieLinesInfos(fullReload ? [] : tieLines);
     }
 
-    updateHvdcLines(hvdcLines: HvdcLine[], fullReload: boolean) {
+    updateHvdcLines(hvdcLines: Line[], fullReload: boolean) {
         if (fullReload) {
             this.hvdcLines = [];
         }
@@ -219,7 +206,7 @@ export class MapEquipments {
         this.completeHvdcLinesInfos(fullReload ? [] : hvdcLines);
     }
 
-    completeHvdcLinesInfos(equipementsToIndex: HvdcLine[]) {
+    completeHvdcLinesInfos(equipementsToIndex: Line[]) {
         if (equipementsToIndex?.length > 0) {
             equipementsToIndex.forEach((hvdcLine) => {
                 this.hvdcLinesById?.set(hvdcLine.id, hvdcLine);

@@ -19,8 +19,8 @@ import {
 } from 'deck.gl';
 import { getDistance } from 'geolib';
 import { INVALID_FLOW_OPACITY } from '../../../utils/colors';
-import BoltIcon from '../images/bolt_black_24dp.svg';
-import PadlockIcon from '../images/lock_black_24dp.svg';
+import BoltIcon from '../images/bolt_black_24dp.svg?react';
+import PadlockIcon from '../images/lock_black_24dp.svg?react';
 import { Line, LonLat } from '../utils/equipment-types';
 import {
     SUBSTATION_RADIUS,
@@ -38,16 +38,16 @@ const DISTANCE_BETWEEN_ARROWS = 10000.0;
 const START_ARROW_POSITION = 0.1;
 const END_ARROW_POSITION = 0.9;
 
-export const LineFlowMode = {
-    STATIC_ARROWS: 'staticArrows',
-    ANIMATED_ARROWS: 'animatedArrows',
-    FEEDERS: 'feeders',
-};
+export enum LineFlowMode {
+    STATIC_ARROWS = 'staticArrows',
+    ANIMATED_ARROWS = 'animatedArrows',
+    FEEDERS = 'feeders',
+}
 
-export const LineFlowColorMode = {
-    NOMINAL_VOLTAGE: 'nominalVoltage',
-    OVERLOADS: 'overloads',
-};
+export enum LineFlowColorMode {
+    NOMINAL_VOLTAGE = 'nominalVoltage',
+    OVERLOADS = 'overloads',
+}
 
 const noDashArray = [0, 0];
 const dashArray = [15, 10];
@@ -276,8 +276,8 @@ type _LineLayerProps = {
     getNominalVoltageColor: (voltage: number) => Color;
     disconnectedLineColor: Color;
     filteredNominalVoltages: number[] | null;
-    lineFlowMode: string;
-    lineFlowColorMode: string;
+    lineFlowMode: LineFlowMode;
+    lineFlowColorMode: LineFlowColorMode;
     lineFlowAlertThreshold: number;
     showLineFlow: boolean;
     lineFullPath: boolean;
@@ -425,7 +425,7 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                         });
 
                         linesStatus!.set(line.id, {
-                            operatingStatus: line.operatingStatus,
+                            operatingStatus: line.operatingStatus!,
                         });
 
                         const key = this.genLineKey(line);
@@ -450,7 +450,7 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                         terminal2Connected: line1.terminal2Connected,
                     });
                     linesStatus!.set(line1.id, {
-                        operatingStatus: line1.operatingStatus,
+                        operatingStatus: line1.operatingStatus!,
                     });
                 });
             }
@@ -523,7 +523,7 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                         lineData.cumulativeDistances,
                         START_ARROW_POSITION,
                         arrowDirection,
-                        line.parallelIndex,
+                        line.parallelIndex!,
                         (line.angle! * 180) / Math.PI,
                         (line.angleStart! * 180) / Math.PI,
                         props.distanceBetweenLines,
@@ -534,7 +534,7 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                         lineData.cumulativeDistances,
                         END_ARROW_POSITION,
                         arrowDirection,
-                        line.parallelIndex,
+                        line.parallelIndex!,
                         (line.angle! * 180) / Math.PI,
                         (line.angleEnd! * 180) / Math.PI,
                         props.distanceBetweenLines,
@@ -589,7 +589,7 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                                 lineData.cumulativeDistances,
                                 0.5,
                                 ArrowDirection.NONE,
-                                line.parallelIndex,
+                                line.parallelIndex!,
                                 (line.angle! * 180) / Math.PI,
                                 (line.angleEnd! * 180) / Math.PI,
                                 props.distanceBetweenLines,
@@ -846,7 +846,7 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                         line.angleStart,
                         line.angle,
                         line.angleEnd,
-                        line.parallelIndex * 2 +
+                        line.parallelIndex! * 2 +
                             31 +
                             64 *
                                 (Math.ceil(line.proximityFactorStart! * 512) -
@@ -1029,7 +1029,7 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                         ),
                     getWidth: 2,
                     getProximityFactor: (line: Line) => line.proximityFactorEnd,
-                    getLineParallelIndex: (line: Line) => -line.parallelIndex,
+                    getLineParallelIndex: (line: Line) => -line.parallelIndex!,
                     getLineAngle: (line: Line) => line.angleEnd! + Math.PI,
                     getDistanceBetweenLines: this.props.distanceBetweenLines,
                     getMaxParallelOffset: this.props.maxParallelOffset,

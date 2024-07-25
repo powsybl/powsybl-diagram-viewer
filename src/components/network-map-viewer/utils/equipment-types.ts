@@ -41,7 +41,7 @@ export type VoltageLevel = {
     id: string;
     nominalV: number;
     substationId: string;
-    substationName: string;
+    substationName?: string;
 };
 
 export type Substation = {
@@ -49,6 +49,14 @@ export type Substation = {
     name: string;
     voltageLevels: VoltageLevel[];
 };
+
+export const isVoltageLevel = (
+    object: Record<string, unknown>
+): object is VoltageLevel => 'substationId' in object;
+
+export const isSubstation = (
+    object: Record<string, unknown>
+): object is Substation => 'voltageLevels' in object;
 
 export type Line = {
     id: string;
@@ -59,29 +67,34 @@ export type Line = {
     terminal2Connected: boolean;
     p1: number;
     p2: number;
-    i1: number | undefined;
-    i2: number | undefined;
-    operatingStatus: LineStatus;
-    currentLimits1: {
+    i1?: number;
+    i2?: number;
+    operatingStatus?: LineStatus;
+    currentLimits1?: {
         permanentLimit: number;
     } | null;
-    currentLimits2: {
+    currentLimits2?: {
         permanentLimit: number;
     } | null;
     // additionnal from line-layer
-    origin: LonLat | undefined;
-    end: LonLat | undefined;
-    substationIndexStart: number | undefined;
-    substationIndexEnd: number | undefined;
-    angle: number | undefined;
-    angleStart: number | undefined;
-    angleEnd: number | undefined;
-    proximityFactorStart: number | undefined;
-    proximityFactorEnd: number | undefined;
-    parallelIndex: number;
-    cumulativeDistances: number[];
-    positions: LonLat[];
+    origin?: LonLat;
+    end?: LonLat;
+    substationIndexStart?: number;
+    substationIndexEnd?: number;
+    angle?: number;
+    angleStart?: number;
+    angleEnd?: number;
+    proximityFactorStart?: number;
+    proximityFactorEnd?: number;
+    parallelIndex?: number;
+    cumulativeDistances?: number[];
+    positions?: LonLat[];
 };
+
+export const isLine = (object: Record<string, unknown>): object is Line =>
+    'id' in object &&
+    'voltageLevelId1' in object &&
+    'voltageLevelId2' in object;
 
 export type TieLine = {
     id: string;
@@ -101,14 +114,14 @@ export type HvdcLine = {
     maxP: number;
 };
 
-export type Equiment = Line | Substation | TieLine | HvdcLine;
+export type Equipment = Line | Substation | TieLine | HvdcLine;
 
 // type EquimentLineTypes = EQUIPMENT_TYPES.LINE | EQUIPMENT_TYPES.TIE_LINE | EQUIPMENT_TYPES.HVDC_LINE;
 export type LineEquimentLine = Line & { equipmentType: EQUIPMENT_TYPES.LINE };
-export type TieLineEquimentLine = TieLine & {
+export type TieLineEquimentLine = Line & {
     equipmentType: EQUIPMENT_TYPES.TIE_LINE;
 };
-export type HvdcLineEquimentLine = HvdcLine & {
+export type HvdcLineEquimentLine = Line & {
     equipmentType: EQUIPMENT_TYPES.HVDC_LINE;
 };
 export type EquimentLine =

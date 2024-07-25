@@ -24,7 +24,7 @@ export enum DRAW_MODES {
     DIRECT_SELECT = 'direct_select',
 }
 
-type DrawControlProps = ConstructorParameters<typeof MapboxDraw>[0] & {
+export type DrawControlProps = ConstructorParameters<typeof MapboxDraw>[0] & {
     position?: ControlPosition;
     readyToDisplay: boolean;
     onDrawPolygonModeActive: (polygoneDrawing: DRAW_MODES) => void;

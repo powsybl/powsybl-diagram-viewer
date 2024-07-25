@@ -6,16 +6,20 @@
  */
 
 import { useCallback } from 'react';
-import { Substation } from './equipment-types';
+
+type EquipmentInfos = {
+    id: string;
+    name: string | null;
+};
 
 export const useNameOrId = (useName: boolean) => {
     const getNameOrId = useCallback(
-        (infos: Substation) => {
+        (infos: EquipmentInfos | null) => {
             if (infos != null) {
                 const name = infos.name;
                 return useName && name != null && name.trim() !== ''
                     ? name
-                    : infos?.id;
+                    : infos?.id ?? null;
             }
             return null;
         },

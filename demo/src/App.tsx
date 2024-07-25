@@ -16,6 +16,7 @@ import { GeoData, NetworkMap } from '../../src';
 import DemoMapEquipments from './map-viewer/demo-map-equipments';
 
 import { NetworkMapRef } from '@/components/network-map-viewer/network/network-map';
+import { Equipment } from '@/components/network-map-viewer/utils/equipment-types';
 import { addNadToDemo, addSldToDemo } from './diagram-viewers/add-diagrams';
 import lmapdata from './map-viewer/data/lmap.json';
 import lposdata from './map-viewer/data/lpos.json';
@@ -34,7 +35,12 @@ function App() {
     }, []);
 
     //called after a click (right mouse click) on an equipment (line or substation)
-    function showEquipmentMenu(equipment, x, y, type) {
+    function showEquipmentMenu(
+        equipment: Equipment,
+        x: number,
+        y: number,
+        type: string
+    ) {
         console.log(
             '# Show equipment menu: ' +
                 JSON.stringify(equipment) +
@@ -47,6 +53,7 @@ function App() {
         palette: {
             mode: 'dark',
         },
+        // @ts-expect-error: TODO not present in ThemeOptions
         link: {
             color: 'green',
         },
@@ -70,7 +77,7 @@ function App() {
     const mapEquipments = new DemoMapEquipments(smapdata, lmapdata);
 
     useEffect(() => {
-        const handleContextmenu = (e) => {
+        const handleContextmenu = (e: MouseEvent) => {
             e.preventDefault();
         };
         document.addEventListener('contextmenu', handleContextmenu);
@@ -139,12 +146,12 @@ function App() {
                             onPolygonChanged={() => {
                                 console.log(
                                     'Selected Substations: ',
-                                    networkMapRef.current!.getSelectedSubstations()
+                                    networkMapRef.current?.getSelectedSubstations()
                                         .length
                                 );
                                 console.log(
                                     'Selected Lines: ',
-                                    networkMapRef.current!.getSelectedLines()
+                                    networkMapRef.current?.getSelectedLines()
                                         .length
                                 );
                             }}

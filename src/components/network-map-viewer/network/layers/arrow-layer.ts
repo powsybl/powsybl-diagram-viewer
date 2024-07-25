@@ -31,8 +31,8 @@ import {
     UpdateParameters,
 } from 'deck.gl';
 import { Line } from '../../utils/equipment-types';
-import fs from './arrow-layer-fragment.glsl';
-import vs from './arrow-layer-vertex.glsl';
+import fs from './arrow-layer-fragment.frag?raw';
+import vs from './arrow-layer-vertex.vert?raw';
 
 const DEFAULT_COLOR = [0, 0, 0, 255] satisfies Color;
 
@@ -171,7 +171,7 @@ export class ArrowLayer extends Layer<Required<_ArrowLayerProps>> {
 
         const maxTextureSize = device.getParametersWebGL(
             GL.MAX_TEXTURE_SIZE
-        ) as number;
+        ) as unknown as number;
 
         this.state = {
             maxTextureSize,
@@ -367,10 +367,10 @@ export class ArrowLayer extends Layer<Required<_ArrowLayerProps>> {
                     linePositionsTextureData.push(position[1]);
                     linePointCount++;
                 });
-                lineDistancesTextureData.push(...line.cumulativeDistances);
+                lineDistancesTextureData.push(...line.cumulativeDistances!);
                 lineDistance =
-                    line.cumulativeDistances[
-                        line.cumulativeDistances.length - 1
+                    line.cumulativeDistances![
+                        line.cumulativeDistances!.length - 1
                     ];
             }
             if (linePointCount > MAX_LINE_POINT_COUNT) {
