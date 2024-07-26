@@ -1,5 +1,5 @@
 {
-    "name": "@powsybl/network-map-layers",
+    "name": "@powsybl/single-line-diagram-viewer",
     "version": "0.6",
     "description": "Typescript library to integrate a powsybl svg diagram in a javascript project.",
     "author": "powsybl team",
@@ -11,22 +11,18 @@
     "files": [
         "dist"
     ],
-    "module": "./dist/powsybl-network-map-layers.js",
+    "module": "./dist/single-line-diagram-viewer.js",
     "exports": {
         ".": {
-            "import": "./dist/powsybl-network-map-layers.js"
+            "import": "./dist/single-line-diagram-viewer.js"
         }
     },
     "scripts": {
         "build": "vite build"
     },
     "dependencies": {
-        "@deck.gl/core": "^9.0.0",
-        "@deck.gl/extensions": "9.0.0",
-        "@deck.gl/layers": "^9.0.0",
-        "@luma.gl/constants": "9.0.0",
-        "@luma.gl/core": "^9.0.0",
-        "@luma.gl/engine": "9.0.0"
+        "@svgdotjs/svg.js": "^3.2.4",
+        "@svgdotjs/svg.panzoom.js": "^2.1.2"
     },
     "devDependencies": {
         "typescript": "5.5.3",

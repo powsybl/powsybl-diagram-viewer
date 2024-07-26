@@ -11,7 +11,7 @@ import SldSvgExample from './data/sld-example.svg';
 import SldSvgSubExampleMeta from './data/sld-sub-example-meta.json' assert { type: 'json' };
 import SldSvgSubExample from './data/sld-sub-example.svg';
 
-import { NetworkAreaDiagramViewer } from '../../../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
+import { NetworkAreaDiagramViewer } from '@/components/network-area-diagram-viewer/network-area-diagram-viewer';
 import {
     HandleTogglePopoverType,
     OnBreakerCallbackType,
@@ -19,7 +19,7 @@ import {
     OnFeederCallbackType,
     OnNextVoltageCallbackType,
     SingleLineDiagramViewer,
-} from '../../../src/components/single-line-diagram-viewer/single-line-diagram-viewer';
+} from '@powsybl/single-line-diagram-viewer';
 
 export const addNadToDemo = () => {
     fetch(NadSvgExample)

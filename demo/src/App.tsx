@@ -5,18 +5,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { GeoData, NetworkMap } from '@/index';
 import {
     StyledEngineProvider,
     ThemeProvider,
     createTheme,
 } from '@mui/material/styles';
 import { useEffect, useRef } from 'react';
-import { GeoData, NetworkMap } from '../../src';
 
 import DemoMapEquipments from './map-viewer/demo-map-equipments';
 
 import { NetworkMapRef } from '@/components/network-map-viewer/network/network-map';
-import { Equipment } from '@/components/network-map-viewer/utils/equipment-types';
+import { Equipment } from '@powsybl/network-map-layers';
 import { addNadToDemo, addSldToDemo } from './diagram-viewers/add-diagrams';
 import lmapdata from './map-viewer/data/lmap.json';
 import lposdata from './map-viewer/data/lpos.json';

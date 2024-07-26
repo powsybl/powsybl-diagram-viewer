@@ -8,6 +8,7 @@
 import react from '@vitejs/plugin-react';
 import * as path from 'node:path';
 import { defineConfig } from 'vite';
+import dts from 'vite-plugin-dts';
 import svgr from 'vite-plugin-svgr';
 
 export default defineConfig((_config) => ({
@@ -18,6 +19,7 @@ export default defineConfig((_config) => ({
         //     failOnWarning: config.mode !== 'development',
         //     lintOnStart: true,
         // }),
+        dts(),
     ],
     resolve: {
         alias: {
@@ -68,6 +70,8 @@ export default defineConfig((_config) => ({
                     '@luma.gl/core': 'LumaGlCore',
                     '@svgdotjs/svg.js': 'SvgJs',
                     '@powsybl/network-map-layers': 'PowsyblNetworkMapLayers',
+                    '@powsybl/single-line-diagram-viewer':
+                        'PowsyblSingleLineDiagramViewer',
                     'react-map-gl/maplibre': 'ReactMapGlMaplibre',
                     '@mapbox/mapbox-gl-draw': 'MapboxGlDraw',
                     '@turf/boolean-point-in-polygon':

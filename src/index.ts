@@ -11,13 +11,7 @@ export {
     LineFlowMode,
     MapEquipments,
 } from '@powsybl/network-map-layers';
-export { NetworkAreaDiagramViewer } from './components/network-area-diagram-viewer/network-area-diagram-viewer';
-export {
-    DRAW_EVENT,
-    default as NetworkMap,
-} from './components/network-map-viewer/network/network-map';
-export type { NetworkMapRef } from './components/network-map-viewer/network/network-map';
-export { SingleLineDiagramViewer } from './components/single-line-diagram-viewer/single-line-diagram-viewer';
+export { SingleLineDiagramViewer } from '@powsybl/single-line-diagram-viewer';
 export type {
     HandleTogglePopoverType,
     OnBreakerCallbackType,
@@ -28,6 +22,12 @@ export type {
     SLDMetadataComponent,
     SLDMetadataComponentSize,
     SLDMetadataNode,
-} from './components/single-line-diagram-viewer/single-line-diagram-viewer';
+} from '@powsybl/single-line-diagram-viewer';
+export { NetworkAreaDiagramViewer } from './components/network-area-diagram-viewer/network-area-diagram-viewer';
+export {
+    DRAW_EVENT,
+    default as NetworkMap,
+} from './components/network-map-viewer/network/network-map';
+export type { NetworkMapRef } from './components/network-map-viewer/network/network-map';
 
 export { DRAW_MODES } from './components/network-map-viewer/network/draw-control';

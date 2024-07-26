@@ -28,11 +28,13 @@
         "licenses-check": "license-checker --summary --excludePrivatePackages --production --onlyAllow \"$( jq -r .onlyAllow[] license-checker-config.json | tr '\n' ';')\" --excludePackages \"$( jq -r .excludePackages[] license-checker-config.json | tr '\n' ';')\""
     },
     "workspaces": [
-        "packages/network-map-layers"
+        "packages/network-map-layers",
+        "packages/single-line-diagram-viewer"
     ],
     "dependencies": {
-        "@powsybl/network-map-layers": "^0.6.0",
         "@mapbox/mapbox-gl-draw": "^1.4.3",
+        "@powsybl/network-map-layers": "^0.6.0",
+        "@powsybl/single-line-diagram-viewer": "^0.6.0",
         "@svgdotjs/svg.js": "^3.2.4",
         "@svgdotjs/svg.panzoom.js": "^2.1.2",
         "@turf/boolean-point-in-polygon": "^6.5.0",

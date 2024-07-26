@@ -5,11 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import {
-    Line,
-    Substation,
-} from '@/components/network-map-viewer/utils/equipment-types';
 import { MapEquipments } from '@/index';
+import { Line, Substation } from '@powsybl/network-map-layers';
 
 export default class DemoMapEquipments extends MapEquipments {
     initEquipments(smapdata: Substation[], lmapdata: Line[]) {
