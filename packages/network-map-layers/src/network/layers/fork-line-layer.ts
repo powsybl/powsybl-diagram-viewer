@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { DefaultProps } from '@deck.gl/core';
-import { Accessor, LineLayer, LineLayerProps } from 'deck.gl';
+import { Accessor, DefaultProps } from '@deck.gl/core';
+import { LineLayer, LineLayerProps } from '@deck.gl/layers';
 
 export type ForkLineLayerProps<DataT = unknown> = _ForkLineLayerProps<DataT> &
     LineLayerProps;

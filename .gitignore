@@ -19,3 +19,6 @@
 /demo/dist
 
 
+# packages
+/packages/*/node_modules
+

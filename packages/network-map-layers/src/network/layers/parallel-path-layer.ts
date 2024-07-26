@@ -4,9 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { DefaultProps } from '@deck.gl/core';
+import { Accessor, DefaultProps } from '@deck.gl/core';
+import { PathLayer, PathLayerProps } from '@deck.gl/layers';
 import { RenderPass, UniformValue } from '@luma.gl/core';
-import { Accessor, PathLayer, PathLayerProps } from 'deck.gl';
 
 type _ParallelPathLayerProps<DataT = unknown> = {
     getLineParallelIndex?: Accessor<DataT, number>;

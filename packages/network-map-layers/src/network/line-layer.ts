@@ -5,28 +5,27 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { PathStyleExtension } from '@deck.gl/extensions';
-import {
-    Color,
-    CompositeLayer,
-    CompositeLayerProps,
-    IconLayer,
-    Layer,
-    LayerContext,
-    Position,
-    TextLayer,
-    UpdateParameters,
-} from 'deck.gl';
-import { getDistance } from 'geolib';
-import { INVALID_FLOW_OPACITY } from '../../../utils/colors';
-import BoltIcon from '../images/bolt_black_24dp.svg?react';
-import PadlockIcon from '../images/lock_black_24dp.svg?react';
-import { Line, LonLat } from '../utils/equipment-types';
 import {
     SUBSTATION_RADIUS,
     SUBSTATION_RADIUS_MAX_PIXEL,
     SUBSTATION_RADIUS_MIN_PIXEL,
-} from './constants';
+} from '@/constants';
+import BoltIcon from '@/images/bolt_black_24dp.svg?react';
+import PadlockIcon from '@/images/lock_black_24dp.svg?react';
+import { INVALID_FLOW_OPACITY } from '@/utils/colors';
+import { Line, LonLat } from '@/utils/equipment-types';
+import {
+    Color,
+    CompositeLayer,
+    CompositeLayerProps,
+    Layer,
+    LayerContext,
+    Position,
+    UpdateParameters,
+} from '@deck.gl/core';
+import { PathStyleExtension } from '@deck.gl/extensions';
+import { IconLayer, TextLayer } from '@deck.gl/layers';
+import { getDistance } from 'geolib';
 import { GeoData } from './geo-data';
 import { Arrow, ArrowDirection, ArrowLayer } from './layers/arrow-layer';
 import ForkLineLayer from './layers/fork-line-layer';

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { LineStatus } from '../network/line-layer';
+import { LineStatus } from '@/network/line-layer';
 
 export const EQUIPMENT_INFOS_TYPES = {
     LIST: { type: 'LIST' },

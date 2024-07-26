@@ -5,13 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-export { NetworkAreaDiagramViewer } from './components/network-area-diagram-viewer/network-area-diagram-viewer';
-export { GeoData } from './components/network-map-viewer/network/geo-data';
 export {
+    GeoData,
     LineFlowColorMode,
     LineFlowMode,
-} from './components/network-map-viewer/network/line-layer';
-export { MapEquipments } from './components/network-map-viewer/network/map-equipments';
+    MapEquipments,
+} from '@powsybl/network-map-layers';
+export { NetworkAreaDiagramViewer } from './components/network-area-diagram-viewer/network-area-diagram-viewer';
 export {
     DRAW_EVENT,
     default as NetworkMap,

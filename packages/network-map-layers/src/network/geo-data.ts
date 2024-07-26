@@ -5,13 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { Line, LonLat } from '@/utils/equipment-types';
 import cheapRuler from 'cheap-ruler';
 import {
     computeDestinationPoint,
     getGreatCircleBearing,
     getRhumbLineBearing,
 } from 'geolib';
-import { Line, LonLat } from '../utils/equipment-types';
 import { ArrowDirection } from './layers/arrow-layer';
 import { MapEquipments } from './map-equipments';
 

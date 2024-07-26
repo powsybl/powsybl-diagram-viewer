@@ -27,7 +27,11 @@
         "lint": "eslint . --ext js,mjs,jsx,ts,mts,tsx --max-warnings 0",
         "licenses-check": "license-checker --summary --excludePrivatePackages --production --onlyAllow \"$( jq -r .onlyAllow[] license-checker-config.json | tr '\n' ';')\" --excludePackages \"$( jq -r .excludePackages[] license-checker-config.json | tr '\n' ';')\""
     },
+    "workspaces": [
+        "packages/network-map-layers"
+    ],
     "dependencies": {
+        "@powsybl/network-map-layers": "^0.6.0",
         "@mapbox/mapbox-gl-draw": "^1.4.3",
         "@svgdotjs/svg.js": "^3.2.4",
         "@svgdotjs/svg.panzoom.js": "^2.1.2",

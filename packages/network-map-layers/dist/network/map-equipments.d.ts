@@ -1,0 +1,41 @@
+import { EQUIPMENT_TYPES, Equipment, Line, Substation, VoltageLevel } from '../utils/equipment-types';
+
+export declare class MapEquipments {
+    substations: Substation[];
+    substationsById: Map<string, Substation>;
+    lines: Line[];
+    linesById: Map<string, Line>;
+    tieLines: Line[];
+    tieLinesById: Map<string, Line>;
+    hvdcLines: Line[];
+    hvdcLinesById: Map<string, Line>;
+    voltageLevels: VoltageLevel[];
+    voltageLevelsById: Map<string, VoltageLevel>;
+    nominalVoltages: number[];
+    intlRef: undefined;
+    constructor();
+    newMapEquipmentForUpdate(): MapEquipments;
+    checkAndGetValues(equipments: Equipment[]): Equipment[];
+    completeSubstationsInfos(equipementsToIndex: Substation[]): void;
+    updateEquipments<T extends Equipment>(currentEquipments: T[], newEquipements: T[], _equipmentType: EQUIPMENT_TYPES): T[];
+    updateSubstations(substations: Substation[], fullReload: boolean): void;
+    completeLinesInfos(equipementsToIndex: Line[]): void;
+    completeTieLinesInfos(equipementsToIndex: Line[]): void;
+    updateLines(lines: Line[], fullReload: boolean): void;
+    updateTieLines(tieLines: Line[], fullReload: boolean): void;
+    updateHvdcLines(hvdcLines: Line[], fullReload: boolean): void;
+    completeHvdcLinesInfos(equipementsToIndex: Line[]): void;
+    removeBranchesOfVoltageLevel(branchesList: Line[], voltageLevelId: string): Line[];
+    removeEquipment(equipmentType: EQUIPMENT_TYPES, equipmentId: string): void;
+    getVoltageLevels(): VoltageLevel[];
+    getVoltageLevel(id: string): VoltageLevel | undefined;
+    getSubstations(): Substation[];
+    getSubstation(id: string): Substation | undefined;
+    getNominalVoltages(): number[];
+    getLines(): Line[];
+    getLine(id: string): Line | undefined;
+    getHvdcLines(): Line[];
+    getHvdcLine(id: string): Line | undefined;
+    getTieLines(): Line[];
+    getTieLine(id: string): Line | undefined;
+}

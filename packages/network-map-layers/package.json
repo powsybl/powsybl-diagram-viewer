@@ -1,0 +1,38 @@
+{
+    "name": "@powsybl/network-map-layers",
+    "version": "0.6",
+    "description": "Typescript library to integrate a powsybl svg diagram in a javascript project.",
+    "author": "powsybl team",
+    "homepage": "https://www.powsybl.org/",
+    "license": "MPL-2.0",
+    "repository": "git://github.com/powsybl/powsybl-diagram-viewer.git",
+    "type": "module",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "module": "./dist/powsybl-network-map-layers.js",
+    "exports": {
+        ".": {
+            "import": "./dist/powsybl-network-map-layers.js"
+        }
+    },
+    "scripts": {
+        "build": "tsc  --p ./tsconfig.json && vite build"
+    },
+    "dependencies": {
+        "@deck.gl/core": "^9.0.0",
+        "@deck.gl/extensions": "9.0.0",
+        "@deck.gl/layers": "^9.0.0",
+        "@luma.gl/constants": "9.0.0",
+        "@luma.gl/core": "^9.0.0",
+        "@luma.gl/engine": "9.0.0"
+    },
+    "devDependencies": {
+        "typescript": "5.5.3",
+        "vite": "^5.3.3",
+        "vite-plugin-dts": "^3.9.1",
+        "vite-plugin-externalize-deps": "^0.8.0",
+        "vite-plugin-svgr": "^4.2.0"
+    }
+}

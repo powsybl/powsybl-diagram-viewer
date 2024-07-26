@@ -13,9 +13,9 @@ import {
 } from '@deck.gl/core';
 import { GL } from '@luma.gl/constants';
 import type { Texture } from '@luma.gl/core';
-import { DeprecatedWebGLTextureProps } from '@luma.gl/core/src/adapter/resources/texture';
 import { Geometry, Model } from '@luma.gl/engine';
 
+import { Line } from '@/utils/equipment-types';
 import {
     Device,
     RenderPass,
@@ -30,7 +30,6 @@ import {
     Position,
     UpdateParameters,
 } from 'deck.gl';
-import { Line } from '../../utils/equipment-types';
 import fs from './arrow-layer-fragment.frag?raw';
 import vs from './arrow-layer-vertex.vert?raw';
 
@@ -326,7 +325,7 @@ export class ArrowLayer extends Layer<Required<_ArrowLayerProps>> {
                 [GL.TEXTURE_WRAP_T]: GL.CLAMP_TO_EDGE,
             },
             mipmaps: false,
-        } satisfies TextureProps | DeprecatedWebGLTextureProps as TextureProps);
+        } as TextureProps);
 
         const stop = performance.now();
         console.info(

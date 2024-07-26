@@ -5,22 +5,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { DefaultProps } from '@deck.gl/core';
 import {
     Color,
     CompositeLayer,
+    DefaultProps,
     LayerContext,
-    TextLayer,
     UpdateParameters,
-} from 'deck.gl';
+} from '@deck.gl/core';
+import { TextLayer } from '@deck.gl/layers';
 import ScatterplotLayerExt from './layers/scatterplot-layer-ext';
 
-import { Substation, VoltageLevel } from '../utils/equipment-types';
 import {
     SUBSTATION_RADIUS,
     SUBSTATION_RADIUS_MAX_PIXEL,
     SUBSTATION_RADIUS_MIN_PIXEL,
-} from './constants';
+} from '@/constants';
+import { Substation, VoltageLevel } from '@/utils/equipment-types';
 import { GeoData } from './geo-data';
 import { CompositeData } from './line-layer';
 import { MapEquipments } from './map-equipments';

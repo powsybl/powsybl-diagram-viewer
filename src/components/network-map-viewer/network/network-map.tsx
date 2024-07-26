@@ -22,6 +22,19 @@ import LoaderWithOverlay from '../utils/loader-with-overlay';
 import { MapboxOverlay, MapboxOverlayProps } from '@deck.gl/mapbox';
 import { Replay } from '@mui/icons-material';
 import { Button, ButtonProps, useTheme } from '@mui/material';
+import {
+    GeoData,
+    LineFlowColorMode,
+    LineFlowMode,
+    LineLayer,
+    MapEquipments,
+    SubstationLayer,
+    getNominalVoltageColor,
+    isLine,
+    isSubstation,
+    isVoltageLevel,
+} from '@powsybl/network-map-layers';
+import type { LineLayerProps } from '@powsybl/network-map-layers/dist/network/line-layer';
 import { FormattedMessage } from 'react-intl';
 import {
     Map,
@@ -31,30 +44,18 @@ import {
     useControl,
     useMap,
 } from 'react-map-gl/maplibre';
-import { getNominalVoltageColor } from '../../../utils/colors';
-import { isLine, isSubstation, isVoltageLevel } from '../utils/equipment-types';
 import { useNameOrId } from '../utils/equipmentInfosHandler';
 import DrawControl, {
     DRAW_MODES,
     DrawControlProps,
     getMapDrawer,
 } from './draw-control';
-import { GeoData } from './geo-data';
-import {
-    LineFlowColorMode,
-    LineFlowMode,
-    LineLayer,
-    LineLayerProps,
-} from './line-layer';
-import { MapEquipments } from './map-equipments';
-import { SubstationLayer } from './substation-layer';
 
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import { PickingInfo } from 'deck.gl';
 import { Feature, Polygon } from 'geojson';
 // import 'mapbox-gl/dist/mapbox-gl.css';
-import 'maplibre-gl/dist/maplibre-gl.css';
 import {
     EQUIPMENT_TYPES,
     EquimentLine,
@@ -65,7 +66,8 @@ import {
     Substation,
     TieLineEquimentLine,
     VoltageLevel,
-} from '../utils/equipment-types';
+} from '@powsybl/network-map-layers';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 // MouseEvent.button https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
 const MOUSE_EVENT_BUTTON_LEFT = 0;

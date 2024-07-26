@@ -6,11 +6,12 @@
  */
 
 import {
+    EQUIPMENT_TYPES,
+    Equipment,
     Line,
     Substation,
     VoltageLevel,
-} from '@/components/network-map-viewer/utils/equipment-types';
-import { EQUIPMENT_TYPES, Equipment } from '../utils/equipment-types';
+} from '@/utils/equipment-types';
 
 const elementIdIndexer = <T extends Equipment>(
     map: Map<string, T>,

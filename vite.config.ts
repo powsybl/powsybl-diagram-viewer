@@ -67,6 +67,11 @@ export default defineConfig((_config) => ({
                     '@luma.gl/constants': 'LumaGlConstants',
                     '@luma.gl/core': 'LumaGlCore',
                     '@svgdotjs/svg.js': 'SvgJs',
+                    '@powsybl/network-map-layers': 'PowsyblNetworkMapLayers',
+                    'react-map-gl/maplibre': 'ReactMapGlMaplibre',
+                    '@mapbox/mapbox-gl-draw': 'MapboxGlDraw',
+                    '@turf/boolean-point-in-polygon':
+                        'TurfBooleanPointInPolygon',
                 },
             },
         },
