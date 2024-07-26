@@ -42,14 +42,19 @@ import {
     ViewState,
     ViewStateChangeEvent,
     useControl,
-    useMap,
-} from 'react-map-gl/maplibre';
+} from 'react-map-gl';
 import { useNameOrId } from '../utils/equipmentInfosHandler';
 import DrawControl, {
     DRAW_MODES,
     DrawControlProps,
     getMapDrawer,
 } from './draw-control';
+
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import type { MapLib, MapRef } from 'react-map-gl';
 
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
@@ -273,7 +278,7 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
         const [labelsVisible, setLabelsVisible] = useState(false);
         const [showLineFlow, setShowLineFlow] = useState(true);
         const [showTooltip, setShowTooltip] = useState(true);
-        const mapRef = useMap();
+        const mapRef = useRef<MapRef>(null);
         const deckRef = useRef<MapboxOverlay | null>(null);
         const [centered, setCentered] = useState<Centered>(INITIAL_CENTERED);
         const lastViewStateRef = useRef<ViewState>();
@@ -362,8 +367,6 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
             });
         }, [centerOnSubstation]);
 
-        const mapLib = useMap();
-
         // TODO simplify this, now we use Map as the camera controlling component
         // so  we don't need the deckgl ref anymore. The following comments are
         // probably outdated, cleanup everything:
@@ -391,7 +394,7 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
                         if (!geodata) {
                             return;
                         } // can't center on substation if no coordinate.
-                        mapLib.current?.flyTo({
+                        mapRef.current?.flyTo({
                             center: [geodata.lon, geodata.lat],
                             duration: 2000,
                         });
@@ -423,7 +426,7 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
                         );
                         const marginlon = (maxlon - minlon) / 10;
                         const marginlat = (maxlat - minlat) / 10;
-                        mapLib.current?.fitBounds(
+                        mapRef.current?.fitBounds(
                             [
                                 [
                                     minlon - marginlon / 2,
@@ -725,9 +728,17 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
             [mapLibrary, mapTheme]
         );
 
-        const mapboxAccessToken = mToken;
-
         const key = mapLibrary === MAPBOX && mToken ? 'mapboxgl' : 'maplibregl';
+
+        const mapLib =
+            mapLibrary === MAPBOX && mToken
+                ? {
+                      mapLib: mapboxgl,
+                      mapboxAccessToken: mToken,
+                  }
+                : {
+                      mapLib: maplibregl,
+                  };
 
         // because the mapLib prop of react-map-gl is not reactive, we need to
         // unmount/mount the Map with 'key', so we need also to reset all state
@@ -750,8 +761,8 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
             const polygonCoordinates = polygonFeatures?.geometry;
             if (
                 !polygonCoordinates ||
-                'geometries' in polygonCoordinates ||
-                polygonCoordinates.coordinates.length < 3
+                polygonCoordinates.type !== 'Polygon' ||
+                polygonCoordinates.coordinates[0].length < 3
             ) {
                 return [];
             }
@@ -829,18 +840,19 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
 
         return (
             <Map
+                ref={mapRef}
                 style={{ zIndex: 0 }}
                 onMove={onViewStateChange}
                 doubleClickZoom={false}
                 mapStyle={mapStyle}
                 styleDiffing={false}
-                mapboxAccessToken={mapboxAccessToken}
                 key={key}
                 initialViewState={initialViewState}
                 cursor={cursorHandler()} //TODO needed for pointer on our polygonFeatures, but forces us to reeimplement grabbing/grab for panning. Can we avoid reimplementing?
                 onDrag={() => setDragging(true)}
                 onDragEnd={() => setDragging(false)}
                 onContextMenu={onMapContextMenu}
+                mapLib={mapLib.mapLib as MapLib<mapboxgl.Map>}
             >
                 {displayOverlayLoader && renderOverlay()}
                 {isManualRefreshBackdropDisplayed && (
@@ -904,7 +916,7 @@ function getSubstationsInPolygon(
         !geoData ||
         !polygonCoordinates ||
         polygonCoordinates.type !== 'Polygon' ||
-        polygonCoordinates.coordinates.length < 3
+        polygonCoordinates.coordinates[0].length < 3
     ) {
         return [];
     }
