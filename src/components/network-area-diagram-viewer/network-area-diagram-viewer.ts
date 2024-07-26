@@ -22,6 +22,13 @@ export type OnMoveNodeCallbackType = (
     yOrig: number
 ) => void;
 
+export type OnSelectNodeCallbackType = (
+    equipmentId: string,
+    nodeId: string,
+    x: number,
+    y: number
+) => void;
+
 export class NetworkAreaDiagramViewer {
     container: HTMLElement;
     svgContent: string;
@@ -37,7 +44,8 @@ export class NetworkAreaDiagramViewer {
     initialPosition: Point = new Point(0, 0);
     svgParameters: SvgParameters;
     edgeAngles: Map<string, number> = new Map<string, number>();
-    onNodeCallback: OnMoveNodeCallbackType | null;
+    onMoveNodeCallback: OnMoveNodeCallbackType | null;
+    onSelectNodeCallback: OnSelectNodeCallbackType | null;
 
     constructor(
         container: HTMLElement,
@@ -46,7 +54,8 @@ export class NetworkAreaDiagramViewer {
         minHeight: number,
         maxWidth: number,
         maxHeight: number,
-        onNodeCallback: OnMoveNodeCallbackType | null,
+        onMoveNodeCallback: OnMoveNodeCallbackType | null,
+        onSelectNodeCallback: OnSelectNodeCallbackType | null,
         enableNodeMoving: boolean
     ) {
         this.container = container;
@@ -57,7 +66,8 @@ export class NetworkAreaDiagramViewer {
         this.originalHeight = 0;
         this.init(minWidth, minHeight, maxWidth, maxHeight, enableNodeMoving);
         this.svgParameters = this.getSvgParameters();
-        this.onNodeCallback = onNodeCallback;
+        this.onMoveNodeCallback = onMoveNodeCallback;
+        this.onSelectNodeCallback = onSelectNodeCallback;
     }
 
     public setWidth(width: number): void {
@@ -272,27 +282,41 @@ export class NetworkAreaDiagramViewer {
         if (svg != null) {
             svg.style.cursor = 'grabbing';
         }
-        this.initialPosition = DiagramUtils.getPosition(this.selectedElement); // used for the offset
-        this.edgeAngles = new Map<string, number>();
+        if (!(event as MouseEvent).shiftKey) {
+            this.initialPosition = DiagramUtils.getPosition(
+                this.selectedElement
+            ); // used for the offset
+            this.edgeAngles = new Map<string, number>();
+        }
     }
 
     private drag(event: Event) {
         if (this.selectedElement) {
             event.preventDefault();
-            this.ctm = this.svgDraw?.node.getScreenCTM();
-            const mousePosition = this.getMousePosition(event as MouseEvent);
-            this.updateGraph(mousePosition);
-            this.initialPosition = DiagramUtils.getPosition(
-                this.selectedElement
-            );
+            if (!(event as MouseEvent).shiftKey) {
+                this.ctm = this.svgDraw?.node.getScreenCTM();
+                const mousePosition = this.getMousePosition(
+                    event as MouseEvent
+                );
+                this.updateGraph(mousePosition);
+                this.initialPosition = DiagramUtils.getPosition(
+                    this.selectedElement
+                );
+            }
         }
     }
 
     private endDrag(event: Event) {
         if (this.selectedElement) {
-            const mousePosition = this.getMousePosition(event as MouseEvent);
-            this.updateGraph(mousePosition);
-            this.updateMetadataCallCallback(mousePosition);
+            if (!(event as MouseEvent).shiftKey) {
+                const mousePosition = this.getMousePosition(
+                    event as MouseEvent
+                );
+                this.updateGraph(mousePosition);
+                this.updateMetadataCallCallback(mousePosition);
+            } else {
+                this.callSelectNodeCallback();
+            }
             const svg: HTMLElement = <HTMLElement>(
                 this.svgDraw?.node.firstElementChild?.parentElement
             );
@@ -1276,15 +1300,36 @@ export class NetworkAreaDiagramViewer {
             // update node position in metadata
             node.setAttribute('x', xNew);
             node.setAttribute('y', yNew);
-            // call the callback, if defined
-            if (this.onNodeCallback != null) {
-                this.onNodeCallback(
+            // call the move node callback, if defined
+            if (this.onMoveNodeCallback != null) {
+                this.onMoveNodeCallback(
                     node.getAttribute('equipmentid') ?? '',
                     node.getAttribute('svgid') ?? '',
                     +xNew,
                     +yNew,
                     +xOrig,
                     +yOrig
+                );
+            }
+        }
+    }
+
+    private callSelectNodeCallback() {
+        // call the select node callback, if defined
+        if (this.onSelectNodeCallback != null) {
+            // get selected node from metadata
+            const node: SVGGraphicsElement | null =
+                this.container.querySelector(
+                    'nad\\:node[svgid="' + this.selectedElement?.id + '"]'
+                );
+            if (node != null) {
+                const x = node.getAttribute('x') ?? '0';
+                const y = node.getAttribute('y') ?? '0';
+                this.onSelectNodeCallback(
+                    node.getAttribute('equipmentid') ?? '',
+                    node.getAttribute('svgid') ?? '',
+                    +x,
+                    +y
                 );
             }
         }
