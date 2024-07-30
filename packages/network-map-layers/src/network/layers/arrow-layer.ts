@@ -295,9 +295,12 @@ export class ArrowLayer extends Layer<Required<_ArrowLayerProps>> {
         // we calculate the smallest texture width less or equals to MAX_TEXTURE_SIZE
         // (which is an property of the graphic card)
         const elementCount = data.length / elementSize;
-        const width = Math.min(maxTextureSize, elementCount);
-        const height = Math.ceil(elementCount / width);
-        if (height > maxTextureSize) {
+        const expSum = Math.ceil(Math.log2(elementCount));
+        const widthExp = Math.ceil(expSum / 2);
+        const heightExp = expSum - widthExp;
+        const width = Math.pow(2, widthExp);
+        const height = Math.pow(2, heightExp);
+        if (height > maxTextureSize || width > maxTextureSize) {
             throw new Error(
                 `Texture size ${width}*${height} cannot be greater than ${maxTextureSize}`
             );
@@ -306,8 +309,8 @@ export class ArrowLayer extends Layer<Required<_ArrowLayerProps>> {
         // data length needs to be width * height (otherwise we get an error), so we pad the data array with zero until
         // reaching the correct size.
         const newLength = width * height * elementSize;
+        const oldLength = data.length;
         if (data.length < newLength) {
-            const oldLength = data.length;
             data.length = newLength;
             data.fill(0, oldLength, newLength);
         }
@@ -329,7 +332,7 @@ export class ArrowLayer extends Layer<Required<_ArrowLayerProps>> {
 
         const stop = performance.now();
         console.info(
-            `Texture of ${newLength} elements (${width} * ${height}) created in ${
+            `Texture of ${elementCount} elements of size ${elementSize} (${width} * ${height}) created in ${
                 stop - start
             } ms`
         );
