@@ -440,7 +440,7 @@ export function getTextNodeAngleFromCentre(textNode: SVGGraphicsElement | null, 
 }
 
 // get the position of a translated text box
-export function getTextNodeTranslatedPosition(textNode: SVGGraphicsElement | null, translation: Point) {
+export function getTextNodeTranslatedPosition(textNode: SVGGraphicsElement | null, translation: Point): Point {
     const textNodeX = textNode?.getAttribute('x') ?? '0';
     const textNodeY = textNode?.getAttribute('y') ?? '0';
     return new Point(+textNodeX + translation.x, +textNodeY + translation.y);
@@ -453,17 +453,6 @@ export function getTextNodePosition(textNode: SVGGraphicsElement | null): Point 
     return new Point(+textNodeX, +textNodeY);
 }
 
-// get text node move (original and new shift of position)
-export function getTextNodeMove(initialTextPosition: Point, textPosition: Point, vlNode: SVGGraphicsElement): NODEMOVE {
-    const xNode = vlNode.getAttribute('x') ?? '0';
-    const yNode = vlNode.getAttribute('y') ?? '0';
-    const xOrig = getFormattedValue(initialTextPosition.x - +xNode);
-    const yOrig = getFormattedValue(initialTextPosition.y - +yNode);
-    const xNew = getFormattedValue(textPosition.x - +xNode);
-    const yNew = getFormattedValue(textPosition.y - +yNode);
-    return { xOrig: xOrig, yOrig: yOrig, xNew: xNew, yNew: yNew };
-}
-
 // get node move (original and new position)
 export function getNodeMove(node: SVGGraphicsElement, nodePosition: Point): NODEMOVE {
     const xOrig = node.getAttribute('x') ?? '0';
@@ -471,4 +460,27 @@ export function getNodeMove(node: SVGGraphicsElement, nodePosition: Point): NODE
     const xNew = getFormattedValue(nodePosition.x);
     const yNew = getFormattedValue(nodePosition.y);
     return { xOrig: xOrig, yOrig: yOrig, xNew: xNew, yNew: yNew };
+}
+
+// get moves (original and new position) of position and connetion of text node
+export function getTextNodeMoves(
+    textNode: SVGGraphicsElement,
+    vlNode: SVGGraphicsElement,
+    textPosition: Point,
+    connectionPosition: Point
+): [NODEMOVE, NODEMOVE] {
+    const xNode = vlNode.getAttribute('x') ?? '0';
+    const yNode = vlNode.getAttribute('y') ?? '0';
+    const xOrig = textNode.getAttribute('shiftx') ?? '0';
+    const yOrig = textNode.getAttribute('shifty') ?? '0';
+    const xNew = getFormattedValue(textPosition.x - +xNode);
+    const yNew = getFormattedValue(textPosition.y - +yNode);
+    const connXOrig = textNode.getAttribute('connectionshiftx') ?? '0';
+    const connYOrig = textNode.getAttribute('connectionshifty') ?? '0';
+    const connXNew = getFormattedValue(connectionPosition.x - +xNode);
+    const connYNew = getFormattedValue(connectionPosition.y - +yNode);
+    return [
+        { xOrig: xOrig, yOrig: yOrig, xNew: xNew, yNew: yNew },
+        { xOrig: connXOrig, yOrig: connYOrig, xNew: connXNew, yNew: connYNew },
+    ];
 }
