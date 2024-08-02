@@ -24,9 +24,7 @@ export type OnMoveNodeCallbackType = (
 
 export type OnSelectNodeCallbackType = (
     equipmentId: string,
-    nodeId: string,
-    x: number,
-    y: number
+    nodeId: string
 ) => void;
 
 export class NetworkAreaDiagramViewer {
@@ -46,6 +44,7 @@ export class NetworkAreaDiagramViewer {
     edgeAngles: Map<string, number> = new Map<string, number>();
     onMoveNodeCallback: OnMoveNodeCallbackType | null;
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
+    shiftKeyOnMouseDown: boolean = false;
 
     constructor(
         container: HTMLElement,
@@ -273,9 +272,9 @@ export class NetworkAreaDiagramViewer {
         if (!draggableElem) {
             return;
         }
-        this.disablePanzoom(); // to avoid panning the whole SVG when moving a node
-        this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute mouse movement
-        this.selectedElement = draggableElem as SVGGraphicsElement; // element to be moved
+        this.disablePanzoom(); // to avoid panning the whole SVG when moving or selecting a node
+        this.selectedElement = draggableElem as SVGGraphicsElement; // element to be moved or selected
+        // change cursor style
         const svg: HTMLElement = <HTMLElement>(
             this.svgDraw?.node.firstElementChild?.parentElement
         );
@@ -283,18 +282,25 @@ export class NetworkAreaDiagramViewer {
             svg.style.cursor = 'grabbing';
         }
         if (!(event as MouseEvent).shiftKey) {
+            // moving node
+            this.shiftKeyOnMouseDown = false;
+            this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute mouse movement
             this.initialPosition = DiagramUtils.getPosition(
                 this.selectedElement
             ); // used for the offset
             this.edgeAngles = new Map<string, number>();
+        } else {
+            // selecting node
+            this.shiftKeyOnMouseDown = true;
         }
     }
 
     private drag(event: Event) {
         if (this.selectedElement) {
             event.preventDefault();
-            if (!(event as MouseEvent).shiftKey) {
-                this.ctm = this.svgDraw?.node.getScreenCTM();
+            if (!this.shiftKeyOnMouseDown) {
+                // moving node
+                this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute mouse movement
                 const mousePosition = this.getMousePosition(
                     event as MouseEvent
                 );
@@ -308,15 +314,20 @@ export class NetworkAreaDiagramViewer {
 
     private endDrag(event: Event) {
         if (this.selectedElement) {
-            if (!(event as MouseEvent).shiftKey) {
+            if (!this.shiftKeyOnMouseDown) {
+                // moving node
                 const mousePosition = this.getMousePosition(
                     event as MouseEvent
                 );
                 this.updateGraph(mousePosition);
                 this.updateMetadataCallCallback(mousePosition);
+                this.initialPosition = new Point(0, 0);
             } else {
+                // selecting node
                 this.callSelectNodeCallback();
+                this.shiftKeyOnMouseDown = false;
             }
+            // change cursor style
             const svg: HTMLElement = <HTMLElement>(
                 this.svgDraw?.node.firstElementChild?.parentElement
             );
@@ -324,7 +335,6 @@ export class NetworkAreaDiagramViewer {
                 svg.style.removeProperty('cursor');
             }
             this.selectedElement = null;
-            this.initialPosition = new Point(0, 0);
             this.enablePanzoom();
         }
     }
@@ -1323,13 +1333,9 @@ export class NetworkAreaDiagramViewer {
                     'nad\\:node[svgid="' + this.selectedElement?.id + '"]'
                 );
             if (node != null) {
-                const x = node.getAttribute('x') ?? '0';
-                const y = node.getAttribute('y') ?? '0';
                 this.onSelectNodeCallback(
                     node.getAttribute('equipmentid') ?? '',
-                    node.getAttribute('svgid') ?? '',
-                    +x,
-                    +y
+                    node.getAttribute('svgid') ?? ''
                 );
             }
         }

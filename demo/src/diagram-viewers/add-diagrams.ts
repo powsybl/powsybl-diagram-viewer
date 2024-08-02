@@ -341,21 +341,7 @@ const handleNodeMove: OnMoveNodeCallbackType = (
     console.log(msg);
 };
 
-const handleNodeSelect: OnSelectNodeCallbackType = (
-    equipmentId,
-    nodeId,
-    x,
-    y
-) => {
-    const msg =
-        'Node ' +
-        nodeId +
-        ' equipment ' +
-        equipmentId +
-        ' position [' +
-        x +
-        ', ' +
-        y +
-        '] selected';
+const handleNodeSelect: OnSelectNodeCallbackType = (equipmentId, nodeId) => {
+    const msg = 'Node ' + nodeId + ' equipment ' + equipmentId + ' selected';
     console.log(msg);
 };
