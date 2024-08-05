@@ -24,6 +24,9 @@ import {
     OnBusCallbackType,
     OnFeederCallbackType,
     OnNextVoltageCallbackType,
+    OnMoveNodeCallbackType,
+    OnMoveTextNodeCallbackType,
+    OnSelectNodeCallbackType,
 } from '../../../src';
 
 export const addNadToDemo = () => {
@@ -39,6 +42,7 @@ export const addNadToDemo = () => {
                 1200,
                 handleNodeMove,
                 handleTextNodeMove,
+                handleNodeSelect,
                 true
             );
 
@@ -60,6 +64,7 @@ export const addNadToDemo = () => {
                 1200,
                 handleNodeMove,
                 handleTextNodeMove,
+                handleNodeSelect,
                 false
             );
 
@@ -81,6 +86,7 @@ export const addNadToDemo = () => {
                 1200,
                 handleNodeMove,
                 handleTextNodeMove,
+                handleNodeSelect,
                 true
             );
 
@@ -104,6 +110,7 @@ export const addNadToDemo = () => {
                 1200,
                 handleNodeMove,
                 handleTextNodeMove,
+                handleNodeSelect,
                 true
             );
 
@@ -125,6 +132,7 @@ export const addNadToDemo = () => {
                 1200,
                 handleNodeMove,
                 handleTextNodeMove,
+                handleNodeSelect,
                 true
             );
 
@@ -146,6 +154,7 @@ export const addNadToDemo = () => {
                 1200,
                 handleNodeMove,
                 handleTextNodeMove,
+                handleNodeSelect,
                 true
             );
 
@@ -167,6 +176,7 @@ export const addNadToDemo = () => {
                 1200,
                 handleNodeMove,
                 handleTextNodeMove,
+                handleNodeSelect,
                 true
             );
 
@@ -314,7 +324,14 @@ const handleTogglePopover: HandleTogglePopoverType = (
     }
 };
 
-const handleNodeMove = (equipmentId, nodeId, x, y, xOrig, yOrig) => {
+const handleNodeMove: OnMoveNodeCallbackType = (
+    equipmentId,
+    nodeId,
+    x,
+    y,
+    xOrig,
+    yOrig
+) => {
     const msg =
         'Node ' +
         nodeId +
@@ -332,7 +349,7 @@ const handleNodeMove = (equipmentId, nodeId, x, y, xOrig, yOrig) => {
     console.log(msg);
 };
 
-const handleTextNodeMove = (
+const handleTextNodeMove: OnMoveTextNodeCallbackType = (
     equipmentId,
     nodeId,
     textNodeId,
@@ -369,5 +386,10 @@ const handleTextNodeMove = (
         ', ' +
         connectionShiftY +
         ']';
+    console.log(msg);
+};
+
+const handleNodeSelect: OnSelectNodeCallbackType = (equipmentId, nodeId) => {
+    const msg = 'Node ' + nodeId + ' equipment ' + equipmentId + ' selected';
     console.log(msg);
 };
