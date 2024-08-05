@@ -38,11 +38,7 @@ export function getFormattedPoint(point: Point): string {
 }
 
 // format points to polyline string
-export function getFormattedPolyline(
-    startPolyline: Point,
-    middlePolyline: Point | null,
-    endPolyline: Point
-): string {
+export function getFormattedPolyline(startPolyline: Point, middlePolyline: Point | null, endPolyline: Point): string {
     let polyline: string = getFormattedPoint(startPolyline);
     if (middlePolyline != null) {
         polyline += ' ' + getFormattedPoint(middlePolyline);
@@ -62,14 +58,9 @@ export function radToDeg(rad: number): number {
 }
 
 // get the transform element of an SVG graphic element
-export function getTransform(
-    element: SVGGraphicsElement | null
-): SVGTransform | undefined {
+export function getTransform(element: SVGGraphicsElement | null): SVGTransform | undefined {
     let transforms = element?.transform.baseVal;
-    if (
-        transforms?.length === 0 ||
-        transforms?.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE
-    ) {
+    if (transforms?.length === 0 || transforms?.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE) {
         element?.setAttribute('transform', 'translate(0,0)');
         transforms = element?.transform.baseVal;
     }
@@ -88,19 +79,12 @@ export function getMidPosition(point1: Point, point2: Point): Point {
 }
 
 // get a point at a distance between two points
-export function getPointAtDistance(
-    point1: Point,
-    point2: Point,
-    radius: number
-): Point {
+export function getPointAtDistance(point1: Point, point2: Point, radius: number): Point {
     const deltax = point1.x - point2.x;
     const deltay = point1.y - point2.y;
     const distance = Math.sqrt(deltax * deltax + deltay * deltay);
     const r = radius / distance;
-    return new Point(
-        point1.x + r * (point2.x - point1.x),
-        point1.y + r * (point2.y - point1.y)
-    );
+    return new Point(point1.x + r * (point2.x - point1.x), point1.y + r * (point2.y - point1.y));
 }
 
 // get the angle between two points
@@ -111,18 +95,12 @@ export function getAngle(point1: Point, point2: Point): number {
 // get the angle of an arrow between two points of an edge polyline
 export function getArrowAngle(point1: Point, point2: Point): number {
     const angle = getAngle(point1, point2);
-    return radToDeg(
-        angle + (angle > Math.PI / 2 ? (-3 * Math.PI) / 2 : Math.PI / 2)
-    );
+    return radToDeg(angle + (angle > Math.PI / 2 ? (-3 * Math.PI) / 2 : Math.PI / 2));
 }
 
 // get the data [angle, shift, text anchor] of a label
 // between two points of an edge polyline
-export function getLabelData(
-    point1: Point,
-    point2: Point,
-    arrowLabelShift: number
-): [number, number, string | null] {
+export function getLabelData(point1: Point, point2: Point, arrowLabelShift: number): [number, number, string | null] {
     const angle = getAngle(point1, point2);
     const textFlipped = Math.cos(angle) < 0;
     return [
@@ -133,15 +111,8 @@ export function getLabelData(
 }
 
 // get fork position of a multibranch edge
-export function getEdgeFork(
-    point: Point,
-    edgeForkLength: number,
-    angleFork: number
-) {
-    return new Point(
-        point.x + edgeForkLength * Math.cos(angleFork),
-        point.y + edgeForkLength * Math.sin(angleFork)
-    );
+export function getEdgeFork(point: Point, edgeForkLength: number, angleFork: number) {
+    return new Point(point.x + edgeForkLength * Math.cos(angleFork), point.y + edgeForkLength * Math.sin(angleFork));
 }
 
 // get the type of edge
@@ -196,16 +167,8 @@ function getConverterStationPoints(
     converterStationWidth: number
 ): [Point, Point] {
     const halfWidth = converterStationWidth / 2;
-    const point1: Point = getPointAtDistance(
-        endPolyline1,
-        startPolyline1,
-        halfWidth
-    );
-    const point2: Point = getPointAtDistance(
-        endPolyline2,
-        startPolyline2,
-        halfWidth
-    );
+    const point1: Point = getPointAtDistance(endPolyline1, startPolyline1, halfWidth);
+    const point2: Point = getPointAtDistance(endPolyline2, startPolyline2, halfWidth);
     return [point1, point2];
 }
 
@@ -239,9 +202,7 @@ export function getDraggableFrom(element: SVGElement): SVGElement | undefined {
 
 function isDraggable(element: SVGElement): boolean {
     return (
-        hasId(element) &&
-        element.parentNode != null &&
-        classIsContainerOfDraggables(element.parentNode as SVGElement)
+        hasId(element) && element.parentNode != null && classIsContainerOfDraggables(element.parentNode as SVGElement)
     );
 }
 
@@ -264,8 +225,7 @@ export function getNodeRadius(
     busIndex: number,
     interAnnulusSpace: number
 ): [number, number, number] {
-    const vlCircleRadius: number =
-        Math.min(Math.max(nbNeighbours + 1, 1), 2) * voltageLevelCircleRadius;
+    const vlCircleRadius: number = Math.min(Math.max(nbNeighbours + 1, 1), 2) * voltageLevelCircleRadius;
     const unitaryRadius = vlCircleRadius / (nbNeighbours + 1);
     return [
         busIndex == 0 ? 0 : busIndex * unitaryRadius + interAnnulusSpace / 2,
@@ -274,12 +234,7 @@ export function getNodeRadius(
     ];
 }
 
-function getCirclePath(
-    radius: number,
-    angleStart: number,
-    angleEnd: number,
-    clockWise: boolean
-) {
+function getCirclePath(radius: number, angleStart: number, angleEnd: number, clockWise: boolean) {
     const arcAngle = angleEnd - angleStart;
     const xStart = radius * Math.cos(angleStart);
     const yStart = radius * Math.sin(angleStart);
@@ -326,30 +281,16 @@ export function getFragmentedAnnulusPath(
             path =
                 path +
                 'M' +
-                getCirclePath(
-                    busNodeRadius[1],
-                    outerArcStart,
-                    outerArcEnd,
-                    true
-                ) +
+                getCirclePath(busNodeRadius[1], outerArcStart, outerArcEnd, true) +
                 ' L' +
-                getCirclePath(
-                    busNodeRadius[0],
-                    innerArcStart,
-                    innerArcEnd,
-                    false
-                ) +
+                getCirclePath(busNodeRadius[0], innerArcStart, innerArcEnd, false) +
                 ' Z ';
         }
     }
     return path;
 }
 
-function getAttribute(
-    element: HTMLElement,
-    tagName: string,
-    attribute: string
-): string | null {
+function getAttribute(element: HTMLElement, tagName: string, attribute: string): string | null {
     if (element.tagName !== tagName) {
         return null;
     }
@@ -390,9 +331,7 @@ function getPathPoints(pathPoints: string): Point[] | null {
     }
     const points: Point[] = [];
     for (let index = 0; index < 2; index++) {
-        const coordinates: string[] = stringPoints[index]
-            .substring(1)
-            .split(',');
+        const coordinates: string[] = stringPoints[index].substring(1).split(',');
         const point = new Point(+coordinates[0], +coordinates[1]);
         points.push(point);
     }
@@ -413,9 +352,7 @@ export function getPathAngle(path: HTMLElement): number | null {
 }
 
 // sort list of bus nodes by index
-export function getSortedBusNodes(
-    busNodes: NodeListOf<SVGGraphicsElement>
-): SVGGraphicsElement[] {
+export function getSortedBusNodes(busNodes: NodeListOf<SVGGraphicsElement>): SVGGraphicsElement[] {
     const sortedBusNodes: SVGGraphicsElement[] = [];
     busNodes.forEach((busNode) => {
         const index = busNode.getAttribute('index') ?? '-1';
@@ -426,15 +363,9 @@ export function getSortedBusNodes(
     return sortedBusNodes;
 }
 
-export function getBoundarySemicircle(
-    edgeStartAngle: number,
-    busOuterRadius: number
-): string {
+export function getBoundarySemicircle(edgeStartAngle: number, busOuterRadius: number): string {
     const startAngle = -Math.PI / 2 + edgeStartAngle;
-    return (
-        'M' +
-        getCirclePath(busOuterRadius, startAngle, startAngle + Math.PI, true)
-    );
+    return 'M' + getCirclePath(busOuterRadius, startAngle, startAngle + Math.PI, true);
 }
 
 // get the angle of a edge name between two points
