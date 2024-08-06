@@ -31,10 +31,7 @@ export class MapEquipments {
 
     completeSubstationsInfos(equipementsToIndex: Substation[]): void;
 
-    updateEquipments(
-        currentEquipments: Equipment[],
-        newEquipements: Equipment[]
-    ): Equipment[];
+    updateEquipments(currentEquipments: Equipment[], newEquipements: Equipment[]): Equipment[];
 
     updateSubstations(substations: Substation[], fullReload: boolean): void;
 
@@ -50,10 +47,7 @@ export class MapEquipments {
 
     completeHvdcLinesInfos(equipementsToIndex: Line[]): void;
 
-    removeBranchesOfVoltageLevel(
-        branchesList: Line[],
-        voltageLevelId: string
-    ): Line[];
+    removeBranchesOfVoltageLevel(branchesList: Line[], voltageLevelId: string): Line[];
 
     removeEquipment(equipmentType, equipmentId: string): void;
 

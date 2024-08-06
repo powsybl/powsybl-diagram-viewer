@@ -5,21 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import {
-    ForwardRefExoticComponent,
-    PropsWithoutRef,
-    ReactNode,
-    RefAttributes,
-    RefObject,
-} from 'react';
+import { ForwardRefExoticComponent, PropsWithoutRef, ReactNode, RefAttributes, RefObject } from 'react';
 import { GeoData } from './geo-data';
-import {
-    Equipment,
-    Line,
-    MapEquipments,
-    Substation,
-    VoltageLevel,
-} from './map-equipments';
+import { Equipment, Line, MapEquipments, Substation, VoltageLevel } from './map-equipments';
 import { LineFlowColorMode, LineFlowMode, LineLayerProps } from './line-layer';
 import { DrawControlProps } from './draw-control';
 import { Feature } from 'geojson';
@@ -32,11 +20,7 @@ export enum DRAW_EVENT {
     DELETE = 0,
 }
 
-export type MenuClickFunction<T extends Equipment> = (
-    equipment: T,
-    eventX: number,
-    eventY: number
-) => void;
+export type MenuClickFunction<T extends Equipment> = (equipment: T, eventX: number, eventY: number) => void;
 
 type NetworkMapProps = {
     disabled?: boolean;
@@ -60,10 +44,7 @@ type NetworkMapProps = {
     lineFlowMode?: LineFlowMode;
     lineFullPath?: boolean;
     lineParallelPath?: boolean;
-    renderPopover?: (
-        equipmentId: string,
-        divRef: RefObject<HTMLDivElement>
-    ) => ReactNode;
+    renderPopover?: (equipmentId: string, divRef: RefObject<HTMLDivElement>) => ReactNode;
     tooltipZoomThreshold?: number;
     // With mapboxgl v2 (not a problem with maplibre), we need to call
     // map.resize() when the parent size has changed, otherwise the map is not
@@ -81,11 +62,7 @@ type NetworkMapProps = {
     onTieLineMenuClick?: MenuClickFunction<Line>;
     onManualRefreshClick?: ButtonProps['onClick'];
     onSubstationClick?: (idVoltageLevel: string) => void;
-    onSubstationClickChooseVoltageLevel?: (
-        idSubstation: string,
-        eventX: number,
-        eventY: number
-    ) => void;
+    onSubstationClickChooseVoltageLevel?: (idSubstation: string, eventX: number, eventY: number) => void;
     onSubstationMenuClick?: MenuClickFunction<Substation>;
     onVoltageLevelMenuClick?: MenuClickFunction<VoltageLevel>;
     onDrawPolygonModeActive?: DrawControlProps['onDrawPolygonModeActive'];
@@ -100,7 +77,5 @@ export type NetworkMapRef = {
     getMapDrawer: () => MapboxDraw | undefined;
 };
 
-const NetworkMap: ForwardRefExoticComponent<
-    PropsWithoutRef<NetworkMapProps> & RefAttributes<NetworkMapRef>
->;
+const NetworkMap: ForwardRefExoticComponent<PropsWithoutRef<NetworkMapProps> & RefAttributes<NetworkMapRef>>;
 export default NetworkMap;

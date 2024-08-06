@@ -4,7 +4,7 @@ Typescript library to integrate a powsybl svg diagram in a javascript project. T
 Node from v18+ is required to build with Vite.
 
 Installation using npm:  
-'npm install @powsybl/diagram-viewer'  
+'npm install @powsybl/diagram-viewer'
 
 #### For developers
 
@@ -16,7 +16,7 @@ For development purpose, to install this library locally from an app, you should
 Then in the app project :
 - npm install {PATH_TO_LIBRARY}/powsybl-diagram-viewer-{LIBRARY_VERSION}.tgz
 
-*Warning* : with Create React App, we realised the library was not updating correctly if you try to install the library multiple times.
+_Warning_ : with Create React App, we realised the library was not updating correctly if you try to install the library multiple times.
 To fix this, run this command from the app **after** running "npm install"
 - rm -Rf node_modules/.cache
 
@@ -42,4 +42,3 @@ Notes :
     * `@mapbox/jsonlint-lines-primitives@2.0.2` is a special license
     * `cartocolor@4.0.2` is Creative Commons but not correctly described in the package
     * `rw@0.1.4` is BSD-3-Clause but not correctly described in the package
-    

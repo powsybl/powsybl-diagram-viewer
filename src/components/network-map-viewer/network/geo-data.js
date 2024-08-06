@@ -5,11 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import {
-    computeDestinationPoint,
-    getGreatCircleBearing,
-    getRhumbLineBearing,
-} from 'geolib';
+import { computeDestinationPoint, getGreatCircleBearing, getRhumbLineBearing } from 'geolib';
 import cheapRuler from 'cheap-ruler';
 import { ArrowDirection } from './layers/arrow-layer';
 
@@ -35,16 +31,11 @@ export class GeoData {
 
     setSubstationPositions(positions) {
         // index positions by substation id
-        this.substationPositionsById = positions.reduce(
-            substationPositionByIdIndexer,
-            new Map()
-        );
+        this.substationPositionsById = positions.reduce(substationPositionByIdIndexer, new Map());
     }
 
     updateSubstationPositions(substationIdsToUpdate, fetchedPositions) {
-        fetchedPositions.forEach((pos) =>
-            this.substationPositionsById.set(pos.id, pos.coordinate)
-        );
+        fetchedPositions.forEach((pos) => this.substationPositionsById.set(pos.id, pos.coordinate));
         // If a substation position is requested but not present in the fetched results, we delete its position.
         // It allows to cancel the position of a substation when the server can't situate it anymore after a network modification (for example a line deletion).
         substationIdsToUpdate
@@ -63,10 +54,7 @@ export class GeoData {
 
     setLinePositions(positions) {
         // index positions by line id
-        this.linePositionsById = positions.reduce(
-            linePositionByIdIndexer,
-            new Map()
-        );
+        this.linePositionsById = positions.reduce(linePositionByIdIndexer, new Map());
     }
 
     updateLinePositions(lineIdsToUpdate, fetchedPositions) {
@@ -87,22 +75,14 @@ export class GeoData {
     getLinePositions(network, line, detailed = true) {
         const voltageLevel1 = network.getVoltageLevel(line.voltageLevelId1);
         if (!voltageLevel1) {
-            throw new Error(
-                `Voltage level side 1 '${line.voltageLevelId1}' not found`
-            );
+            throw new Error(`Voltage level side 1 '${line.voltageLevelId1}' not found`);
         }
         const voltageLevel2 = network.getVoltageLevel(line.voltageLevelId2);
         if (!voltageLevel2) {
-            throw new Error(
-                `Voltage level side 2 '${line.voltageLevelId1}' not found`
-            );
+            throw new Error(`Voltage level side 2 '${line.voltageLevelId1}' not found`);
         }
-        const substationPosition1 = this.getSubstationPosition(
-            voltageLevel1.substationId
-        );
-        const substationPosition2 = this.getSubstationPosition(
-            voltageLevel2.substationId
-        );
+        const substationPosition1 = this.getSubstationPosition(voltageLevel1.substationId);
+        const substationPosition2 = this.getSubstationPosition(voltageLevel2.substationId);
 
         // We never want to draw lines when its start or end is in (0, 0) (it is ugly, it would cross the whole screen all the time).
         // For example, when a substation position is not yet fetched and it is connected to a positioned substation, it avoids the line crossing the whole screen.
@@ -188,9 +168,7 @@ export class GeoData {
         proximityFactor
     ) {
         if (arrowPosition > 1 || arrowPosition < 0) {
-            throw new Error(
-                'Proportional position value incorrect: ' + arrowPosition
-            );
+            throw new Error('Proportional position value incorrect: ' + arrowPosition);
         }
         if (
             cumulativeDistances === null ||
@@ -206,16 +184,10 @@ export class GeoData {
             // For parallel lines, the initial fork line distance does not count
             // when there are no intermediate points between the substations.
             // I'm not sure this is entirely correct but it displays well enough.
-            wantedDistance =
-                wantedDistance -
-                2 * distanceBetweenLines * arrowPosition * proximityFactor;
+            wantedDistance = wantedDistance - 2 * distanceBetweenLines * arrowPosition * proximityFactor;
         }
 
-        let goodSegment = this.findSegment(
-            positions,
-            cumulativeDistances,
-            wantedDistance
-        );
+        let goodSegment = this.findSegment(positions, cumulativeDistances, wantedDistance);
 
         // We don't have the exact same distance calculation as in the arrow shader, so take some margin:
         // we move the label a little bit on the flat side of the arrow so that at least it stays
@@ -236,18 +208,11 @@ export class GeoData {
         }
         let remainingDistance = goodSegment.remainingDistance * multiplier;
 
-        let angle = this.getMapAngle(
-            goodSegment.segment[0],
-            goodSegment.segment[1]
-        );
+        let angle = this.getMapAngle(goodSegment.segment[0], goodSegment.segment[1]);
         const neededOffset = this.getLabelOffset(angle, 20, arrowDirection);
 
         const position = {
-            position: computeDestinationPoint(
-                goodSegment.segment[0],
-                remainingDistance,
-                angle
-            ),
+            position: computeDestinationPoint(goodSegment.segment[0], remainingDistance, angle),
             angle: angle,
             offset: neededOffset,
         };
@@ -265,15 +230,10 @@ export class GeoData {
                 -distanceBetweenLines * proximityFactor,
                 lineAngle
             );
-        } else if (
-            goodSegment.idx === 0 ||
-            goodSegment.idx === cumulativeDistances.length - 2
-        ) {
+        } else if (goodSegment.idx === 0 || goodSegment.idx === cumulativeDistances.length - 2) {
             // When the label is on the first or last segment and there is an intermediate point,
             // when must shift by the percentange of position of the label on this segment
-            const segmentDistance =
-                cumulativeDistances[goodSegment.idx + 1] -
-                cumulativeDistances[goodSegment.idx];
+            const segmentDistance = cumulativeDistances[goodSegment.idx + 1] - cumulativeDistances[goodSegment.idx];
             const alreadyDoneDistance = segmentDistance - remainingDistance;
             let labelDistanceInSegment;
             if (goodSegment.idx === 0) {
