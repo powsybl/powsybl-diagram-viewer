@@ -507,3 +507,23 @@ export function getTextNodeMoves(
         { xOrig: connXOrig, yOrig: connYOrig, xNew: connXNew, yNew: connYNew },
     ];
 }
+
+// get number parameter from metadata element
+export function getNumberParameter(
+    parametersMetadataElement: SVGGraphicsElement | null,
+    parameterName: string,
+    parameterDefault: number
+): number {
+    const parameter = parametersMetadataElement?.getAttribute(parameterName);
+    return parameter !== undefined && parameter !== null ? +parameter : parameterDefault;
+}
+
+// get boolean parameter from metadata element
+export function getBooleanParameter(
+    parametersMetadataElement: SVGGraphicsElement | null,
+    parameterName: string,
+    parameterDefault: boolean
+): boolean {
+    const parameter = parametersMetadataElement?.getAttribute(parameterName);
+    return parameter !== undefined && parameter !== null ? parameter === 'true' : parameterDefault;
+}
