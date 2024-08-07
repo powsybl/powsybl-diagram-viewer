@@ -6,23 +6,18 @@
  */
 
 export class SvgParameters {
-    static readonly VOLTAGE_LEVEL_CIRCLE_RADIUS_PARAMETER_NAME =
-        'voltagelevelcircleradius';
+    static readonly VOLTAGE_LEVEL_CIRCLE_RADIUS_PARAMETER_NAME = 'voltagelevelcircleradius';
     static readonly INTER_ANNULUS_SPACE_PARAMETER_NAME = 'interannulusspace';
-    static readonly TRANSFORMER_CIRCLE_RADIUS_PARAMETER_NAME =
-        'transformercircleradius';
+    static readonly TRANSFORMER_CIRCLE_RADIUS_PARAMETER_NAME = 'transformercircleradius';
     static readonly EDGES_FORK_APERTURE_PARAMETER_NAME = 'edgesforkaperture';
     static readonly EDGES_FORK_LENGTH_PARAMETER_NAME = 'edgesforklength';
     static readonly ARROW_SHIFT_PARAMETER_NAME = 'arrowshift';
     static readonly ARROW_LABEL_SHIFT_PARAMETER_NAME = 'arrowlabelshift';
-    static readonly CONVERTER_STATION_WIDTH_PARAMETER_NAME =
-        'converterstationwidth';
+    static readonly CONVERTER_STATION_WIDTH_PARAMETER_NAME = 'converterstationwidth';
     static readonly NODE_HOLLOW_WIDTH_PARAMETER_NAME = 'nodehollowwidth';
-    static readonly UNKNOWN_BUS_NODE_EXTRA_RADIUS_PARAMETER_NAME =
-        'unknownbusnodeextraradius';
+    static readonly UNKNOWN_BUS_NODE_EXTRA_RADIUS_PARAMETER_NAME = 'unknownbusnodeextraradius';
     static readonly EDGE_NAME_DISPLAYED_PARAMETER_NAME = 'edgenamedisplayed';
-    static readonly DETAILED_TEXT_NODE_Y_SHIFT_PARAMETER_NAME =
-        'detailedtextnodeyshift';
+    static readonly DETAILED_TEXT_NODE_Y_SHIFT_PARAMETER_NAME = 'detailedtextnodeyshift';
 
     static readonly VOLTAGE_LEVEL_CIRCLE_RADIUS_DEFAULT = 30.0;
     static readonly INTER_ANNULUS_SPACE_DEFAULT = 5.0;
@@ -119,9 +114,7 @@ export class SvgParameters {
         parameterDefault: number
     ): number {
         const parameter = svgParametersElement?.getAttribute(parameterName);
-        return parameter !== undefined && parameter !== null
-            ? +parameter
-            : parameterDefault;
+        return parameter !== undefined && parameter !== null ? +parameter : parameterDefault;
     }
 
     private getBooleanParameter(
@@ -130,9 +123,7 @@ export class SvgParameters {
         parameterDefault: boolean
     ): boolean {
         const parameter = svgParametersElement?.getAttribute(parameterName);
-        return parameter !== undefined && parameter !== null
-            ? parameter === 'true'
-            : parameterDefault;
+        return parameter !== undefined && parameter !== null ? parameter === 'true' : parameterDefault;
     }
 
     public getVoltageLevelCircleRadius(): number {

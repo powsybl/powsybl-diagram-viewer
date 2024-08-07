@@ -24,15 +24,9 @@ export type {
     SLDMetadataNode,
 } from './components/single-line-diagram-viewer/single-line-diagram-viewer';
 export { GeoData } from './components/network-map-viewer/network/geo-data';
-export {
-    LineFlowMode,
-    LineFlowColorMode,
-} from './components/network-map-viewer/network/line-layer';
+export { LineFlowMode, LineFlowColorMode } from './components/network-map-viewer/network/line-layer';
 export { MapEquipments } from './components/network-map-viewer/network/map-equipments';
-export {
-    default as NetworkMap,
-    DRAW_EVENT,
-} from './components/network-map-viewer/network/network-map';
+export { default as NetworkMap, DRAW_EVENT } from './components/network-map-viewer/network/network-map';
 export type { NetworkMapRef } from './components/network-map-viewer/network/network-map';
 
 export { DRAW_MODES } from './components/network-map-viewer/network/draw-control';

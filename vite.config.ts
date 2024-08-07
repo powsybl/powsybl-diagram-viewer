@@ -36,8 +36,7 @@ export default defineConfig((config) => ({
         rollupOptions: {
             //https://stackoverflow.com/questions/59134241/using-deck-gl-as-webpack-external
             //https://github.com/visgl/deck.gl/blob/94bad4bb209a5da0686fb03f107e86b18199c108/website/webpack.config.js#L128-L141
-            external: (id: string) =>
-                !id.startsWith('.') && !path.isAbsolute(id),
+            external: (id: string) => !id.startsWith('.') && !path.isAbsolute(id),
             output: {
                 // preserveModules: true,
                 // entryFileNames: '[name].js', // override vite and allow to keep the original tree and .js extension even in ESM

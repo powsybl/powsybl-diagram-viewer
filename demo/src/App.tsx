@@ -6,11 +6,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import {
-    createTheme,
-    StyledEngineProvider,
-    ThemeProvider,
-} from '@mui/material/styles';
+import { createTheme, StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import { GeoData, NetworkMap, NetworkMapRef } from '../../src';
 import { Equipment } from '../../src/components/network-map-viewer/network/map-equipments';
 import { addNadToDemo, addSldToDemo } from './diagram-viewers/add-diagrams';
@@ -33,18 +29,8 @@ export default function App() {
     }, []);
 
     //called after a click (right mouse click) on an equipment (line or substation)
-    function showEquipmentMenu(
-        equipment: Equipment,
-        x: number,
-        y: number,
-        type: string
-    ) {
-        console.log(
-            '# Show equipment menu: ' +
-                JSON.stringify(equipment) +
-                ', type: ' +
-                type
-        );
+    function showEquipmentMenu(equipment: Equipment, x: number, y: number, type: string) {
+        console.log('# Show equipment menu: ' + JSON.stringify(equipment) + ', type: ' + type);
     }
 
     const darkTheme = createTheme({
@@ -110,11 +96,7 @@ export default function App() {
                             onSubstationClick={(vlId) => {
                                 console.log('# OpenVoltageLevel: ' + vlId);
                             }}
-                            onSubstationClickChooseVoltageLevel={(
-                                idSubstation,
-                                x,
-                                y
-                            ) =>
+                            onSubstationClickChooseVoltageLevel={(idSubstation, x, y) =>
                                 console.log(
                                     `# Choose Voltage Level for substation: ${idSubstation}  at coordinates (${x}, ${y})`
                                 )
@@ -122,9 +104,7 @@ export default function App() {
                             onSubstationMenuClick={(equipment, x, y) =>
                                 showEquipmentMenu(equipment, x, y, 'substation')
                             }
-                            onLineMenuClick={(equipment, x, y) =>
-                                showEquipmentMenu(equipment, x, y, 'line')
-                            }
+                            onLineMenuClick={(equipment, x, y) => showEquipmentMenu(equipment, x, y, 'line')}
                             onVoltageLevelMenuClick={(equipment, x, y) => {
                                 console.log(
                                     `# VoltageLevel menu click: ${JSON.stringify(
@@ -136,22 +116,14 @@ export default function App() {
                             mapTheme={'dark'}
                             filteredNominalVoltages={filteredNominalVoltages}
                             onDrawPolygonModeActive={(active) => {
-                                console.log(
-                                    'polygon drawing mode active: ',
-                                    active ? 'active' : 'inactive'
-                                );
+                                console.log('polygon drawing mode active: ', active ? 'active' : 'inactive');
                             }}
                             onPolygonChanged={() => {
                                 console.log(
                                     'Selected Substations: ',
-                                    networkMapRef.current?.getSelectedSubstations()
-                                        .length
+                                    networkMapRef.current?.getSelectedSubstations().length
                                 );
-                                console.log(
-                                    'Selected Lines: ',
-                                    networkMapRef.current?.getSelectedLines()
-                                        .length
-                                );
+                                console.log('Selected Lines: ', networkMapRef.current?.getSelectedLines().length);
                             }}
                         />
                     </div>

@@ -18,10 +18,7 @@ export default class ScatterplotLayerExt extends ScatterplotLayer {
     getShaders() {
         const shaders = super.getShaders();
         return Object.assign({}, shaders, {
-            vs: shaders.vs.replace(
-                ', radiusMaxPixels',
-                ', instanceRadiusMaxPixels'
-            ), // hack to replace the uniform variable to corresponding attribute
+            vs: shaders.vs.replace(', radiusMaxPixels', ', instanceRadiusMaxPixels'), // hack to replace the uniform variable to corresponding attribute
             inject: {
                 'vs:#decl': `\
 attribute float instanceRadiusMaxPixels;

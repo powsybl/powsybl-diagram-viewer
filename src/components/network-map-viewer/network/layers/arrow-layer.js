@@ -6,14 +6,7 @@
  */
 import { Layer, project32, picking } from '@deck.gl/core';
 import GL from '@luma.gl/constants';
-import {
-    Model,
-    Geometry,
-    Texture2D,
-    FEATURES,
-    hasFeatures,
-    isWebGL2,
-} from '@luma.gl/core';
+import { Model, Geometry, Texture2D, FEATURES, hasFeatures, isWebGL2 } from '@luma.gl/core';
 
 import vs from './arrow-layer-vertex.vert?raw';
 import fs from './arrow-layer-fragment.frag?raw';
@@ -139,29 +132,25 @@ export class ArrowLayer extends Layer {
                 size: 1,
                 transition: true,
                 type: GL.FLOAT,
-                accessor: (arrow) =>
-                    this.getArrowLineAttributes(arrow).distance,
+                accessor: (arrow) => this.getArrowLineAttributes(arrow).distance,
             },
             instanceLinePositionsTextureOffset: {
                 size: 1,
                 transition: true,
                 type: GL.FLOAT,
-                accessor: (arrow) =>
-                    this.getArrowLineAttributes(arrow).positionsTextureOffset,
+                accessor: (arrow) => this.getArrowLineAttributes(arrow).positionsTextureOffset,
             },
             instanceLineDistancesTextureOffset: {
                 size: 1,
                 transition: true,
                 type: GL.FLOAT,
-                accessor: (arrow) =>
-                    this.getArrowLineAttributes(arrow).distancesTextureOffset,
+                accessor: (arrow) => this.getArrowLineAttributes(arrow).distancesTextureOffset,
             },
             instanceLinePointCount: {
                 size: 1,
                 transition: true,
                 type: GL.FLOAT,
-                accessor: (arrow) =>
-                    this.getArrowLineAttributes(arrow).pointCount,
+                accessor: (arrow) => this.getArrowLineAttributes(arrow).pointCount,
             },
             instanceLineParallelIndex: {
                 size: 1,
@@ -197,9 +186,7 @@ export class ArrowLayer extends Layer {
         const textureSize = 2 ** n;
         const { maxTextureSize } = this.state;
         if (textureSize > maxTextureSize) {
-            throw new Error(
-                `Texture size (${textureSize}) cannot be greater than ${maxTextureSize}`
-            );
+            throw new Error(`Texture size (${textureSize}) cannot be greater than ${maxTextureSize}`);
         }
 
         // data length needs to be width * height (otherwise we get an error), so we pad the data array with zero until
@@ -228,9 +215,7 @@ export class ArrowLayer extends Layer {
 
         const stop = performance.now();
         console.info(
-            `Texture of ${elementCount} elements (${textureSize} * ${textureSize}) created in ${
-                stop - start
-            } ms`
+            `Texture of ${elementCount} elements (${textureSize} * ${textureSize}) created in ${stop - start} ms`
         );
 
         return texture2d;
@@ -245,17 +230,14 @@ export class ArrowLayer extends Layer {
         let lineDistance = 0;
 
         // build line list from arrow list
-        const lines = [
-            ...new Set(props.data.map((arrow) => this.props.getLine(arrow))),
-        ];
+        const lines = [...new Set(props.data.map((arrow) => this.props.getLine(arrow)))];
 
         lines.forEach((line) => {
             const positions = props.getLinePositions(line);
             if (!positions) {
                 throw new Error(`Invalid positions for line ${line.id}`);
             }
-            const linePositionsTextureOffset =
-                linePositionsTextureData.length / 2;
+            const linePositionsTextureOffset = linePositionsTextureData.length / 2;
             const lineDistancesTextureOffset = lineDistancesTextureData.length;
             let linePointCount = 0;
             if (positions.length > 0) {
@@ -266,15 +248,10 @@ export class ArrowLayer extends Layer {
                     linePointCount++;
                 });
                 lineDistancesTextureData.push(...line.cumulativeDistances);
-                lineDistance =
-                    line.cumulativeDistances[
-                        line.cumulativeDistances.length - 1
-                    ];
+                lineDistance = line.cumulativeDistances[line.cumulativeDistances.length - 1];
             }
             if (linePointCount > MAX_LINE_POINT_COUNT) {
-                throw new Error(
-                    `Too many line point count (${linePointCount}), maximum is ${MAX_LINE_POINT_COUNT}`
-                );
+                throw new Error(`Too many line point count (${linePointCount}), maximum is ${MAX_LINE_POINT_COUNT}`);
             }
 
             lineAttributes.set(line, {
@@ -299,17 +276,13 @@ export class ArrowLayer extends Layer {
         const geometryChanged =
             changeFlags.dataChanged ||
             (changeFlags.updateTriggersChanged &&
-                (changeFlags.updateTriggersChanged.all ||
-                    changeFlags.updateTriggersChanged.getLinePositions));
+                (changeFlags.updateTriggersChanged.all || changeFlags.updateTriggersChanged.getLinePositions));
 
         if (geometryChanged) {
             const { gl } = this.context;
 
-            const {
-                linePositionsTextureData,
-                lineDistancesTextureData,
-                lineAttributes,
-            } = this.createTexturesStructure(props);
+            const { linePositionsTextureData, lineDistancesTextureData, lineAttributes } =
+                this.createTexturesStructure(props);
 
             const linePositionsTexture = this.createTexture2D(
                 gl,
@@ -391,12 +364,7 @@ export class ArrowLayer extends Layer {
     draw({ uniforms }) {
         const { sizeMinPixels, sizeMaxPixels } = this.props;
 
-        const {
-            linePositionsTexture,
-            lineDistancesTexture,
-            timestamp,
-            webgl2,
-        } = this.state;
+        const { linePositionsTexture, lineDistancesTexture, timestamp, webgl2 } = this.state;
 
         this.state.model
             .setUniforms(uniforms)
@@ -405,14 +373,8 @@ export class ArrowLayer extends Layer {
                 sizeMaxPixels,
                 linePositionsTexture,
                 lineDistancesTexture,
-                linePositionsTextureSize: [
-                    linePositionsTexture.width,
-                    linePositionsTexture.height,
-                ],
-                lineDistancesTextureSize: [
-                    lineDistancesTexture.width,
-                    lineDistancesTexture.height,
-                ],
+                linePositionsTextureSize: [linePositionsTexture.width, linePositionsTexture.height],
+                lineDistancesTextureSize: [lineDistancesTexture.width, lineDistancesTexture.height],
                 timestamp,
                 webgl2,
                 distanceBetweenLines: this.props.getDistanceBetweenLines,
@@ -423,9 +385,7 @@ export class ArrowLayer extends Layer {
     }
 
     _getModel(gl) {
-        const positions = [
-            -1, -1, 0, 0, 1, 0, 0, -0.6, 0, 1, -1, 0, 0, 1, 0, 0, -0.6, 0,
-        ];
+        const positions = [-1, -1, 0, 0, 1, 0, 0, -0.6, 0, 1, -1, 0, 0, 1, 0, 0, -0.6, 0];
 
         return new Model(
             gl,

@@ -100,9 +100,7 @@ export const addNadToDemo = () => {
         .then((response) => response.text())
         .then((svgContent) => {
             new NetworkAreaDiagramViewer(
-                document.getElementById(
-                    'svg-container-nad-multibus-vlnodes14'
-                )!,
+                document.getElementById('svg-container-nad-multibus-vlnodes14')!,
                 svgContent,
                 500,
                 600,
@@ -289,49 +287,23 @@ const handleSwitch: OnBreakerCallbackType = (id, switch_status, element) => {
 
 const handleFeeder: OnFeederCallbackType = (id, feederType, svgId, x, y) => {
     const msg =
-        'Clicked on feeder: ' +
-        id +
-        ', feeder type: ' +
-        feederType +
-        ', svgId: ' +
-        svgId +
-        'x: ' +
-        x +
-        ', y: ' +
-        y;
+        'Clicked on feeder: ' + id + ', feeder type: ' + feederType + ', svgId: ' + svgId + 'x: ' + x + ', y: ' + y;
     console.log(msg);
 };
 
 const handleBus: OnBusCallbackType = (id, svgId, x, y) => {
-    const msg =
-        'Clicked on bus: ' + id + ', svgId: ' + svgId + 'x: ' + x + ', y: ' + y;
+    const msg = 'Clicked on bus: ' + id + ', svgId: ' + svgId + 'x: ' + x + ', y: ' + y;
     console.log(msg);
 };
 
-const handleTogglePopover: HandleTogglePopoverType = (
-    shouldDisplay,
-    anchorEl,
-    equipmentId,
-    equipmentType
-) => {
+const handleTogglePopover: HandleTogglePopoverType = (shouldDisplay, anchorEl, equipmentId, equipmentType) => {
     if (shouldDisplay) {
-        const msg =
-            'Hovers on equipment: ' +
-            equipmentId +
-            ', equipmentType: ' +
-            equipmentType;
+        const msg = 'Hovers on equipment: ' + equipmentId + ', equipmentType: ' + equipmentType;
         console.log(msg);
     }
 };
 
-const handleNodeMove: OnMoveNodeCallbackType = (
-    equipmentId,
-    nodeId,
-    x,
-    y,
-    xOrig,
-    yOrig
-) => {
+const handleNodeMove: OnMoveNodeCallbackType = (equipmentId, nodeId, x, y, xOrig, yOrig) => {
     const msg =
         'Node ' +
         nodeId +

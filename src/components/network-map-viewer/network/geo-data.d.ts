@@ -287,23 +287,15 @@ export class GeoData {
     linePositionsById: Map<Line['id'], Line['coordinates']>;
 
     constructor(
-        substationPositionsById: Map<
-            Substation['id'],
-            Substation['coordinate']
-        >,
+        substationPositionsById: Map<Substation['id'], Substation['coordinate']>,
         linePositionsById: Map<Line['id'], Line['coordinates']>
     );
 
     setSubstationPositions(positions: Substation[]);
 
-    getSubstationPosition(
-        substationId: string
-    ): [Coordinate['lon'], Coordinate['lat']];
+    getSubstationPosition(substationId: string): [Coordinate['lon'], Coordinate['lat']];
 
-    updateSubstationPositions(
-        substationIdsToUpdate: string[],
-        fetchedPositions: Substation[]
-    );
+    updateSubstationPositions(substationIdsToUpdate: string[], fetchedPositions: Substation[]);
 
     setLinePositions(positions: Line[]);
 
