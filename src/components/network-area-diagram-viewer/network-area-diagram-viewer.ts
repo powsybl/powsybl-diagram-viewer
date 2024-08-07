@@ -22,6 +22,20 @@ export type OnMoveNodeCallbackType = (
     yOrig: number
 ) => void;
 
+export type OnMoveTextNodeCallbackType = (
+    equipmentId: string,
+    vlNodeId: string,
+    textNodeId: string,
+    shiftX: number,
+    shiftY: number,
+    shiftXOrig: number,
+    shiftYOrig: number,
+    connectionShiftX: number,
+    connectionShiftY: number,
+    connectionShiftXOrig: number,
+    connectionShiftYOrig: number
+) => void;
+
 export type OnSelectNodeCallbackType = (equipmentId: string, nodeId: string) => void;
 
 export class NetworkAreaDiagramViewer {
@@ -39,7 +53,12 @@ export class NetworkAreaDiagramViewer {
     initialPosition: Point = new Point(0, 0);
     svgParameters: SvgParameters;
     edgeAngles: Map<string, number> = new Map<string, number>();
+    textNodeSelected: boolean = false;
+    initialTextNodePosition: Point = new Point(0, 0);
+    initialEndTextEdge: Point = new Point(0, 0);
+    endTextEdge: Point = new Point(0, 0);
     onMoveNodeCallback: OnMoveNodeCallbackType | null;
+    onMoveTextNodeCallback: OnMoveTextNodeCallbackType | null;
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
     shiftKeyOnMouseDown: boolean = false;
 
@@ -51,6 +70,7 @@ export class NetworkAreaDiagramViewer {
         maxWidth: number,
         maxHeight: number,
         onMoveNodeCallback: OnMoveNodeCallbackType | null,
+        onMoveTextNodeCallback: OnMoveTextNodeCallbackType | null,
         onSelectNodeCallback: OnSelectNodeCallbackType | null,
         enableNodeMoving: boolean
     ) {
@@ -63,6 +83,7 @@ export class NetworkAreaDiagramViewer {
         this.init(minWidth, minHeight, maxWidth, maxHeight, enableNodeMoving);
         this.svgParameters = this.getSvgParameters();
         this.onMoveNodeCallback = onMoveNodeCallback;
+        this.onMoveTextNodeCallback = onMoveTextNodeCallback;
         this.onSelectNodeCallback = onSelectNodeCallback;
     }
 
@@ -261,6 +282,11 @@ export class NetworkAreaDiagramViewer {
             this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute mouse movement
             this.initialPosition = DiagramUtils.getPosition(this.selectedElement); // used for the offset
             this.edgeAngles = new Map<string, number>();
+            // check if I'm moving a text node
+            if (DiagramUtils.isTextNode(this.selectedElement)) {
+                this.textNodeSelected = true;
+                this.initialTextNodePosition = DiagramUtils.getTextNodePosition(this.selectedElement);
+            }
         } else {
             // selecting node
             this.shiftKeyOnMouseDown = true;
@@ -286,8 +312,16 @@ export class NetworkAreaDiagramViewer {
                 // moving node
                 const mousePosition = this.getMousePosition(event as MouseEvent);
                 this.updateGraph(mousePosition);
-                this.updateMetadataCallCallback(mousePosition);
+                if (this.textNodeSelected) {
+                    this.callMoveTextNodeCallback(mousePosition);
+                } else {
+                    this.updateNodeMetadataCallCallback(mousePosition);
+                }
                 this.initialPosition = new Point(0, 0);
+                this.textNodeSelected = false;
+                this.initialTextNodePosition = new Point(0, 0);
+                this.initialEndTextEdge = new Point(0, 0);
+                this.endTextEdge = new Point(0, 0);
             } else {
                 // selecting node
                 this.callSelectNodeCallback();
@@ -317,9 +351,25 @@ export class NetworkAreaDiagramViewer {
     }
 
     private updateGraph(mousePosition: Point) {
-        this.moveNode(mousePosition);
-        this.moveText(mousePosition);
-        this.moveEdges(mousePosition);
+        if (this.textNodeSelected) {
+            window.getSelection()?.empty(); // to avoid text highlighting in firefox
+            const vlNode: SVGGraphicsElement | null = this.container.querySelector(
+                "[id='" + DiagramUtils.getVoltageLevelNodeId(this.selectedElement?.id) + "']"
+            );
+            this.moveText(this.selectedElement, vlNode, mousePosition, DiagramUtils.getTextNodeAngleFromCentre);
+        } else {
+            this.moveNode(mousePosition);
+            const textNode: SVGGraphicsElement | null = this.container.querySelector(
+                "[id='" + DiagramUtils.getTextNodeId(this.selectedElement?.id) + "']"
+            );
+            this.moveText(
+                textNode,
+                this.selectedElement,
+                this.getTranslation(mousePosition),
+                DiagramUtils.getTextNodeTranslatedPosition
+            );
+            this.moveEdges(mousePosition);
+        }
     }
 
     private moveNode(mousePosition: Point) {
@@ -329,12 +379,77 @@ export class NetworkAreaDiagramViewer {
         );
     }
 
-    private moveText(mousePosition: Point) {
-        const translation = this.getTranslation(mousePosition);
-        // move node text
-        this.moveSvgElement(this.selectedElement?.id + '-textnode', translation);
-        // move edge connecting node and node text
-        this.moveSvgElement(this.selectedElement?.id + '-textedge', translation);
+    private moveText(
+        textNode: SVGGraphicsElement | null,
+        vlNode: SVGGraphicsElement | null,
+        position: Point,
+        getPosition: (node: SVGGraphicsElement | null, position: Point) => Point
+    ) {
+        // compute text node new position
+        const textNodeNewPosition = getPosition(textNode, position);
+        // move text node
+        this.moveTextNode(textNode, textNodeNewPosition);
+        if (vlNode != null) {
+            // move text edge
+            this.moveTextEdge(
+                DiagramUtils.getTextEdgeId(vlNode?.id),
+                textNodeNewPosition,
+                vlNode,
+                textNode?.firstElementChild?.scrollHeight ?? 0,
+                textNode?.firstElementChild?.scrollWidth ?? 0
+            );
+        }
+    }
+
+    private moveTextNode(textElement: SVGGraphicsElement | null, point: Point) {
+        if (textElement != null) {
+            textElement.setAttribute('x', DiagramUtils.getFormattedValue(point.x));
+            textElement.setAttribute('y', DiagramUtils.getFormattedValue(point.y));
+        }
+    }
+
+    private moveTextEdge(
+        textEdgeId: string,
+        textNodePosition: Point,
+        vlNode: SVGGraphicsElement,
+        textHeight: number,
+        textWidth: number
+    ) {
+        const textEdge: SVGGraphicsElement | null = this.container.querySelector("[id='" + textEdgeId + "']");
+        if (textEdge != null) {
+            // compute voltage level circle radius
+            const busNodes: NodeListOf<SVGGraphicsElement> = this.container.querySelectorAll(
+                'nad\\:busnode[vlnode="' + vlNode.id + '"]'
+            );
+            const nbNeighbours = busNodes.length > 1 ? busNodes.length - 1 : 0;
+            const voltageLevelCircleRadius = DiagramUtils.getVoltageLevelCircleRadius(
+                nbNeighbours,
+                this.svgParameters.getVoltageLevelCircleRadius()
+            );
+            // compute text edge start and end
+            const vlNodePosition = DiagramUtils.getPosition(vlNode);
+            this.endTextEdge = DiagramUtils.getTextEdgeEnd(
+                textNodePosition,
+                vlNodePosition,
+                this.svgParameters.getDetailedTextNodeYShift(),
+                textHeight,
+                textWidth
+            );
+            const startTextEdge = DiagramUtils.getPointAtDistance(
+                vlNodePosition,
+                this.endTextEdge,
+                voltageLevelCircleRadius
+            );
+            if (this.initialEndTextEdge.x == 0 && this.initialEndTextEdge.y == 0) {
+                const points = DiagramUtils.getPolylinePoints(textEdge as unknown as HTMLElement);
+                if (points != null) {
+                    this.initialEndTextEdge = points[points.length - 1];
+                }
+            }
+            // update text edge polyline
+            const polyline = DiagramUtils.getFormattedPolyline(startTextEdge, null, this.endTextEdge);
+            textEdge.setAttribute('points', polyline);
+        }
     }
 
     private moveSvgElement(svgElementId: string, translation: Point) {
@@ -815,7 +930,7 @@ export class NetworkAreaDiagramViewer {
         });
     }
 
-    moveEdgeName(edgeNode: SVGGraphicsElement, anchorPoint: Point, edgeStart: Point) {
+    private moveEdgeName(edgeNode: SVGGraphicsElement, anchorPoint: Point, edgeStart: Point) {
         const positionElement: SVGGraphicsElement | null = edgeNode.querySelector(
             '.nad-edge-label'
         ) as SVGGraphicsElement;
@@ -885,7 +1000,7 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    getEdgeAngle(busNode: SVGGraphicsElement, edge: SVGGraphicsElement, edgeId: string, isLoopEdge: boolean) {
+    private getEdgeAngle(busNode: SVGGraphicsElement, edge: SVGGraphicsElement, edgeId: string, isLoopEdge: boolean) {
         const busId = busNode.getAttribute('svgid') ?? '-2';
         const busNode1 = edge.getAttribute('busnode1') ?? '-1';
         const angleId = busId == busNode1 ? edgeId + '.1' : edgeId + '.2';
@@ -1014,30 +1129,58 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private updateMetadataCallCallback(mousePosition: Point) {
-        // get moved node in metadata
+    private updateNodeMetadataCallCallback(mousePosition: Point) {
+        // get moved node from metadata
         const node: SVGGraphicsElement | null = this.container.querySelector(
             'nad\\:node[svgid="' + this.selectedElement?.id + '"]'
         );
         if (node != null) {
-            // get new position
-            const xNew = DiagramUtils.getFormattedValue(mousePosition.x);
-            const yNew = DiagramUtils.getFormattedValue(mousePosition.y);
-            // save original position, for the callback
-            const xOrig = node.getAttribute('x') ?? '0';
-            const yOrig = node.getAttribute('y') ?? '0';
+            const nodeMove = DiagramUtils.getNodeMove(node, mousePosition);
             // update node position in metadata
-            node.setAttribute('x', xNew);
-            node.setAttribute('y', yNew);
-            // call the move node callback, if defined
+            node.setAttribute('x', nodeMove.xNew);
+            node.setAttribute('y', nodeMove.yNew);
+            // call the node move callback, if defined
             if (this.onMoveNodeCallback != null) {
                 this.onMoveNodeCallback(
                     node.getAttribute('equipmentid') ?? '',
                     node.getAttribute('svgid') ?? '',
-                    +xNew,
-                    +yNew,
-                    +xOrig,
-                    +yOrig
+                    +nodeMove.xNew,
+                    +nodeMove.yNew,
+                    +nodeMove.xOrig,
+                    +nodeMove.yOrig
+                );
+            }
+        }
+    }
+
+    private callMoveTextNodeCallback(mousePosition: Point) {
+        if (this.onMoveTextNodeCallback != null) {
+            // get from metadata node connected to moved text node
+            const node: SVGGraphicsElement | null = this.container.querySelector(
+                'nad\\:node[svgid="' + DiagramUtils.getVoltageLevelNodeId(this.selectedElement?.id) + '"]'
+            );
+            if (node != null) {
+                // get new text node position
+                const textPosition = DiagramUtils.getTextNodeAngleFromCentre(this.selectedElement, mousePosition);
+                const textNodeMove = DiagramUtils.getTextNodeMove(this.initialTextNodePosition, textPosition, node);
+                const textConnectionMove = DiagramUtils.getTextNodeMove(
+                    this.initialEndTextEdge,
+                    this.endTextEdge,
+                    node
+                );
+                // call the node move callback, if defined
+                this.onMoveTextNodeCallback(
+                    node.getAttribute('equipmentid') ?? '',
+                    node.getAttribute('svgid') ?? '',
+                    this.selectedElement?.id ?? '',
+                    +textNodeMove.xNew,
+                    +textNodeMove.yNew,
+                    +textNodeMove.xOrig,
+                    +textNodeMove.yOrig,
+                    +textConnectionMove.xNew,
+                    +textConnectionMove.yNew,
+                    +textConnectionMove.xOrig,
+                    +textConnectionMove.yOrig
                 );
             }
         }

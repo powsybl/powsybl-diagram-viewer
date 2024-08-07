@@ -8,6 +8,7 @@
 export { NetworkAreaDiagramViewer } from './components/network-area-diagram-viewer/network-area-diagram-viewer';
 export type {
     OnMoveNodeCallbackType,
+    OnMoveTextNodeCallbackType,
     OnSelectNodeCallbackType,
 } from './components/network-area-diagram-viewer/network-area-diagram-viewer';
 export { SingleLineDiagramViewer } from './components/single-line-diagram-viewer/single-line-diagram-viewer';

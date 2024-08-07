@@ -25,6 +25,7 @@ import {
     OnFeederCallbackType,
     OnNextVoltageCallbackType,
     OnMoveNodeCallbackType,
+    OnMoveTextNodeCallbackType,
     OnSelectNodeCallbackType,
 } from '../../../src';
 
@@ -40,6 +41,7 @@ export const addNadToDemo = () => {
                 1000,
                 1200,
                 handleNodeMove,
+                handleTextNodeMove,
                 handleNodeSelect,
                 true
             );
@@ -61,6 +63,7 @@ export const addNadToDemo = () => {
                 1000,
                 1200,
                 handleNodeMove,
+                handleTextNodeMove,
                 handleNodeSelect,
                 false
             );
@@ -82,6 +85,7 @@ export const addNadToDemo = () => {
                 1000,
                 1200,
                 handleNodeMove,
+                handleTextNodeMove,
                 handleNodeSelect,
                 true
             );
@@ -103,6 +107,7 @@ export const addNadToDemo = () => {
                 1000,
                 1200,
                 handleNodeMove,
+                handleTextNodeMove,
                 handleNodeSelect,
                 true
             );
@@ -124,6 +129,7 @@ export const addNadToDemo = () => {
                 1000,
                 1200,
                 handleNodeMove,
+                handleTextNodeMove,
                 handleNodeSelect,
                 true
             );
@@ -145,6 +151,7 @@ export const addNadToDemo = () => {
                 1000,
                 1200,
                 handleNodeMove,
+                handleTextNodeMove,
                 handleNodeSelect,
                 true
             );
@@ -166,6 +173,7 @@ export const addNadToDemo = () => {
                 1000,
                 1200,
                 handleNodeMove,
+                handleTextNodeMove,
                 handleNodeSelect,
                 true
             );
@@ -309,6 +317,46 @@ const handleNodeMove: OnMoveNodeCallbackType = (equipmentId, nodeId, x, y, xOrig
         x +
         ', ' +
         y +
+        ']';
+    console.log(msg);
+};
+
+const handleTextNodeMove: OnMoveTextNodeCallbackType = (
+    equipmentId,
+    nodeId,
+    textNodeId,
+    shiftX,
+    shiftY,
+    shiftXOrig,
+    shiftYOrig,
+    connectionShiftX,
+    connectionShiftY,
+    connectionShiftXOrig,
+    connectionShiftYOrig
+) => {
+    const msg =
+        'TextNode ' +
+        textNodeId +
+        ' Node ' +
+        nodeId +
+        ' equipment ' +
+        equipmentId +
+        ' position shift changed from [' +
+        shiftXOrig +
+        ', ' +
+        shiftYOrig +
+        '] to [' +
+        shiftX +
+        ', ' +
+        shiftY +
+        '] connection shift changed from [' +
+        connectionShiftXOrig +
+        ', ' +
+        connectionShiftYOrig +
+        '] to [' +
+        connectionShiftX +
+        ', ' +
+        connectionShiftY +
         ']';
     console.log(msg);
 };
