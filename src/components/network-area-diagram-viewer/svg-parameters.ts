@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { getNumberParameter, getBooleanParameter } from './diagram-utils';
+
 export class SvgParameters {
     static readonly VOLTAGE_LEVEL_CIRCLE_RADIUS_PARAMETER_NAME = 'voltagelevelcircleradius';
     static readonly INTER_ANNULUS_SPACE_PARAMETER_NAME = 'interannulusspace';
@@ -17,7 +19,6 @@ export class SvgParameters {
     static readonly NODE_HOLLOW_WIDTH_PARAMETER_NAME = 'nodehollowwidth';
     static readonly UNKNOWN_BUS_NODE_EXTRA_RADIUS_PARAMETER_NAME = 'unknownbusnodeextraradius';
     static readonly EDGE_NAME_DISPLAYED_PARAMETER_NAME = 'edgenamedisplayed';
-    static readonly DETAILED_TEXT_NODE_Y_SHIFT_PARAMETER_NAME = 'detailedtextnodeyshift';
 
     static readonly VOLTAGE_LEVEL_CIRCLE_RADIUS_DEFAULT = 30.0;
     static readonly INTER_ANNULUS_SPACE_DEFAULT = 5.0;
@@ -30,7 +31,6 @@ export class SvgParameters {
     static readonly NODE_HOLLOW_WIDTH_DEFAULT = 15.0;
     static readonly UNKNOWN_BUS_NODE_EXTRA_RADIUS_DEFAULT = 10.0;
     static readonly EDGE_NAME_DISPLAYED_DEFAULT = true;
-    static readonly DETAILED_TEXT_NODE_Y_SHIFT_DEFAULT = 25.0;
 
     voltageLevelCircleRadius: number;
     interAnnulusSpace: number;
@@ -43,85 +43,63 @@ export class SvgParameters {
     nodeHollowWidth: number;
     unknownBusNodeExtraRadius: number;
     edgeNameDisplayed: boolean;
-    detailedTextNodeYShift: number;
 
     constructor(svgParametersElement: SVGGraphicsElement | null) {
-        this.voltageLevelCircleRadius = this.getNumberParameter(
+        this.voltageLevelCircleRadius = getNumberParameter(
             svgParametersElement,
             SvgParameters.VOLTAGE_LEVEL_CIRCLE_RADIUS_PARAMETER_NAME,
             SvgParameters.VOLTAGE_LEVEL_CIRCLE_RADIUS_DEFAULT
         );
-        this.interAnnulusSpace = this.getNumberParameter(
+        this.interAnnulusSpace = getNumberParameter(
             svgParametersElement,
             SvgParameters.INTER_ANNULUS_SPACE_PARAMETER_NAME,
             SvgParameters.INTER_ANNULUS_SPACE_DEFAULT
         );
-        this.transformerCircleRadius = this.getNumberParameter(
+        this.transformerCircleRadius = getNumberParameter(
             svgParametersElement,
             SvgParameters.TRANSFORMER_CIRCLE_RADIUS_PARAMETER_NAME,
             SvgParameters.TRANSFORMER_CIRCLE_RADIUS_DEFAULT
         );
-        this.edgesForkAperture = this.getNumberParameter(
+        this.edgesForkAperture = getNumberParameter(
             svgParametersElement,
             SvgParameters.EDGES_FORK_APERTURE_PARAMETER_NAME,
             SvgParameters.EDGES_FORK_APERTURE_DEFAULT
         );
-        this.edgesForkLength = this.getNumberParameter(
+        this.edgesForkLength = getNumberParameter(
             svgParametersElement,
             SvgParameters.EDGES_FORK_LENGTH_PARAMETER_NAME,
             SvgParameters.EDGES_FORK_LENGTH_DEFAULT
         );
-        this.arrowShift = this.getNumberParameter(
+        this.arrowShift = getNumberParameter(
             svgParametersElement,
             SvgParameters.ARROW_SHIFT_PARAMETER_NAME,
             SvgParameters.ARROW_SHIFT_DEFAULT
         );
-        this.arrowLabelShift = this.getNumberParameter(
+        this.arrowLabelShift = getNumberParameter(
             svgParametersElement,
             SvgParameters.ARROW_LABEL_SHIFT_PARAMETER_NAME,
             SvgParameters.ARROW_LABEL_SHIFT_DEFAULT
         );
-        this.converterStationWidth = this.getNumberParameter(
+        this.converterStationWidth = getNumberParameter(
             svgParametersElement,
             SvgParameters.CONVERTER_STATION_WIDTH_PARAMETER_NAME,
             SvgParameters.CONVERTER_STATION_WIDTH_DEFAULT
         );
-        this.nodeHollowWidth = this.getNumberParameter(
+        this.nodeHollowWidth = getNumberParameter(
             svgParametersElement,
             SvgParameters.NODE_HOLLOW_WIDTH_PARAMETER_NAME,
             SvgParameters.NODE_HOLLOW_WIDTH_DEFAULT
         );
-        this.unknownBusNodeExtraRadius = this.getNumberParameter(
+        this.unknownBusNodeExtraRadius = getNumberParameter(
             svgParametersElement,
             SvgParameters.UNKNOWN_BUS_NODE_EXTRA_RADIUS_PARAMETER_NAME,
             SvgParameters.UNKNOWN_BUS_NODE_EXTRA_RADIUS_DEFAULT
         );
-        this.edgeNameDisplayed = this.getBooleanParameter(
+        this.edgeNameDisplayed = getBooleanParameter(
             svgParametersElement,
             SvgParameters.EDGE_NAME_DISPLAYED_PARAMETER_NAME,
             SvgParameters.EDGE_NAME_DISPLAYED_DEFAULT
         );
-        // parameter moved from svg parameters to layout parameters
-        // value hardcoded, waiting for the layout parameter in metadata
-        this.detailedTextNodeYShift = SvgParameters.DETAILED_TEXT_NODE_Y_SHIFT_DEFAULT;
-    }
-
-    private getNumberParameter(
-        svgParametersElement: SVGGraphicsElement | null,
-        parameterName: string,
-        parameterDefault: number
-    ): number {
-        const parameter = svgParametersElement?.getAttribute(parameterName);
-        return parameter !== undefined && parameter !== null ? +parameter : parameterDefault;
-    }
-
-    private getBooleanParameter(
-        svgParametersElement: SVGGraphicsElement | null,
-        parameterName: string,
-        parameterDefault: boolean
-    ): boolean {
-        const parameter = svgParametersElement?.getAttribute(parameterName);
-        return parameter !== undefined && parameter !== null ? parameter === 'true' : parameterDefault;
     }
 
     public getVoltageLevelCircleRadius(): number {
@@ -166,9 +144,5 @@ export class SvgParameters {
 
     public getEdgeNameDisplayed(): boolean {
         return this.edgeNameDisplayed;
-    }
-
-    public getDetailedTextNodeYShift(): number {
-        return this.detailedTextNodeYShift;
     }
 }

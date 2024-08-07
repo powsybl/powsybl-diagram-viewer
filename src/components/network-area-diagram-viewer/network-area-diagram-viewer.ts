@@ -9,6 +9,7 @@ import { Point, SVG, ViewBoxLike, Svg } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 import * as DiagramUtils from './diagram-utils';
 import { SvgParameters } from './svg-parameters';
+import { LayoutParameters } from './layout-parameters';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
@@ -52,6 +53,7 @@ export class NetworkAreaDiagramViewer {
     ctm: DOMMatrix | null | undefined = null;
     initialPosition: Point = new Point(0, 0);
     svgParameters: SvgParameters;
+    layoutParameters: LayoutParameters;
     edgeAngles: Map<string, number> = new Map<string, number>();
     textNodeSelected: boolean = false;
     endTextEdge: Point = new Point(0, 0);
@@ -80,6 +82,7 @@ export class NetworkAreaDiagramViewer {
         this.originalHeight = 0;
         this.init(minWidth, minHeight, maxWidth, maxHeight, enableNodeMoving);
         this.svgParameters = this.getSvgParameters();
+        this.layoutParameters = this.getLayoutParameters();
         this.onMoveNodeCallback = onMoveNodeCallback;
         this.onMoveTextNodeCallback = onMoveTextNodeCallback;
         this.onSelectNodeCallback = onSelectNodeCallback;
@@ -262,6 +265,12 @@ export class NetworkAreaDiagramViewer {
         return new SvgParameters(svgParametersElement);
     }
 
+    private getLayoutParameters(): LayoutParameters {
+        const layoutParametersElement: SVGGraphicsElement | null =
+            this.container.querySelector('nad\\:layoutparameters');
+        return new LayoutParameters(layoutParametersElement);
+    }
+
     private startDrag(event: Event) {
         const draggableElem = DiagramUtils.getDraggableFrom(event.target as SVGElement);
         if (!draggableElem) {
@@ -429,7 +438,7 @@ export class NetworkAreaDiagramViewer {
             this.endTextEdge = DiagramUtils.getTextEdgeEnd(
                 textNodePosition,
                 vlNodePosition,
-                this.svgParameters.getDetailedTextNodeYShift(),
+                this.layoutParameters.getTextNodeEdgeConnectionYShift(),
                 textHeight,
                 textWidth
             );
