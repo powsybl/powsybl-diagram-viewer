@@ -54,8 +54,6 @@ export class NetworkAreaDiagramViewer {
     svgParameters: SvgParameters;
     edgeAngles: Map<string, number> = new Map<string, number>();
     textNodeSelected: boolean = false;
-    initialTextNodePosition: Point = new Point(0, 0);
-    initialEndTextEdge: Point = new Point(0, 0);
     endTextEdge: Point = new Point(0, 0);
     onMoveNodeCallback: OnMoveNodeCallbackType | null;
     onMoveTextNodeCallback: OnMoveTextNodeCallbackType | null;
@@ -285,7 +283,6 @@ export class NetworkAreaDiagramViewer {
             // check if I'm moving a text node
             if (DiagramUtils.isTextNode(this.selectedElement)) {
                 this.textNodeSelected = true;
-                this.initialTextNodePosition = DiagramUtils.getTextNodePosition(this.selectedElement);
             }
         } else {
             // selecting node
@@ -313,14 +310,12 @@ export class NetworkAreaDiagramViewer {
                 const mousePosition = this.getMousePosition(event as MouseEvent);
                 this.updateGraph(mousePosition);
                 if (this.textNodeSelected) {
-                    this.callMoveTextNodeCallback(mousePosition);
+                    this.updateTextNodeMetadataCallCallback(mousePosition);
                 } else {
                     this.updateNodeMetadataCallCallback(mousePosition);
                 }
                 this.initialPosition = new Point(0, 0);
                 this.textNodeSelected = false;
-                this.initialTextNodePosition = new Point(0, 0);
-                this.initialEndTextEdge = new Point(0, 0);
                 this.endTextEdge = new Point(0, 0);
             } else {
                 // selecting node
@@ -333,6 +328,9 @@ export class NetworkAreaDiagramViewer {
                 svg.style.removeProperty('cursor');
             }
             this.selectedElement = null;
+            this.initialPosition = new Point(0, 0);
+            this.textNodeSelected = false;
+            this.endTextEdge = new Point(0, 0);
             this.enablePanzoom();
         }
     }
@@ -440,12 +438,6 @@ export class NetworkAreaDiagramViewer {
                 this.endTextEdge,
                 voltageLevelCircleRadius
             );
-            if (this.initialEndTextEdge.x == 0 && this.initialEndTextEdge.y == 0) {
-                const points = DiagramUtils.getPolylinePoints(textEdge as unknown as HTMLElement);
-                if (points != null) {
-                    this.initialEndTextEdge = points[points.length - 1];
-                }
-            }
             // update text edge polyline
             const polyline = DiagramUtils.getFormattedPolyline(startTextEdge, null, this.endTextEdge);
             textEdge.setAttribute('points', polyline);
@@ -1153,34 +1145,37 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private callMoveTextNodeCallback(mousePosition: Point) {
+    private updateTextNodeMetadataCallCallback(mousePosition: Point) {
         if (this.onMoveTextNodeCallback != null) {
             // get from metadata node connected to moved text node
             const node: SVGGraphicsElement | null = this.container.querySelector(
                 'nad\\:node[svgid="' + DiagramUtils.getVoltageLevelNodeId(this.selectedElement?.id) + '"]'
             );
-            if (node != null) {
+            const textNode: SVGGraphicsElement | null = this.container.querySelector(
+                'nad\\:textnode[svgid="' + this.selectedElement?.id + '"]'
+            );
+            if (node != null && textNode != null) {
                 // get new text node position
                 const textPosition = DiagramUtils.getTextNodeAngleFromCentre(this.selectedElement, mousePosition);
-                const textNodeMove = DiagramUtils.getTextNodeMove(this.initialTextNodePosition, textPosition, node);
-                const textConnectionMove = DiagramUtils.getTextNodeMove(
-                    this.initialEndTextEdge,
-                    this.endTextEdge,
-                    node
-                );
+                const textNodeMoves = DiagramUtils.getTextNodeMoves(textNode, node, textPosition, this.endTextEdge);
+                // update text node position in metadata
+                textNode.setAttribute('shiftx', textNodeMoves[0].xNew);
+                textNode.setAttribute('shifty', textNodeMoves[0].yNew);
+                textNode.setAttribute('connectionshiftx', textNodeMoves[1].xNew);
+                textNode.setAttribute('connectionshifty', textNodeMoves[1].yNew);
                 // call the node move callback, if defined
                 this.onMoveTextNodeCallback(
                     node.getAttribute('equipmentid') ?? '',
                     node.getAttribute('svgid') ?? '',
-                    this.selectedElement?.id ?? '',
-                    +textNodeMove.xNew,
-                    +textNodeMove.yNew,
-                    +textNodeMove.xOrig,
-                    +textNodeMove.yOrig,
-                    +textConnectionMove.xNew,
-                    +textConnectionMove.yNew,
-                    +textConnectionMove.xOrig,
-                    +textConnectionMove.yOrig
+                    textNode.getAttribute('svgid') ?? '',
+                    +textNodeMoves[0].xNew,
+                    +textNodeMoves[0].yNew,
+                    +textNodeMoves[0].xOrig,
+                    +textNodeMoves[0].yOrig,
+                    +textNodeMoves[1].xNew,
+                    +textNodeMoves[1].yNew,
+                    +textNodeMoves[1].xOrig,
+                    +textNodeMoves[1].yOrig
                 );
             }
         }
