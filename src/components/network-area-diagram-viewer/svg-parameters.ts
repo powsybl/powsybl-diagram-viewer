@@ -103,8 +103,7 @@ export class SvgParameters {
         );
         // parameter moved from svg parameters to layout parameters
         // value hardcoded, waiting for the layout parameter in metadata
-        this.detailedTextNodeYShift =
-            SvgParameters.DETAILED_TEXT_NODE_Y_SHIFT_DEFAULT;
+        this.detailedTextNodeYShift = SvgParameters.DETAILED_TEXT_NODE_Y_SHIFT_DEFAULT;
     }
 
     private getNumberParameter(
