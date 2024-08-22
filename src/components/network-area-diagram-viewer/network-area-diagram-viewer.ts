@@ -189,6 +189,90 @@ export class NetworkAreaDiagramViewer {
         return this.dynamicCssRules;
     }
 
+    public init(minWidth: number, minHeight: number, maxWidth: number, maxHeight: number): void {
+        if (!this.container || !this.svgContent) {
+            return;
+        }
+
+        const dimensions: DIMENSIONS | null = this.getDimensionsFromSvg();
+
+        if (!dimensions) {
+            return;
+        }
+
+        // clear the previous svg in div element before replacing
+        this.container.innerHTML = '';
+
+        this.setOriginalWidth(dimensions.width);
+        this.setOriginalHeight(dimensions.height);
+
+        this.setWidth(dimensions.width < minWidth ? minWidth : Math.min(dimensions.width, maxWidth));
+        this.setHeight(dimensions.height < minHeight ? minHeight : Math.min(dimensions.height, maxHeight));
+
+        // we check if there is an "initial zoom" by checking ratio of width and height of the nad compared with viewBox sizes
+        const widthRatio = dimensions.viewbox.width / this.getWidth();
+        const heightRatio = dimensions.viewbox.height / this.getHeight();
+        const ratio = Math.max(widthRatio, heightRatio);
+
+        const draw = SVG()
+            .addTo(this.container)
+            .size(this.width, this.height)
+            .viewbox(dimensions.viewbox.x, dimensions.viewbox.y, dimensions.viewbox.width, dimensions.viewbox.height)
+            .panZoom({
+                panning: true,
+                zoomMin: 0.5 / ratio, // maximum zoom OUT ratio (0.5 = at best, the displayed area is twice the SVG's size)
+                zoomMax: 20 * ratio, // maximum zoom IN ratio (20 = at best, the displayed area is only 1/20th of the SVG's size)
+                zoomFactor: 0.2,
+                margins: { top: 0, left: 0, right: 0, bottom: 0 },
+            });
+
+        const drawnSvg: HTMLElement = <HTMLElement>draw.svg(this.svgContent).node.firstElementChild;
+        drawnSvg.style.overflow = 'visible';
+
+        // PowSyBl NAD introduced server side calculated SVG viewbox. This viewBox attribute can be removed as it is copied in the panzoom svg tag.
+        const firstChild: HTMLElement = <HTMLElement>draw.node.firstChild;
+        firstChild.removeAttribute('viewBox');
+        firstChild.removeAttribute('width');
+        firstChild.removeAttribute('height');
+
+        // We insert custom CSS to hide details before first load, in order to improve performances
+        this.initializeDynamicCssRules(Math.max(dimensions.viewbox.width, dimensions.viewbox.height));
+        this.injectDynamicCssRules(firstChild);
+        draw.fire('zoom'); // Forces a new dynamic zoom check to correctly update the dynamic CSS
+
+        // We add an observer to track when the SVG's viewBox is updated by panzoom
+        // (we have to do this instead of using panzoom's 'zoom' event to have accurate viewBox updates)
+        const targetNode: SVGSVGElement = draw.node;
+        // Callback function to execute when mutations are observed
+        const observerCallback = (mutationList: MutationRecord[]) => {
+            for (const mutation of mutationList) {
+                if (mutation.attributeName === 'viewBox') {
+                    this.checkLevelOfDetail(targetNode);
+                }
+            }
+        };
+        const observer = new MutationObserver(observerCallback);
+        observer.observe(targetNode, { attributeFilter: ['viewBox'] });
+
+        this.svgDraw = draw;
+    }
+
+    public getDimensionsFromSvg(): DIMENSIONS | null {
+        // Dimensions are set in the main svg tag attributes. We want to parse those data without loading the whole svg in the DOM.
+        const result = this.svgContent.match('<svg[^>]*>');
+        if (result === null || result.length === 0) {
+            return null;
+        }
+        const emptiedSvgContent = result[0] + '</svg>';
+        const svg: SVGSVGElement = new DOMParser()
+            .parseFromString(emptiedSvgContent, 'image/svg+xml')
+            .getElementsByTagName('svg')[0];
+        const width = Number(svg.getAttribute('width'));
+        const height = Number(svg.getAttribute('height'));
+        const viewbox: VIEWBOX = svg.viewBox.baseVal;
+        return { width: width, height: height, viewbox: viewbox };
+    }
+
     public updateSvgCssDisplayValue(svg: SVGSVGElement, cssSelector: string, cssDeclaration: CSSDECLARATION) {
         const innerSvg = svg.querySelector('svg');
         if (!innerSvg) {
@@ -291,89 +375,5 @@ export class NetworkAreaDiagramViewer {
                 this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.aboveThresholdCssDeclaration);
             }
         });
-    }
-
-    public init(minWidth: number, minHeight: number, maxWidth: number, maxHeight: number): void {
-        if (!this.container || !this.svgContent) {
-            return;
-        }
-
-        const dimensions: DIMENSIONS | null = this.getDimensionsFromSvg();
-
-        if (!dimensions) {
-            return;
-        }
-
-        // clear the previous svg in div element before replacing
-        this.container.innerHTML = '';
-
-        this.setOriginalWidth(dimensions.width);
-        this.setOriginalHeight(dimensions.height);
-
-        this.setWidth(dimensions.width < minWidth ? minWidth : Math.min(dimensions.width, maxWidth));
-        this.setHeight(dimensions.height < minHeight ? minHeight : Math.min(dimensions.height, maxHeight));
-
-        // we check if there is an "initial zoom" by checking ratio of width and height of the nad compared with viewBox sizes
-        const widthRatio = dimensions.viewbox.width / this.getWidth();
-        const heightRatio = dimensions.viewbox.height / this.getHeight();
-        const ratio = Math.max(widthRatio, heightRatio);
-
-        const draw = SVG()
-            .addTo(this.container)
-            .size(this.width, this.height)
-            .viewbox(dimensions.viewbox.x, dimensions.viewbox.y, dimensions.viewbox.width, dimensions.viewbox.height)
-            .panZoom({
-                panning: true,
-                zoomMin: 0.5 / ratio, // maximum zoom OUT ratio (0.5 = at best, the displayed area is twice the SVG's size)
-                zoomMax: 20 * ratio, // maximum zoom IN ratio (20 = at best, the displayed area is only 1/20th of the SVG's size)
-                zoomFactor: 0.2,
-                margins: { top: 0, left: 0, right: 0, bottom: 0 },
-            });
-
-        const drawnSvg: HTMLElement = <HTMLElement>draw.svg(this.svgContent).node.firstElementChild;
-        drawnSvg.style.overflow = 'visible';
-
-        // PowSyBl NAD introduced server side calculated SVG viewbox. This viewBox attribute can be removed as it is copied in the panzoom svg tag.
-        const firstChild: HTMLElement = <HTMLElement>draw.node.firstChild;
-        firstChild.removeAttribute('viewBox');
-        firstChild.removeAttribute('width');
-        firstChild.removeAttribute('height');
-
-        // We insert custom CSS to hide details before first load, in order to improve performances
-        this.initializeDynamicCssRules(Math.max(dimensions.viewbox.width, dimensions.viewbox.height));
-        this.injectDynamicCssRules(firstChild);
-        draw.fire('zoom'); // Forces a new dynamic zoom check to correctly update the dynamic CSS
-
-        // We add an observer to track when the SVG's viewBox is updated by panzoom
-        // (we have to do this instead of using panzoom's 'zoom' event to have accurate viewBox updates)
-        const targetNode: SVGSVGElement = draw.node;
-        // Callback function to execute when mutations are observed
-        const observerCallback = (mutationList: MutationRecord[]) => {
-            for (const mutation of mutationList) {
-                if (mutation.attributeName === 'viewBox') {
-                    this.checkLevelOfDetail(targetNode);
-                }
-            }
-        };
-        const observer = new MutationObserver(observerCallback);
-        observer.observe(targetNode, { attributeFilter: ['viewBox'] });
-
-        this.svgDraw = draw;
-    }
-
-    public getDimensionsFromSvg(): DIMENSIONS | null {
-        // Dimensions are set in the main svg tag attributes. We want to parse those data without loading the whole svg in the DOM.
-        const result = this.svgContent.match('<svg[^>]*>');
-        if (result === null || result.length === 0) {
-            return null;
-        }
-        const emptiedSvgContent = result[0] + '</svg>';
-        const svg: SVGSVGElement = new DOMParser()
-            .parseFromString(emptiedSvgContent, 'image/svg+xml')
-            .getElementsByTagName('svg')[0];
-        const width = Number(svg.getAttribute('width'));
-        const height = Number(svg.getAttribute('height'));
-        const viewbox: VIEWBOX = svg.viewBox.baseVal;
-        return { width: width, height: height, viewbox: viewbox };
     }
 }
