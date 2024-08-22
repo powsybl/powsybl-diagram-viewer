@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const vs = `\
 #define SHADER_NAME arrow-layer-vertex-shader
 
 precision highp float;
@@ -234,6 +233,3 @@ void main(void) {
       shouldDiscard = 0.0;
   }
 }
-`;
-
-export default vs;

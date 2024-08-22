@@ -7,7 +7,7 @@
 
 import { NetworkAreaDiagramViewer } from './network-area-diagram-viewer';
 
-describe('Test network-area-diagram-viewer.ts', () => {
+describe('Test network-area-diagram-viewer', () => {
     // SVG aren't loaded properly in DOM with Jest. Has to be enriched...
     test('nad creation', () => {
         const container: HTMLDivElement = document.createElement('div');
@@ -18,7 +18,11 @@ describe('Test network-area-diagram-viewer.ts', () => {
             0,
             0,
             0,
-            0
+            0,
+            null,
+            null,
+            null,
+            false
         );
 
         expect(container.getElementsByTagName('svg').length).toBe(0);

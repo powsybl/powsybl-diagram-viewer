@@ -83,16 +83,14 @@ export class NetworkAreaDiagramViewer {
             thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         {
-            cssSelector:
-                '[class^="nad-vl120to180"], [class*=" nad-vl120to180"]',
+            cssSelector: '[class^="nad-vl120to180"], [class*=" nad-vl120to180"]',
             belowThresholdCssDeclaration: { display: 'block' },
             aboveThresholdCssDeclaration: { display: 'none' },
             threshold: 12000,
             thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
         {
-            cssSelector:
-                '[class^="nad-vl180to300"], [class*=" nad-vl180to300"]',
+            cssSelector: '[class^="nad-vl180to300"], [class*=" nad-vl180to300"]',
             belowThresholdCssDeclaration: { display: 'block' },
             aboveThresholdCssDeclaration: { display: 'none' },
             threshold: 20000, // 0.01,
@@ -191,11 +189,7 @@ export class NetworkAreaDiagramViewer {
         return this.dynamicCssRules;
     }
 
-    public updateSvgCssDisplayValue(
-        svg: SVGSVGElement,
-        cssSelector: string,
-        cssDeclaration: CSSDECLARATION
-    ) {
+    public updateSvgCssDisplayValue(svg: SVGSVGElement, cssSelector: string, cssDeclaration: CSSDECLARATION) {
         const innerSvg = svg.querySelector('svg');
         if (!innerSvg) {
             console.error('Cannot find the SVG to update!');
@@ -227,9 +221,7 @@ export class NetworkAreaDiagramViewer {
             }
         } else {
             innerSvg.appendChild(document.createElement('style'));
-            console.debug(
-                '[updateSvgCssDisplayValue] Style tag missing from SVG file. It has been created.'
-            );
+            console.debug('[updateSvgCssDisplayValue] Style tag missing from SVG file. It has been created.');
             svgStyles = innerSvg.querySelectorAll('style');
             if (!svgStyles) {
                 console.error('Failed to create a style tag in the SVG!');
@@ -241,17 +233,13 @@ export class NetworkAreaDiagramViewer {
             const key = Object.keys(cssDeclaration)[0];
             const value = cssDeclaration[key];
             const styleTag = svgStyles[svgStyles.length - 1]; // Adds the new rule to the last <style> tag in the SVG
-            styleTag.textContent =
-                `${cssSelector} {${key}: ${value};}\n` + styleTag.textContent;
+            styleTag.textContent = `${cssSelector} {${key}: ${value};}\n` + styleTag.textContent;
         }
     }
 
     public initializeDynamicCssRules(maxDisplayedSize: number) {
         this.getDynamicCssRules().forEach((rule) => {
-            rule.thresholdStatus =
-                maxDisplayedSize < rule.threshold
-                    ? THRESHOLD_STATUS.BELOW
-                    : THRESHOLD_STATUS.ABOVE;
+            rule.thresholdStatus = maxDisplayedSize < rule.threshold ? THRESHOLD_STATUS.BELOW : THRESHOLD_STATUS.ABOVE;
         });
     }
 
@@ -271,9 +259,7 @@ export class NetworkAreaDiagramViewer {
         let styleTag = htmlElementSvg.querySelector('style');
         if (!styleTag) {
             htmlElementSvg.appendChild(document.createElement('style'));
-            console.debug(
-                '[injectDynamicCssRules] Style tag missing from SVG file. It has been created.'
-            );
+            console.debug('[injectDynamicCssRules] Style tag missing from SVG file. It has been created.');
             styleTag = htmlElementSvg.querySelector('style');
         }
         if (styleTag && 'textContent' in styleTag) {
@@ -291,52 +277,23 @@ export class NetworkAreaDiagramViewer {
     public checkLevelOfDetail(svg: SVGSVGElement) {
         const maxDisplayedSize = this.getCurrentlyMaxDisplayedSize();
         this.getDynamicCssRules().forEach((rule) => {
-            if (
-                rule.thresholdStatus === THRESHOLD_STATUS.ABOVE &&
-                maxDisplayedSize < rule.threshold
-            ) {
+            if (rule.thresholdStatus === THRESHOLD_STATUS.ABOVE && maxDisplayedSize < rule.threshold) {
                 console.debug(
-                    'CSS Rule ' +
-                        rule.cssSelector +
-                        ' below threshold ' +
-                        maxDisplayedSize +
-                        ' < ' +
-                        rule.threshold
+                    'CSS Rule ' + rule.cssSelector + ' below threshold ' + maxDisplayedSize + ' < ' + rule.threshold
                 );
                 rule.thresholdStatus = THRESHOLD_STATUS.BELOW;
-                this.updateSvgCssDisplayValue(
-                    svg,
-                    rule.cssSelector,
-                    rule.belowThresholdCssDeclaration
-                );
-            } else if (
-                rule.thresholdStatus === THRESHOLD_STATUS.BELOW &&
-                maxDisplayedSize >= rule.threshold
-            ) {
+                this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.belowThresholdCssDeclaration);
+            } else if (rule.thresholdStatus === THRESHOLD_STATUS.BELOW && maxDisplayedSize >= rule.threshold) {
                 console.debug(
-                    'CSS Rule ' +
-                        rule.cssSelector +
-                        ' above threshold ' +
-                        maxDisplayedSize +
-                        ' >= ' +
-                        rule.threshold
+                    'CSS Rule ' + rule.cssSelector + ' above threshold ' + maxDisplayedSize + ' >= ' + rule.threshold
                 );
                 rule.thresholdStatus = THRESHOLD_STATUS.ABOVE;
-                this.updateSvgCssDisplayValue(
-                    svg,
-                    rule.cssSelector,
-                    rule.aboveThresholdCssDeclaration
-                );
+                this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.aboveThresholdCssDeclaration);
             }
         });
     }
 
-    public init(
-        minWidth: number,
-        minHeight: number,
-        maxWidth: number,
-        maxHeight: number
-    ): void {
+    public init(minWidth: number, minHeight: number, maxWidth: number, maxHeight: number): void {
         if (!this.container || !this.svgContent) {
             return;
         }
@@ -353,16 +310,8 @@ export class NetworkAreaDiagramViewer {
         this.setOriginalWidth(dimensions.width);
         this.setOriginalHeight(dimensions.height);
 
-        this.setWidth(
-            dimensions.width < minWidth
-                ? minWidth
-                : Math.min(dimensions.width, maxWidth)
-        );
-        this.setHeight(
-            dimensions.height < minHeight
-                ? minHeight
-                : Math.min(dimensions.height, maxHeight)
-        );
+        this.setWidth(dimensions.width < minWidth ? minWidth : Math.min(dimensions.width, maxWidth));
+        this.setHeight(dimensions.height < minHeight ? minHeight : Math.min(dimensions.height, maxHeight));
 
         // we check if there is an "initial zoom" by checking ratio of width and height of the nad compared with viewBox sizes
         const widthRatio = dimensions.viewbox.width / this.getWidth();
@@ -372,12 +321,7 @@ export class NetworkAreaDiagramViewer {
         const draw = SVG()
             .addTo(this.container)
             .size(this.width, this.height)
-            .viewbox(
-                dimensions.viewbox.x,
-                dimensions.viewbox.y,
-                dimensions.viewbox.width,
-                dimensions.viewbox.height
-            )
+            .viewbox(dimensions.viewbox.x, dimensions.viewbox.y, dimensions.viewbox.width, dimensions.viewbox.height)
             .panZoom({
                 panning: true,
                 zoomMin: 0.5 / ratio, // maximum zoom OUT ratio (0.5 = at best, the displayed area is twice the SVG's size)
@@ -386,9 +330,7 @@ export class NetworkAreaDiagramViewer {
                 margins: { top: 0, left: 0, right: 0, bottom: 0 },
             });
 
-        const drawnSvg: HTMLElement = <HTMLElement>(
-            draw.svg(this.svgContent).node.firstElementChild
-        );
+        const drawnSvg: HTMLElement = <HTMLElement>draw.svg(this.svgContent).node.firstElementChild;
         drawnSvg.style.overflow = 'visible';
 
         // PowSyBl NAD introduced server side calculated SVG viewbox. This viewBox attribute can be removed as it is copied in the panzoom svg tag.
@@ -398,9 +340,7 @@ export class NetworkAreaDiagramViewer {
         firstChild.removeAttribute('height');
 
         // We insert custom CSS to hide details before first load, in order to improve performances
-        this.initializeDynamicCssRules(
-            Math.max(dimensions.viewbox.width, dimensions.viewbox.height)
-        );
+        this.initializeDynamicCssRules(Math.max(dimensions.viewbox.width, dimensions.viewbox.height));
         this.injectDynamicCssRules(firstChild);
         draw.fire('zoom'); // Forces a new dynamic zoom check to correctly update the dynamic CSS
 

@@ -5,4 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-export { DRAW_MODES } from './components/network-map-viewer/network/draw-control';
+/* eslint-disable */
+
+/* Override for v8 following
+ * https://deck.gl/docs/get-started/using-with-typescript
+ */
+declare module 'deck.gl' {
+    //export namespace DeckTypings {}
+    export * from 'deck.gl/typed';
+}

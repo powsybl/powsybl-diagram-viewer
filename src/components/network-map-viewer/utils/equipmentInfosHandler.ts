@@ -7,14 +7,17 @@
 
 import { useCallback } from 'react';
 
-export const useNameOrId = (useName) => {
+type EquipmentInfos = {
+    id: string;
+    name: string | null;
+};
+
+export const useNameOrId = (useName: boolean) => {
     const getNameOrId = useCallback(
-        (infos) => {
+        (infos: EquipmentInfos | null) => {
             if (infos != null) {
                 const name = infos.name;
-                return useName && name != null && name.trim() !== ''
-                    ? name
-                    : infos?.id;
+                return useName && name != null && name.trim() !== '' ? name : infos?.id ?? null;
             }
             return null;
         },
