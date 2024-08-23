@@ -135,7 +135,7 @@ export class NetworkAreaDiagramViewer {
             cssSelector: '[class^="nad-vl180to300"], [class*=" nad-vl180to300"]',
             belowThresholdCssDeclaration: { display: 'block' },
             aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 20000, // 0.01,
+            threshold: 20000,
             thresholdStatus: THRESHOLD_STATUS.BELOW,
         },
     ];
@@ -150,7 +150,8 @@ export class NetworkAreaDiagramViewer {
         onMoveNodeCallback: OnMoveNodeCallbackType | null,
         onMoveTextNodeCallback: OnMoveTextNodeCallbackType | null,
         onSelectNodeCallback: OnSelectNodeCallbackType | null,
-        enableNodeMoving: boolean
+        enableNodeMoving: boolean,
+        enableLevelOfDetail: boolean
     ) {
         this.container = container;
         this.svgContent = svgContent;
@@ -158,7 +159,7 @@ export class NetworkAreaDiagramViewer {
         this.height = 0;
         this.originalWidth = 0;
         this.originalHeight = 0;
-        this.init(minWidth, minHeight, maxWidth, maxHeight, enableNodeMoving);
+        this.init(minWidth, minHeight, maxWidth, maxHeight, enableNodeMoving, enableLevelOfDetail);
         this.svgParameters = this.getSvgParameters();
         this.onMoveNodeCallback = onMoveNodeCallback;
         this.onMoveTextNodeCallback = onMoveTextNodeCallback;
@@ -230,7 +231,8 @@ export class NetworkAreaDiagramViewer {
         minHeight: number,
         maxWidth: number,
         maxHeight: number,
-        enableNodeMoving: boolean
+        enableNodeMoving: boolean,
+        enableLevelOfDetail: boolean
     ): void {
         if (!this.container || !this.svgContent) {
             return;
@@ -296,24 +298,26 @@ export class NetworkAreaDiagramViewer {
         firstChild.removeAttribute('width');
         firstChild.removeAttribute('height');
 
-        // We insert custom CSS to hide details before first load, in order to improve performances
-        this.initializeDynamicCssRules(Math.max(dimensions.viewbox.width, dimensions.viewbox.height));
-        this.injectDynamicCssRules(firstChild);
-        this.svgDraw.fire('zoom'); // Forces a new dynamic zoom check to correctly update the dynamic CSS
+        if (enableLevelOfDetail) {
+            // We insert custom CSS to hide details before first load, in order to improve performances
+            this.initializeDynamicCssRules(Math.max(dimensions.viewbox.width, dimensions.viewbox.height));
+            this.injectDynamicCssRules(firstChild);
+            this.svgDraw.fire('zoom'); // Forces a new dynamic zoom check to correctly update the dynamic CSS
 
-        // We add an observer to track when the SVG's viewBox is updated by panzoom
-        // (we have to do this instead of using panzoom's 'zoom' event to have accurate viewBox updates)
-        const targetNode: SVGSVGElement = this.svgDraw.node;
-        // Callback function to execute when mutations are observed
-        const observerCallback = (mutationList: MutationRecord[]) => {
-            for (const mutation of mutationList) {
-                if (mutation.attributeName === 'viewBox') {
-                    this.checkLevelOfDetail(targetNode);
+            // We add an observer to track when the SVG's viewBox is updated by panzoom
+            // (we have to do this instead of using panzoom's 'zoom' event to have accurate viewBox updates)
+            const targetNode: SVGSVGElement = this.svgDraw.node;
+            // Callback function to execute when mutations are observed
+            const observerCallback = (mutationList: MutationRecord[]) => {
+                for (const mutation of mutationList) {
+                    if (mutation.attributeName === 'viewBox') {
+                        this.checkLevelOfDetail(targetNode);
+                    }
                 }
-            }
-        };
-        const observer = new MutationObserver(observerCallback);
-        observer.observe(targetNode, { attributeFilter: ['viewBox'] });
+            };
+            const observer = new MutationObserver(observerCallback);
+            observer.observe(targetNode, { attributeFilter: ['viewBox'] });
+        }
 
         if (enableNodeMoving) {
             // fill empty elements: unknown buses and three windings transformers
