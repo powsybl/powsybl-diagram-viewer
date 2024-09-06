@@ -9,21 +9,10 @@ import { Point, SVG, ViewBoxLike, Svg } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 import * as DiagramUtils from './diagram-utils';
 import { SvgParameters } from './svg-parameters';
+import { CSSDECLARATION, CSSRULE, THRESHOLD_STATUS, DEFAULT_DYNAMIC_CSS_RULES } from './dynamic-css-utils';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
-type CSSDECLARATION = Record<string, string>;
-type CSSRULE = {
-    cssSelector: string;
-    belowThresholdCssDeclaration: CSSDECLARATION;
-    aboveThresholdCssDeclaration: CSSDECLARATION;
-    threshold: number;
-    thresholdStatus: THRESHOLD_STATUS;
-};
-enum THRESHOLD_STATUS {
-    BELOW,
-    ABOVE,
-}
 
 export type OnMoveNodeCallbackType = (
     equipmentId: string,
@@ -73,72 +62,7 @@ export class NetworkAreaDiagramViewer {
     onMoveTextNodeCallback: OnMoveTextNodeCallbackType | null;
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
     shiftKeyOnMouseDown: boolean = false;
-
-    dynamicCssRules: CSSRULE[] = [
-        {
-            cssSelector: '.nad-edge-infos', // data on edges (arrows and values)
-            belowThresholdCssDeclaration: { display: 'block' },
-            aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 2200,
-            thresholdStatus: THRESHOLD_STATUS.ABOVE,
-        },
-        {
-            cssSelector: '.nad-label-box', // tooltips linked to nodes
-            belowThresholdCssDeclaration: { display: 'block' },
-            aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 3000,
-            thresholdStatus: THRESHOLD_STATUS.ABOVE,
-        },
-        {
-            cssSelector: '.nad-text-edges', // visual link between nodes and their tooltip
-            belowThresholdCssDeclaration: { display: 'block' },
-            aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 3000,
-            thresholdStatus: THRESHOLD_STATUS.ABOVE,
-        },
-        {
-            cssSelector: '[class^="nad-vl0to30"], [class*=" nad-vl0to30"]',
-            belowThresholdCssDeclaration: { display: 'block' },
-            aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 4000,
-            thresholdStatus: THRESHOLD_STATUS.BELOW,
-        },
-        {
-            cssSelector: '[class^="nad-vl30to50"], [class*=" nad-vl30to50"]',
-            belowThresholdCssDeclaration: { display: 'block' },
-            aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 4000,
-            thresholdStatus: THRESHOLD_STATUS.BELOW,
-        },
-        {
-            cssSelector: '[class^="nad-vl50to70"], [class*=" nad-vl50to70"]',
-            belowThresholdCssDeclaration: { display: 'block' },
-            aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 9000,
-            thresholdStatus: THRESHOLD_STATUS.BELOW,
-        },
-        {
-            cssSelector: '[class^="nad-vl70to120"], [class*=" nad-vl70to120"]',
-            belowThresholdCssDeclaration: { display: 'block' },
-            aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 9000,
-            thresholdStatus: THRESHOLD_STATUS.BELOW,
-        },
-        {
-            cssSelector: '[class^="nad-vl120to180"], [class*=" nad-vl120to180"]',
-            belowThresholdCssDeclaration: { display: 'block' },
-            aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 12000,
-            thresholdStatus: THRESHOLD_STATUS.BELOW,
-        },
-        {
-            cssSelector: '[class^="nad-vl180to300"], [class*=" nad-vl180to300"]',
-            belowThresholdCssDeclaration: { display: 'block' },
-            aboveThresholdCssDeclaration: { display: 'none' },
-            threshold: 20000,
-            thresholdStatus: THRESHOLD_STATUS.BELOW,
-        },
-    ];
+    dynamicCssRules: CSSRULE[];
 
     constructor(
         container: HTMLElement,
@@ -151,7 +75,8 @@ export class NetworkAreaDiagramViewer {
         onMoveTextNodeCallback: OnMoveTextNodeCallbackType | null,
         onSelectNodeCallback: OnSelectNodeCallbackType | null,
         enableNodeMoving: boolean,
-        enableLevelOfDetail: boolean
+        enableLevelOfDetail: boolean,
+        customDynamicCssRules: CSSRULE[] | null
     ) {
         this.container = container;
         this.svgContent = svgContent;
@@ -159,6 +84,7 @@ export class NetworkAreaDiagramViewer {
         this.height = 0;
         this.originalWidth = 0;
         this.originalHeight = 0;
+        this.dynamicCssRules = customDynamicCssRules ?? DEFAULT_DYNAMIC_CSS_RULES;
         this.init(minWidth, minHeight, maxWidth, maxHeight, enableNodeMoving, enableLevelOfDetail);
         this.svgParameters = this.getSvgParameters();
         this.onMoveNodeCallback = onMoveNodeCallback;
