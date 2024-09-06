@@ -9,7 +9,7 @@ import { Point, SVG, ViewBoxLike, Svg } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 import * as DiagramUtils from './diagram-utils';
 import { SvgParameters } from './svg-parameters';
-import { CSSDECLARATION, CSSRULE, THRESHOLD_STATUS, DEFAULT_DYNAMIC_CSS_RULES } from './dynamic-css-utils';
+import { CSS_DECLARATION, CSS_RULE, THRESHOLD_STATUS, DEFAULT_DYNAMIC_CSS_RULES } from './dynamic-css-utils';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
@@ -62,7 +62,7 @@ export class NetworkAreaDiagramViewer {
     onMoveTextNodeCallback: OnMoveTextNodeCallbackType | null;
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
     shiftKeyOnMouseDown: boolean = false;
-    dynamicCssRules: CSSRULE[];
+    dynamicCssRules: CSS_RULE[];
 
     constructor(
         container: HTMLElement,
@@ -76,7 +76,7 @@ export class NetworkAreaDiagramViewer {
         onSelectNodeCallback: OnSelectNodeCallbackType | null,
         enableNodeMoving: boolean,
         enableLevelOfDetail: boolean,
-        customDynamicCssRules: CSSRULE[] | null
+        customDynamicCssRules: CSS_RULE[] | null
     ) {
         this.container = container;
         this.svgContent = svgContent;
@@ -1228,7 +1228,10 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    public updateSvgCssDisplayValue(svg: SVGSVGElement, cssSelector: string, cssDeclaration: CSSDECLARATION) {
+    // Will explore the SVG's <style> tags to find the css rule associated with "cssSelector" and update the
+    // rule using "cssDeclaration".
+    // Will create a style tag or/and new css rule if not found in the SVG.
+    public updateSvgCssDisplayValue(svg: SVGSVGElement, cssSelector: string, cssDeclaration: CSS_DECLARATION) {
         const innerSvg = svg.querySelector('svg');
         if (!innerSvg) {
             console.error('Cannot find the SVG to update!');

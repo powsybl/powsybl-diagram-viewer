@@ -5,20 +5,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-export type CSSDECLARATION = Record<string, string>;
-export type CSSRULE = {
-    cssSelector: string;
-    belowThresholdCssDeclaration: CSSDECLARATION;
-    aboveThresholdCssDeclaration: CSSDECLARATION;
-    threshold: number;
-    thresholdStatus: THRESHOLD_STATUS;
-};
 export enum THRESHOLD_STATUS {
     BELOW,
     ABOVE,
 }
+export type CSS_DECLARATION = Record<string, string>;
+export type CSS_RULE = {
+    cssSelector: string;
+    belowThresholdCssDeclaration: CSS_DECLARATION;
+    aboveThresholdCssDeclaration: CSS_DECLARATION;
+    threshold: number;
+    thresholdStatus: THRESHOLD_STATUS;
+};
 
-export const DEFAULT_DYNAMIC_CSS_RULES: CSSRULE[] = [
+export const DEFAULT_DYNAMIC_CSS_RULES: CSS_RULE[] = [
     {
         cssSelector: '.nad-edge-infos', // data on edges (arrows and values)
         belowThresholdCssDeclaration: { display: 'block' },
