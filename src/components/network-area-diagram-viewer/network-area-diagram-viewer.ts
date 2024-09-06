@@ -1315,7 +1315,7 @@ export class NetworkAreaDiagramViewer {
 
     public checkAndUpdateLevelOfDetail(svg: SVGSVGElement) {
         const maxDisplayedSize = this.getCurrentlyMaxDisplayedSize();
-        // We will check each dynamic css rule to see if we crossed a zoom threshold. IF this is the case, we
+        // We will check each dynamic css rule to see if we crossed a zoom threshold. If this is the case, we
         // update the rule's threshold status and trigger the CSS change in the SVG.
         this.getDynamicCssRules().forEach((rule) => {
             if (rule.thresholdStatus === THRESHOLD_STATUS.ABOVE && maxDisplayedSize < rule.threshold) {
