@@ -6,8 +6,8 @@
  */
 
 export enum THRESHOLD_STATUS {
-    BELOW,
-    ABOVE,
+    BELOW = 'BELOW',
+    ABOVE = 'ABOVE',
 }
 export type CSS_DECLARATION = Record<string, string>;
 export type CSS_RULE = {
