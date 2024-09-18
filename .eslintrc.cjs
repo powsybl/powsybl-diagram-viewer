@@ -14,4 +14,7 @@ module.exports = {
     rules: {
         'prettier/prettier': 'warn',
     },
+    ignorePatterns: [
+        'coverage',
+    ]
 };
