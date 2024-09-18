@@ -1,5 +1,9 @@
 name: CI
-on: [push]
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
 
 jobs:
     license-headers:
@@ -24,6 +28,7 @@ jobs:
             - name: Checkout sources
               uses: actions/checkout@v2
               with:
+                  fetch-depth: 0
                   persist-credentials: false
 
             - name: FixForNodeWarnings
@@ -35,5 +40,11 @@ jobs:
                   npm install
                   npm run licenses-check
                   npm run lint
-                  npm run test
+                  npm run test:coverage
                   npm run build
+
+            - name: SonarCloud Scan
+              uses: SonarSource/sonarcloud-github-action@v3.0.0
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
