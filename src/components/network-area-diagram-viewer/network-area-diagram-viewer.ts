@@ -1228,10 +1228,42 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
+    private buildNewCssRule(cssSelector: string, cssDeclaration: CSS_DECLARATION | CSS_DECLARATION[]) {
+        const declarations = Array.isArray(cssDeclaration) ? cssDeclaration : [cssDeclaration];
+        let selectorContent = '';
+        declarations.forEach((declaration) => {
+            const key = Object.keys(declaration)[0];
+            const value = declaration[key];
+            selectorContent += `${key}: ${value};\n`;
+        });
+        return `${cssSelector} {${selectorContent}}`;
+    }
+
+    private addNewCssRuleToStyleTag(
+        styleTag: HTMLStyleElement,
+        cssSelector: string,
+        cssDeclaration: CSS_DECLARATION | CSS_DECLARATION[]
+    ) {
+        styleTag.textContent += this.buildNewCssRule(cssSelector, cssDeclaration);
+    }
+
+    private updateCssRule(styleRule: CSSStyleRule, cssDeclaration: CSS_DECLARATION | CSS_DECLARATION[]) {
+        const declarations = Array.isArray(cssDeclaration) ? cssDeclaration : [cssDeclaration];
+        declarations.forEach((declaration) => {
+            const key = Object.keys(declaration)[0];
+            const value = declaration[key];
+            styleRule.style.setProperty(key, value);
+        });
+    }
+
     // Will explore the SVG's <style> tags to find the css rule associated with "cssSelector" and update the
     // rule using "cssDeclaration".
     // Will create a style tag or/and new css rule if not found in the SVG.
-    public updateSvgCssDisplayValue(svg: SVGSVGElement, cssSelector: string, cssDeclaration: CSS_DECLARATION) {
+    public updateSvgCssDisplayValue(
+        svg: SVGSVGElement,
+        cssSelector: string,
+        cssDeclaration: CSS_DECLARATION | CSS_DECLARATION[]
+    ) {
         const innerSvg = svg.querySelector('svg');
         if (!innerSvg) {
             console.error('Cannot find the SVG to update!');
@@ -1250,9 +1282,7 @@ export class NetworkAreaDiagramViewer {
                 for (const rule of svgStyle.sheet.cssRules) {
                     const styleRule = rule as CSSStyleRule;
                     if (styleRule.selectorText === cssSelector) {
-                        const key = Object.keys(cssDeclaration)[0];
-                        const value = cssDeclaration[key];
-                        styleRule.style.setProperty(key, value);
+                        this.updateCssRule(styleRule, cssDeclaration);
                         ruleFound = true;
                         break;
                     }
@@ -1272,10 +1302,7 @@ export class NetworkAreaDiagramViewer {
         }
 
         if (!ruleFound) {
-            const key = Object.keys(cssDeclaration)[0];
-            const value = cssDeclaration[key];
-            const styleTag = svgStyles[svgStyles.length - 1]; // Adds the new rule to the last <style> tag in the SVG
-            styleTag.textContent = `${cssSelector} {${key}: ${value};}\n` + styleTag.textContent;
+            this.addNewCssRuleToStyleTag(svgStyles[svgStyles.length - 1], cssSelector, cssDeclaration);
         }
     }
 
@@ -1292,9 +1319,7 @@ export class NetworkAreaDiagramViewer {
                     rule.thresholdStatus === THRESHOLD_STATUS.BELOW
                         ? rule.belowThresholdCssDeclaration
                         : rule.aboveThresholdCssDeclaration;
-                const key = Object.keys(ruleToInject)[0];
-                const value = ruleToInject[key];
-                return `${rule.cssSelector} {${key}: ${value};}`;
+                return this.buildNewCssRule(rule.cssSelector, ruleToInject);
             })
             .join('\n');
 
@@ -1305,7 +1330,7 @@ export class NetworkAreaDiagramViewer {
             styleTag = htmlElementSvg.querySelector('style');
         }
         if (styleTag && 'textContent' in styleTag) {
-            styleTag.textContent = rules + styleTag.textContent;
+            styleTag.textContent += rules;
         } else {
             console.error('Failed to create Style tag in SVG file!');
         }
