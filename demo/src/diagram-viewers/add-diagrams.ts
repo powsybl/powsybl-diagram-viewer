@@ -28,6 +28,7 @@ import {
     OnMoveTextNodeCallbackType,
     OnSelectNodeCallbackType,
 } from '../../../src';
+import { HandleToggleNadPopoverType } from '../../../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
 
 export const addNadToDemo = () => {
     fetch(NadSvgExample)
@@ -45,7 +46,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                HandleToggleNadPopover
             );
 
             document
@@ -69,7 +71,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 false,
                 false,
-                null
+                null,
+                HandleToggleNadPopover
             );
 
             document
@@ -93,7 +96,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                HandleToggleNadPopover
             );
 
             document
@@ -117,7 +121,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                HandleToggleNadPopover
             );
 
             document
@@ -141,7 +146,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                HandleToggleNadPopover
             );
 
             document
@@ -165,7 +171,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                HandleToggleNadPopover
             );
 
             document
@@ -189,7 +196,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 true,
-                null
+                null,
+                HandleToggleNadPopover
             );
 
             document
@@ -378,4 +386,24 @@ const handleTextNodeMove: OnMoveTextNodeCallbackType = (
 const handleNodeSelect: OnSelectNodeCallbackType = (equipmentId, nodeId) => {
     const msg = 'Node ' + nodeId + ' equipment ' + equipmentId + ' selected';
     console.log(msg);
+};
+
+const HandleToggleNadPopover: HandleToggleNadPopoverType = (
+    shouldDisplay,
+    mousePosition,
+    equipmentId,
+    equipmentType
+) => {
+    if (shouldDisplay) {
+        const msg =
+            'Hovers on equipment: ' +
+            equipmentId +
+            ', equipmentType: ' +
+            equipmentType +
+            ', mousePosition : x =' +
+            mousePosition?.x +
+            ', y=' +
+            mousePosition?.y;
+        console.log(msg);
+    }
 };

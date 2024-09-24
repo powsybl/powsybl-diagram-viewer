@@ -227,6 +227,9 @@ function classIsContainerOfDraggables(element: SVGElement): boolean {
     );
 }
 
+export function classIsContainerOfHoverables(element: HTMLElement): boolean {
+    return element.classList.contains('nad-branch-edges') || element.classList.contains('nad-3wt-edges');
+}
 // get radius of voltage level
 export function getVoltageLevelCircleRadius(nbNeighbours: number, voltageLevelCircleRadius: number): number {
     return Math.min(Math.max(nbNeighbours + 1, 1), 2) * voltageLevelCircleRadius;
@@ -471,4 +474,23 @@ export function getNodeMove(node: SVGGraphicsElement, nodePosition: Point): NODE
     const xNew = getFormattedValue(nodePosition.x);
     const yNew = getFormattedValue(nodePosition.y);
     return { xOrig: xOrig, yOrig: yOrig, xNew: xNew, yNew: yNew };
+}
+
+function hasParentNode(element: SVGElement): boolean {
+    return hasId(element) && element.parentNode != null;
+}
+
+export function getHoverableForm(element: SVGElement): SVGElement | undefined {
+    if (!hasParentNode(element.parentNode as SVGElement)) {
+        return element;
+    } else if (element.parentElement) {
+        return getHoverableForm(element.parentNode as SVGElement);
+    }
+}
+export function getStringEdgeType(edge: SVGGraphicsElement): string | null {
+    const edgeTypeIndex = getEdgeType(edge);
+    if (edgeTypeIndex !== null && edgeTypeIndex in EdgeType) {
+        return EdgeType[edgeTypeIndex];
+    }
+    return null;
 }
