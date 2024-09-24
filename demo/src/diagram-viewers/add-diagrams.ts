@@ -19,7 +19,6 @@ import SldSvgSubExampleMeta from './data/sld-sub-example-meta.json';
 import {
     NetworkAreaDiagramViewer,
     SingleLineDiagramViewer,
-    HandleTogglePopoverType,
     OnBreakerCallbackType,
     OnBusCallbackType,
     OnFeederCallbackType,
@@ -28,6 +27,7 @@ import {
     OnMoveTextNodeCallbackType,
     OnSelectNodeCallbackType,
 } from '../../../src';
+import { HandleTogglePopoverType1 } from '../../../src/components/single-line-diagram-viewer/single-line-diagram-viewer';
 
 export const addNadToDemo = () => {
     fetch(NadSvgExample)
@@ -45,7 +45,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                handleTogglePopover
             );
 
             document
@@ -69,7 +70,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 false,
                 false,
-                null
+                null,
+                handleTogglePopover
             );
 
             document
@@ -93,7 +95,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                handleTogglePopover
             );
 
             document
@@ -117,7 +120,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                handleTogglePopover
             );
 
             document
@@ -141,7 +145,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                handleTogglePopover
             );
 
             document
@@ -165,7 +170,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                handleTogglePopover
             );
 
             document
@@ -189,7 +195,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 true,
-                null
+                null,
+                handleTogglePopover
             );
 
             document
@@ -310,7 +317,7 @@ const handleBus: OnBusCallbackType = (id, svgId, x, y) => {
     console.log(msg);
 };
 
-const handleTogglePopover: HandleTogglePopoverType = (shouldDisplay, anchorEl, equipmentId, equipmentType) => {
+const handleTogglePopover: HandleTogglePopoverType1 = (shouldDisplay, anchorEl, equipmentId, equipmentType) => {
     if (shouldDisplay) {
         const msg = 'Hovers on equipment: ' + equipmentId + ', equipmentType: ' + equipmentType;
         console.log(msg);

@@ -102,6 +102,13 @@ export type HandleTogglePopoverType = (
     equipmentId: string,
     equipmentType: string
 ) => void;
+export type HandleTogglePopoverType1 = (
+    shouldDisplay: boolean,
+    anchorEl: EventTarget | null,
+    mousePosition: Point | null,
+    equipmentId: string,
+    equipmentType: string
+) => void;
 
 export class SingleLineDiagramViewer {
     container: HTMLElement;

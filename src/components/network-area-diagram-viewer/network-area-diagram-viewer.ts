@@ -10,6 +10,7 @@ import '@svgdotjs/svg.panzoom.js';
 import * as DiagramUtils from './diagram-utils';
 import { SvgParameters } from './svg-parameters';
 import { CSS_DECLARATION, CSS_RULE, THRESHOLD_STATUS, DEFAULT_DYNAMIC_CSS_RULES } from './dynamic-css-utils';
+import { HandleTogglePopoverType1 } from '../single-line-diagram-viewer/single-line-diagram-viewer';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
@@ -63,6 +64,7 @@ export class NetworkAreaDiagramViewer {
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
     shiftKeyOnMouseDown: boolean = false;
     dynamicCssRules: CSS_RULE[];
+    handleTogglePopover: HandleTogglePopoverType1 | null;
 
     constructor(
         container: HTMLElement,
@@ -76,7 +78,8 @@ export class NetworkAreaDiagramViewer {
         onSelectNodeCallback: OnSelectNodeCallbackType | null,
         enableNodeMoving: boolean,
         enableLevelOfDetail: boolean,
-        customDynamicCssRules: CSS_RULE[] | null
+        customDynamicCssRules: CSS_RULE[] | null,
+        handleTogglePopover: HandleTogglePopoverType1 | null
     ) {
         this.container = container;
         this.svgContent = svgContent;
@@ -90,6 +93,7 @@ export class NetworkAreaDiagramViewer {
         this.onMoveNodeCallback = onMoveNodeCallback;
         this.onMoveTextNodeCallback = onMoveTextNodeCallback;
         this.onSelectNodeCallback = onSelectNodeCallback;
+        this.handleTogglePopover = handleTogglePopover;
     }
 
     public setWidth(width: number): void {
@@ -201,6 +205,9 @@ export class NetworkAreaDiagramViewer {
                 this.endDrag(e);
             });
         }
+        this.svgDraw.on('mouseover', (e: Event) => {
+            this.onHover(e);
+        });
         this.svgDraw.on('panStart', function () {
             if (drawnSvg.parentElement != undefined) {
                 drawnSvg.parentElement.style.cursor = 'move';
@@ -335,6 +342,32 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
+    private onHover(event: Event) {
+        const HoverableElem = DiagramUtils.getHoverableForm(event.target as SVGElement);
+        const parentNode = HoverableElem?.parentElement as HTMLElement;
+
+        if (DiagramUtils.classIsContainerOfHoverables(parentNode)) {
+            const anchorEl = event.target;
+
+            const edge: SVGGraphicsElement | null = this.container.querySelector(
+                'nad\\:edge[svgid="' + HoverableElem?.id + '"]'
+            );
+            console.log('^^^^^^ hovering ', event.target);
+            console.log('^^^^^^ hovering  HoverableElem as EventTarget ', HoverableElem as EventTarget);
+            console.log('^^^^^^ hovering parentNode ', parentNode);
+            const mousePosition = this.getMousePosition(event as MouseEvent);
+
+            if (edge) {
+                this.handleTogglePopover?.(
+                    true,
+                    anchorEl,
+                    mousePosition,
+                    edge?.getAttribute('equipmentid') || '',
+                    DiagramUtils.getEdgeTypeString(edge) || ''
+                );
+            }
+        }
+    }
     private endDrag(event: Event) {
         if (this.selectedElement) {
             if (!this.shiftKeyOnMouseDown) {

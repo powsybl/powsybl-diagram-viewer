@@ -24,7 +24,16 @@ export enum EdgeType {
     TIE_LINE,
     THREE_WINDINGS_TRANSFORMER,
 }
+export function getEdgeTypeString(edge: SVGGraphicsElement): string | null {
+    // Get the edge type from the element
+    const edgeTypeIndex = getEdgeType(edge);
 
+    // Check if the edge type is valid and convert it to string
+    if (edgeTypeIndex !== null && edgeTypeIndex in EdgeType) {
+        return EdgeType[edgeTypeIndex]; // Return the string representation
+    }
+    return null; // Return null if the edge type is invalid
+}
 const EdgeTypeMapping: { [key: string]: EdgeType } = {
     LineEdge: EdgeType.LINE,
     TwoWtEdge: EdgeType.TWO_WINDINGS_TRANSFORMER,
@@ -207,17 +216,26 @@ export function getDraggableFrom(element: SVGElement): SVGElement | undefined {
         return getDraggableFrom(element.parentNode as SVGElement);
     }
 }
-
+export function getHoverableForm(element: SVGElement): SVGElement | undefined {
+    if (!hasParentNode(element.parentNode as SVGElement)) {
+        return element;
+    } else if (element.parentElement) {
+        return getHoverableForm(element.parentNode as SVGElement);
+    }
+}
+function hasParentNode(element: SVGElement): boolean {
+    return hasId(element) && element.parentNode != null;
+}
 function isDraggable(element: SVGElement): boolean {
-    return (
-        hasId(element) && element.parentNode != null && classIsContainerOfDraggables(element.parentNode as SVGElement)
-    );
+    return hasParentNode(element) && classIsContainerOfDraggables(element.parentNode as SVGElement);
 }
 
 function hasId(element: SVGElement): boolean {
     return typeof element.id != 'undefined' && element.id != '';
 }
-
+export function classIsContainerOfHoverables(element: HTMLElement): boolean {
+    return element.classList.contains('nad-branch-edges') || element.classList.contains('nad-3wt-edges');
+}
 function classIsContainerOfDraggables(element: SVGElement): boolean {
     return (
         element.classList.contains('nad-vl-nodes') ||
