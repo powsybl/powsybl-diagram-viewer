@@ -205,16 +205,16 @@ export class NetworkAreaDiagramViewer {
         // add events
         if (enableNodeMoving) {
             this.svgDraw.on('mousedown', (e: Event) => {
-                this.startDrag(e);
+                this.handleStartDrag(e);
             });
             this.svgDraw.on('mousemove', (e: Event) => {
-                this.drag(e);
+                this.handleDrag(e);
             });
             this.svgDraw.on('mouseup', (e: Event) => {
-                this.endDrag(e);
+                this.handleEndDrag(e);
             });
             this.svgDraw.on('mouseleave', (e: Event) => {
-                this.endDrag(e);
+                this.handleEndDrag(e);
             });
         }
         this.svgDraw.on('panStart', function () {
@@ -309,20 +309,23 @@ export class NetworkAreaDiagramViewer {
         return new SvgParameters(svgParametersElement);
     }
 
-    private startDrag(event: Event) {
+    private handleStartDrag(event: Event) {
         const draggableElem = DiagramUtils.getDraggableFrom(event.target as SVGElement);
         if (!draggableElem) {
             return;
         }
+        const isShiftKeyDown = !!(event as MouseEvent).shiftKey;
+        this.processStartDrag(draggableElem, isShiftKeyDown);
+    }
+
+    private processStartDrag(draggableElem: SVGElement, isShiftKeyDown: boolean) {
         this.disablePanzoom(); // to avoid panning the whole SVG when moving or selecting a node
         this.selectedElement = draggableElem as SVGGraphicsElement; // element to be moved or selected
         console.error('DRAGGING this.selectedElement', this.selectedElement); // TODO CHARLY remove this line
         // change cursor style
         const svg: HTMLElement = <HTMLElement>this.svgDraw?.node.firstElementChild?.parentElement;
-        if (svg != null) {
-            svg.style.cursor = 'grabbing';
-        }
-        if (!(event as MouseEvent).shiftKey) {
+        svg.style.cursor = 'grabbing';
+        if (!isShiftKeyDown) {
             // moving node
             this.shiftKeyOnMouseDown = false;
             this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute mouse movement
@@ -339,29 +342,39 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private drag(event: Event) {
+    private handleDrag(event: Event) {
         if (this.selectedElement) {
             event.preventDefault();
+            const newPosition = this.getMousePosition(event as MouseEvent);
+            this.processDrag(newPosition);
+        }
+    }
+
+    private processDrag(newPosition: Point) {
+        if (this.selectedElement) {
             if (!this.shiftKeyOnMouseDown) {
                 // moving node
-                this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute mouse movement
-                const mousePosition = this.getMousePosition(event as MouseEvent);
-                this.updateGraph(mousePosition);
+                this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute SVG transformations
+                this.updateGraph(newPosition);
                 this.initialPosition = DiagramUtils.getPosition(this.selectedElement);
             }
         }
     }
 
-    private endDrag(event: Event) {
+    private handleEndDrag(event: Event) {
+        const newPosition = this.getMousePosition(event as MouseEvent);
+        this.processEndDrag(newPosition);
+    }
+
+    private processEndDrag(newPosition: Point) {
         if (this.selectedElement) {
             if (!this.shiftKeyOnMouseDown) {
                 // moving node
-                const mousePosition = this.getMousePosition(event as MouseEvent);
-                this.updateGraph(mousePosition);
+                this.updateGraph(newPosition);
                 if (this.textNodeSelected) {
-                    this.callMoveTextNodeCallback(mousePosition);
+                    this.callMoveTextNodeCallback(newPosition);
                 } else {
-                    this.updateNodeMetadataCallCallback(mousePosition);
+                    this.updateNodeMetadataCallCallback(newPosition);
                 }
                 this.initialPosition = new Point(0, 0);
                 this.textNodeSelected = false;
@@ -375,9 +388,7 @@ export class NetworkAreaDiagramViewer {
             }
             // change cursor style
             const svg: HTMLElement = <HTMLElement>this.svgDraw?.node.firstElementChild?.parentElement;
-            if (svg != null) {
-                svg.style.removeProperty('cursor');
-            }
+            svg.style.removeProperty('cursor');
             this.selectedElement = null;
             this.enablePanzoom();
         }
