@@ -153,19 +153,14 @@ export class NetworkAreaDiagramViewer {
     }
 
     public moveNodeToCoordonates(nodeId: string, x: number, y: number) {
-        console.error(
-            'network-area-diagram-viewer.ts::moveNodeToCoordonates(nodeId:' + nodeId + ', x:' + x + ', y:' + y + ')'
-        ); // TODO CHARLY remove this line
         const elemToMove: SVGElement | null = this.container.querySelector('[id="' + nodeId + '"]');
         if (!elemToMove) {
-            console.error('ERROR nodeId:' + nodeId + ' not found !');
+            console.error('moveNodeToCoordonates nodeId:' + nodeId + ' not found !');
             return;
         }
-        this.selectedElement = DiagramUtils.getDraggableFrom(elemToMove as SVGElement) as SVGGraphicsElement;
-        console.error('this.selectedElement', this.selectedElement); // TODO CHARLY remove this line
-        const newCoord = new Point(x, y);
-        this.updateGraph(newCoord);
-        this.selectedElement = null;
+        const newPosition = new Point(x, y);
+        this.processStartDrag(elemToMove, false);
+        this.processEndDrag(newPosition);
     }
 
     public init(
