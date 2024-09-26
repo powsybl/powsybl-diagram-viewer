@@ -152,15 +152,23 @@ export class NetworkAreaDiagramViewer {
         return this.dynamicCssRules;
     }
 
-    public moveNodeToCoordonates(nodeId: string, x: number, y: number) {
-        const elemToMove: SVGElement | null = this.container.querySelector('[id="' + nodeId + '"]');
-        if (!elemToMove) {
-            console.error('moveNodeToCoordonates nodeId:' + nodeId + ' not found !');
-            return;
+    private getNodeIdFromEquipmentId(equipmentId: string) {
+        const node: SVGGraphicsElement | null = this.container.querySelector(
+            'nad\\:node[equipmentid="' + equipmentId + '"]'
+        );
+        return node?.getAttribute('svgid') ?? '';
+    }
+
+    public moveNodeToCoordonates(equipmentId: string, x: number, y: number) {
+        const nodeId = this.getNodeIdFromEquipmentId(equipmentId);
+        if (nodeId != '') {
+            const elemToMove: SVGElement | null = this.container.querySelector('[id="' + nodeId + '"]');
+            if (elemToMove) {
+                const newPosition = new Point(x, y);
+                this.processStartDrag(elemToMove, false);
+                this.processEndDrag(newPosition, false);
+            }
         }
-        const newPosition = new Point(x, y);
-        this.processStartDrag(elemToMove, false);
-        this.processEndDrag(newPosition);
     }
 
     public init(
@@ -316,7 +324,6 @@ export class NetworkAreaDiagramViewer {
     private processStartDrag(draggableElem: SVGElement, isShiftKeyDown: boolean) {
         this.disablePanzoom(); // to avoid panning the whole SVG when moving or selecting a node
         this.selectedElement = draggableElem as SVGGraphicsElement; // element to be moved or selected
-        console.error('DRAGGING this.selectedElement', this.selectedElement); // TODO CHARLY remove this line
         // change cursor style
         const svg: HTMLElement = <HTMLElement>this.svgDraw?.node.firstElementChild?.parentElement;
         svg.style.cursor = 'grabbing';
@@ -358,10 +365,10 @@ export class NetworkAreaDiagramViewer {
 
     private handleEndDrag(event: Event) {
         const newPosition = this.getMousePosition(event as MouseEvent);
-        this.processEndDrag(newPosition);
+        this.processEndDrag(newPosition, true);
     }
 
-    private processEndDrag(newPosition: Point) {
+    private processEndDrag(newPosition: Point, callMoveNodeCallback: boolean) {
         if (this.selectedElement) {
             if (!this.shiftKeyOnMouseDown) {
                 // moving node
@@ -369,7 +376,7 @@ export class NetworkAreaDiagramViewer {
                 if (this.textNodeSelected) {
                     this.callMoveTextNodeCallback(newPosition);
                 } else {
-                    this.updateNodeMetadataCallCallback(newPosition);
+                    this.updateNodeMetadataCallCallback(newPosition, callMoveNodeCallback);
                 }
                 this.initialPosition = new Point(0, 0);
                 this.textNodeSelected = false;
@@ -1181,7 +1188,7 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private updateNodeMetadataCallCallback(mousePosition: Point) {
+    private updateNodeMetadataCallCallback(mousePosition: Point, callMoveNodeCallback: boolean) {
         // get moved node from metadata
         const node: SVGGraphicsElement | null = this.container.querySelector(
             'nad\\:node[svgid="' + this.selectedElement?.id + '"]'
@@ -1192,7 +1199,7 @@ export class NetworkAreaDiagramViewer {
             node.setAttribute('x', nodeMove.xNew);
             node.setAttribute('y', nodeMove.yNew);
             // call the node move callback, if defined
-            if (this.onMoveNodeCallback != null) {
+            if (this.onMoveNodeCallback != null && callMoveNodeCallback) {
                 this.onMoveNodeCallback(
                     node.getAttribute('equipmentid') ?? '',
                     node.getAttribute('svgid') ?? '',
