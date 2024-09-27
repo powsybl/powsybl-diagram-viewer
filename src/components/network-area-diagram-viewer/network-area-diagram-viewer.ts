@@ -156,12 +156,12 @@ export class NetworkAreaDiagramViewer {
         const node: SVGGraphicsElement | null = this.container.querySelector(
             'nad\\:node[equipmentid="' + equipmentId + '"]'
         );
-        return node?.getAttribute('svgid') ?? '';
+        return node?.getAttribute('svgid') || null;
     }
 
     public moveNodeToCoordonates(equipmentId: string, x: number, y: number) {
         const nodeId = this.getNodeIdFromEquipmentId(equipmentId);
-        if (nodeId != '') {
+        if (nodeId != null) {
             const elemToMove: SVGElement | null = this.container.querySelector('[id="' + nodeId + '"]');
             if (elemToMove) {
                 const newPosition = new Point(x, y);
