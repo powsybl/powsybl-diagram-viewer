@@ -159,7 +159,7 @@ export class NetworkAreaDiagramViewer {
         return node?.getAttribute('svgid') || null;
     }
 
-    public moveNodeToCoordonates(equipmentId: string, x: number, y: number) {
+    public moveNodeToCoordinates(equipmentId: string, x: number, y: number) {
         const nodeId = this.getNodeIdFromEquipmentId(equipmentId);
         if (nodeId != null) {
             const elemToMove: SVGElement | null = this.container.querySelector('[id="' + nodeId + '"]');
