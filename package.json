@@ -1,6 +1,6 @@
 {
     "name": "@powsybl/diagram-viewer",
-    "version": "0.5.1",
+    "version": "0.6.0",
     "description": "Typescript library to integrate a powsybl svg diagram in a javascript project.",
     "author": "powsybl team",
     "homepage": "https://www.powsybl.org/",
@@ -39,7 +39,7 @@
         "@svgdotjs/svg.panzoom.js": "^2.1.2",
         "@turf/boolean-point-in-polygon": "^6.5.0",
         "cheap-ruler": "^3.0.2",
-        "deck.gl": "^9.0.24",
+        "deck.gl": "^9.0.31",
         "geolib": "^3.3.4",
         "mapbox-gl": "^3.4.0",
         "maplibre-gl": "^4.5.0",

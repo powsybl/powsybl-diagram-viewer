@@ -291,12 +291,12 @@ export type Coordinate = {
     lat: number;
 };
 
-type SubstationPosition = {
+export type SubstationPosition = {
     id: string;
     coordinate: Coordinate;
 };
 
-type LinePosition = {
+export type LinePosition = {
     id: string;
     coordinates: Coordinate[];
 };

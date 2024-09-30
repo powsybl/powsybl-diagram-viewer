@@ -20,6 +20,7 @@ import {
     SUBSTATION_RADIUS_MAX_PIXEL,
     SUBSTATION_RADIUS_MIN_PIXEL,
 } from '@/constants';
+import { getNominalVoltageColor } from '@/utils/colors';
 import { Substation, VoltageLevel } from '@/utils/equipment-types';
 import { GeoData } from './geo-data';
 import { CompositeData } from './line-layer';
@@ -61,7 +62,7 @@ export type SubstationLayerProps = {
 };
 
 const defaultProps: DefaultProps<SubstationLayerProps> = {
-    getNominalVoltageColor: { type: 'function', value: () => [255, 255, 255] },
+    getNominalVoltageColor: { type: 'function', value: getNominalVoltageColor },
     filteredNominalVoltages: null,
     labelsVisible: false,
     labelColor: { type: 'color', value: [255, 255, 255] },

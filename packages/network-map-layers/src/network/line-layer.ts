@@ -12,7 +12,7 @@ import {
 } from '@/constants';
 import BoltIcon from '@/images/bolt_black_24dp.svg?react';
 import PadlockIcon from '@/images/lock_black_24dp.svg?react';
-import { INVALID_FLOW_OPACITY } from '@/utils/colors';
+import { getNominalVoltageColor, INVALID_FLOW_OPACITY } from '@/utils/colors';
 import { Line, LonLat } from '@/utils/equipment-types';
 import {
     Color,
@@ -300,7 +300,7 @@ export type LineLayerProps = _LineLayerProps & CompositeLayerProps;
 const defaultProps = {
     network: null,
     geoData: null,
-    getNominalVoltageColor: { type: 'accessor', value: [255, 255, 255] },
+    getNominalVoltageColor: { type: 'accessor', value: getNominalVoltageColor },
     disconnectedLineColor: { type: 'color', value: [255, 255, 255] },
     filteredNominalVoltages: null,
     lineFlowMode: LineFlowMode.FEEDERS,
@@ -320,6 +320,7 @@ const defaultProps = {
         type: 'number',
         value: SUBSTATION_RADIUS_MIN_PIXEL,
     },
+    labelColor: [255, 255, 255],
 };
 
 export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {

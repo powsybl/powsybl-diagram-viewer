@@ -1,6 +1,6 @@
 {
     "name": "@powsybl/network-map-layers",
-    "version": "0.6",
+    "version": "0.6.0",
     "description": "Typescript library to integrate a powsybl svg diagram in a javascript project.",
     "author": "powsybl team",
     "homepage": "https://www.powsybl.org/",
@@ -14,13 +14,14 @@
     "module": "./dist/powsybl-network-map-layers.js",
     "exports": {
         ".": {
-            "import": "./dist/powsybl-network-map-layers.js"
+            "import": "./dist/powsybl-network-map-layers.js",
+            "types": "./dist/index.d.ts"
         }
     },
     "scripts": {
         "build": "vite build"
     },
-    "dependencies": {
+    "peerDependencies": {
         "@deck.gl/core": "^9.0.0",
         "@deck.gl/extensions": "^9.0.0",
         "@deck.gl/layers": "^9.0.0",

@@ -1,6 +1,6 @@
 {
-    "name": "@powsybl/single-line-diagram-viewer",
-    "version": "0.6",
+    "name": "@amarant/single-line-diagram-viewer",
+    "version": "0.6.0",
     "description": "Typescript library to integrate a powsybl svg diagram in a javascript project.",
     "author": "powsybl team",
     "homepage": "https://www.powsybl.org/",
@@ -14,7 +14,8 @@
     "module": "./dist/single-line-diagram-viewer.js",
     "exports": {
         ".": {
-            "import": "./dist/single-line-diagram-viewer.js"
+            "import": "./dist/single-line-diagram-viewer.js",
+            "types": "./dist/index.d.ts"
         }
     },
     "scripts": {

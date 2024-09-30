@@ -27,7 +27,7 @@ export default defineConfig((_config) => ({
             fileName: 'powsybl-network-map-layers',
         },
         rollupOptions: {
-            external: [...Object.keys(pkg.dependencies), /^node:.*/],
+            external: [...Object.keys(pkg.peerDependencies), /^node:.*/],
         },
         target: 'esnext',
     },
