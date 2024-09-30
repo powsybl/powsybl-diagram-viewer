@@ -230,7 +230,7 @@ export class NetworkAreaDiagramViewer {
             });
         }
         this.svgDraw.on('mouseover', (e: Event) => {
-            this.onHover(e);
+            this.onHover(e as MouseEvent);
         });
         this.svgDraw.on('panStart', function () {
             if (drawnSvg.parentElement != undefined) {
@@ -374,25 +374,37 @@ export class NetworkAreaDiagramViewer {
             }
         }
     }
-    private onHover(event: Event) {
-        const hoverableElem = DiagramUtils.getHoverableForm(event.target as SVGElement);
-        const parentElement = hoverableElem?.parentElement as HTMLElement;
-        if (DiagramUtils.classIsContainerOfHoverables(parentElement)) {
-            //get edge by svgId
-            const edge: SVGGraphicsElement | null = this.container.querySelector(
-                'nad\\:edge[svgid="' + hoverableElem?.id + '"]'
+    private onHover(mouseEvent: MouseEvent) {
+        if (this.handleTogglePopover == null) {
+            return;
+        }
+
+        const hoverableElem = DiagramUtils.getHoverableForm(mouseEvent.target as SVGElement);
+        const parentElement = hoverableElem?.parentElement;
+        if (hoverableElem == null || parentElement == null) {
+            this.handleTogglePopover(false, null, '', '');
+            return;
+        }
+        if (!DiagramUtils.classIsContainerOfHoverables(parentElement)) {
+            this.handleTogglePopover(false, null, '', '');
+            return;
+        }
+
+        //get edge by svgId
+        const edge: SVGGraphicsElement | null = this.container.querySelector(
+            `nad\\:edge[svgid="${hoverableElem?.id}"]`
+        );
+
+        if (edge) {
+            const mousePosition = this.getMousePosition(mouseEvent);
+            this.handleTogglePopover(
+                true,
+                mousePosition,
+                edge.getAttribute('equipmentid') ?? '',
+                DiagramUtils.getStringEdgeType(edge) ?? ''
             );
-            if (edge) {
-                const mousePosition = this.getMousePosition(event as MouseEvent);
-                this.handleTogglePopover?.(
-                    true,
-                    mousePosition,
-                    edge?.getAttribute('equipmentid') || '',
-                    DiagramUtils.getStringEdgeType(edge) || ''
-                );
-            }
         } else {
-            this.handleTogglePopover?.(false, null, '', '');
+            this.handleTogglePopover(false, null, '', '');
         }
     }
 
