@@ -28,6 +28,7 @@ describe('Test network-area-diagram-viewer', () => {
             null
         );
 
+        nad.moveNodeToCoordinates('', 0, 0);
         expect(container.getElementsByTagName('svg').length).toBe(0);
         expect(nad.getContainer().outerHTML).toBe('<div></div>');
         expect(nad.getSvgContent()).toBe('');

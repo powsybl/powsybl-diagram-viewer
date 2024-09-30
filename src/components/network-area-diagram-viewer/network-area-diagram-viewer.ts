@@ -161,6 +161,25 @@ export class NetworkAreaDiagramViewer {
         return this.dynamicCssRules;
     }
 
+    private getNodeIdFromEquipmentId(equipmentId: string) {
+        const node: SVGGraphicsElement | null = this.container.querySelector(
+            'nad\\:node[equipmentid="' + equipmentId + '"]'
+        );
+        return node?.getAttribute('svgid') || null;
+    }
+
+    public moveNodeToCoordinates(equipmentId: string, x: number, y: number) {
+        const nodeId = this.getNodeIdFromEquipmentId(equipmentId);
+        if (nodeId != null) {
+            const elemToMove: SVGElement | null = this.container.querySelector('[id="' + nodeId + '"]');
+            if (elemToMove) {
+                const newPosition = new Point(x, y);
+                this.processStartDrag(elemToMove, false);
+                this.processEndDrag(newPosition, false);
+            }
+        }
+    }
+
     public init(
         minWidth: number,
         minHeight: number,
@@ -198,16 +217,16 @@ export class NetworkAreaDiagramViewer {
         // add events
         if (enableNodeMoving) {
             this.svgDraw.on('mousedown', (e: Event) => {
-                this.startDrag(e);
+                this.handleStartDrag(e);
             });
             this.svgDraw.on('mousemove', (e: Event) => {
-                this.drag(e);
+                this.handleDrag(e);
             });
             this.svgDraw.on('mouseup', (e: Event) => {
-                this.endDrag(e);
+                this.handleEndDrag(e);
             });
             this.svgDraw.on('mouseleave', (e: Event) => {
-                this.endDrag(e);
+                this.handleEndDrag(e);
             });
         }
         this.svgDraw.on('mouseover', (e: Event) => {
@@ -305,19 +324,22 @@ export class NetworkAreaDiagramViewer {
         return new SvgParameters(svgParametersElement);
     }
 
-    private startDrag(event: Event) {
+    private handleStartDrag(event: Event) {
         const draggableElem = DiagramUtils.getDraggableFrom(event.target as SVGElement);
         if (!draggableElem) {
             return;
         }
+        const isShiftKeyDown = !!(event as MouseEvent).shiftKey;
+        this.processStartDrag(draggableElem, isShiftKeyDown);
+    }
+
+    private processStartDrag(draggableElem: SVGElement, isShiftKeyDown: boolean) {
         this.disablePanzoom(); // to avoid panning the whole SVG when moving or selecting a node
         this.selectedElement = draggableElem as SVGGraphicsElement; // element to be moved or selected
         // change cursor style
         const svg: HTMLElement = <HTMLElement>this.svgDraw?.node.firstElementChild?.parentElement;
-        if (svg != null) {
-            svg.style.cursor = 'grabbing';
-        }
-        if (!(event as MouseEvent).shiftKey) {
+        svg.style.cursor = 'grabbing';
+        if (!isShiftKeyDown) {
             // moving node
             this.shiftKeyOnMouseDown = false;
             this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute mouse movement
@@ -334,14 +356,20 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private drag(event: Event) {
+    private handleDrag(event: Event) {
         if (this.selectedElement) {
             event.preventDefault();
+            const newPosition = this.getMousePosition(event as MouseEvent);
+            this.processDrag(newPosition);
+        }
+    }
+
+    private processDrag(newPosition: Point) {
+        if (this.selectedElement) {
             if (!this.shiftKeyOnMouseDown) {
                 // moving node
-                this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute mouse movement
-                const mousePosition = this.getMousePosition(event as MouseEvent);
-                this.updateGraph(mousePosition);
+                this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute SVG transformations
+                this.updateGraph(newPosition);
                 this.initialPosition = DiagramUtils.getPosition(this.selectedElement);
             }
         }
@@ -368,16 +396,20 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private endDrag(event: Event) {
+    private handleEndDrag(event: Event) {
+        const newPosition = this.getMousePosition(event as MouseEvent);
+        this.processEndDrag(newPosition, true);
+    }
+
+    private processEndDrag(newPosition: Point, callMoveNodeCallback: boolean) {
         if (this.selectedElement) {
             if (!this.shiftKeyOnMouseDown) {
                 // moving node
-                const mousePosition = this.getMousePosition(event as MouseEvent);
-                this.updateGraph(mousePosition);
+                this.updateGraph(newPosition);
                 if (this.textNodeSelected) {
-                    this.callMoveTextNodeCallback(mousePosition);
+                    this.callMoveTextNodeCallback(newPosition);
                 } else {
-                    this.updateNodeMetadataCallCallback(mousePosition);
+                    this.updateNodeMetadataCallCallback(newPosition, callMoveNodeCallback);
                 }
                 this.initialPosition = new Point(0, 0);
                 this.textNodeSelected = false;
@@ -391,9 +423,7 @@ export class NetworkAreaDiagramViewer {
             }
             // change cursor style
             const svg: HTMLElement = <HTMLElement>this.svgDraw?.node.firstElementChild?.parentElement;
-            if (svg != null) {
-                svg.style.removeProperty('cursor');
-            }
+            svg.style.removeProperty('cursor');
             this.selectedElement = null;
             this.enablePanzoom();
         }
@@ -1191,7 +1221,7 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private updateNodeMetadataCallCallback(mousePosition: Point) {
+    private updateNodeMetadataCallCallback(mousePosition: Point, callMoveNodeCallback: boolean) {
         // get moved node from metadata
         const node: SVGGraphicsElement | null = this.container.querySelector(
             'nad\\:node[svgid="' + this.selectedElement?.id + '"]'
@@ -1202,7 +1232,7 @@ export class NetworkAreaDiagramViewer {
             node.setAttribute('x', nodeMove.xNew);
             node.setAttribute('y', nodeMove.yNew);
             // call the node move callback, if defined
-            if (this.onMoveNodeCallback != null) {
+            if (this.onMoveNodeCallback != null && callMoveNodeCallback) {
                 this.onMoveNodeCallback(
                     node.getAttribute('equipmentid') ?? '',
                     node.getAttribute('svgid') ?? '',
