@@ -375,6 +375,7 @@ export class NetworkAreaDiagramViewer {
         }
     }
     private onHover(mouseEvent: MouseEvent) {
+        const equipmentsWithPopover = ['LINE', 'TWO_WINDINGS_TRANSFORMER', 'PHASE_SHIFT_TRANSFORMER'];
         if (this.handleTogglePopover == null) {
             return;
         }
@@ -395,7 +396,7 @@ export class NetworkAreaDiagramViewer {
             `nad\\:edge[svgid="${hoverableElem?.id}"]`
         );
 
-        if (edge) {
+        if (edge && equipmentsWithPopover.includes(DiagramUtils.getStringEdgeType(edge) ?? '')) {
             const mousePosition = this.getMousePosition(mouseEvent);
             this.handleTogglePopover(
                 true,
