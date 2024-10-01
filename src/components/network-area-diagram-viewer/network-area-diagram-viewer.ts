@@ -10,6 +10,7 @@ import '@svgdotjs/svg.panzoom.js';
 import * as DiagramUtils from './diagram-utils';
 import { SvgParameters } from './svg-parameters';
 import { LayoutParameters } from './layout-parameters';
+import { CSS_DECLARATION, CSS_RULE, THRESHOLD_STATUS, DEFAULT_DYNAMIC_CSS_RULES } from './dynamic-css-utils';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
@@ -61,6 +62,7 @@ export class NetworkAreaDiagramViewer {
     onMoveTextNodeCallback: OnMoveTextNodeCallbackType | null;
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
     shiftKeyOnMouseDown: boolean = false;
+    dynamicCssRules: CSS_RULE[];
 
     constructor(
         container: HTMLElement,
@@ -72,7 +74,9 @@ export class NetworkAreaDiagramViewer {
         onMoveNodeCallback: OnMoveNodeCallbackType | null,
         onMoveTextNodeCallback: OnMoveTextNodeCallbackType | null,
         onSelectNodeCallback: OnSelectNodeCallbackType | null,
-        enableNodeMoving: boolean
+        enableNodeMoving: boolean,
+        enableLevelOfDetail: boolean,
+        customDynamicCssRules: CSS_RULE[] | null
     ) {
         this.container = container;
         this.svgContent = svgContent;
@@ -80,7 +84,8 @@ export class NetworkAreaDiagramViewer {
         this.height = 0;
         this.originalWidth = 0;
         this.originalHeight = 0;
-        this.init(minWidth, minHeight, maxWidth, maxHeight, enableNodeMoving);
+        this.dynamicCssRules = customDynamicCssRules ?? DEFAULT_DYNAMIC_CSS_RULES;
+        this.init(minWidth, minHeight, maxWidth, maxHeight, enableNodeMoving, enableLevelOfDetail);
         this.svgParameters = this.getSvgParameters();
         this.layoutParameters = this.getLayoutParameters();
         this.onMoveNodeCallback = onMoveNodeCallback;
@@ -141,8 +146,29 @@ export class NetworkAreaDiagramViewer {
     }
 
     public setViewBox(viewBox: ViewBoxLike): void {
-        if (viewBox !== undefined && viewBox !== null) {
-            this.svgDraw?.viewbox(viewBox);
+        this.svgDraw?.viewbox(viewBox);
+    }
+
+    public getDynamicCssRules() {
+        return this.dynamicCssRules;
+    }
+
+    private getNodeIdFromEquipmentId(equipmentId: string) {
+        const node: SVGGraphicsElement | null = this.container.querySelector(
+            'nad\\:node[equipmentid="' + equipmentId + '"]'
+        );
+        return node?.getAttribute('svgid') || null;
+    }
+
+    public moveNodeToCoordinates(equipmentId: string, x: number, y: number) {
+        const nodeId = this.getNodeIdFromEquipmentId(equipmentId);
+        if (nodeId != null) {
+            const elemToMove: SVGElement | null = this.container.querySelector('[id="' + nodeId + '"]');
+            if (elemToMove) {
+                const newPosition = new Point(x, y);
+                this.processStartDrag(elemToMove, false);
+                this.processEndDrag(newPosition, false);
+            }
         }
     }
 
@@ -151,7 +177,8 @@ export class NetworkAreaDiagramViewer {
         minHeight: number,
         maxWidth: number,
         maxHeight: number,
-        enableNodeMoving: boolean
+        enableNodeMoving: boolean,
+        enableLevelOfDetail: boolean
     ): void {
         if (!this.container || !this.svgContent) {
             return;
@@ -182,16 +209,16 @@ export class NetworkAreaDiagramViewer {
         // add events
         if (enableNodeMoving) {
             this.svgDraw.on('mousedown', (e: Event) => {
-                this.startDrag(e);
+                this.handleStartDrag(e);
             });
             this.svgDraw.on('mousemove', (e: Event) => {
-                this.drag(e);
+                this.handleDrag(e);
             });
             this.svgDraw.on('mouseup', (e: Event) => {
-                this.endDrag(e);
+                this.handleEndDrag(e);
             });
             this.svgDraw.on('mouseleave', (e: Event) => {
-                this.endDrag(e);
+                this.handleEndDrag(e);
             });
         }
         this.svgDraw.on('panStart', function () {
@@ -216,6 +243,27 @@ export class NetworkAreaDiagramViewer {
         firstChild.removeAttribute('viewBox');
         firstChild.removeAttribute('width');
         firstChild.removeAttribute('height');
+
+        if (enableLevelOfDetail) {
+            // We insert custom CSS to hide details before first load, in order to improve performances
+            this.initializeDynamicCssRules(Math.max(dimensions.viewbox.width, dimensions.viewbox.height));
+            this.injectDynamicCssRules(firstChild);
+            this.svgDraw.fire('zoom'); // Forces a new dynamic zoom check to correctly update the dynamic CSS
+
+            // We add an observer to track when the SVG's viewBox is updated by panzoom
+            // (we have to do this instead of using panzoom's 'zoom' event to have accurate viewBox updates)
+            const targetNode: SVGSVGElement = this.svgDraw.node;
+            // Callback function to execute when mutations are observed
+            const observerCallback = (mutationList: MutationRecord[]) => {
+                for (const mutation of mutationList) {
+                    if (mutation.attributeName === 'viewBox') {
+                        this.checkAndUpdateLevelOfDetail(targetNode);
+                    }
+                }
+            };
+            const observer = new MutationObserver(observerCallback);
+            observer.observe(targetNode, { attributeFilter: ['viewBox'] });
+        }
 
         if (enableNodeMoving) {
             // fill empty elements: unknown buses and three windings transformers
@@ -247,9 +295,9 @@ export class NetworkAreaDiagramViewer {
     private enablePanzoom() {
         this.svgDraw?.panZoom({
             panning: true,
-            zoomMin: 0.5 / this.ratio,
-            zoomMax: 30 * this.ratio,
-            zoomFactor: 0.15,
+            zoomMin: 0.5 / this.ratio, // maximum zoom OUT ratio (0.5 = at best, the displayed area is twice the SVG's size)
+            zoomMax: 20 * this.ratio, // maximum zoom IN ratio (20 = at best, the displayed area is only 1/20th of the SVG's size)
+            zoomFactor: 0.2,
             margins: { top: 0, left: 0, right: 0, bottom: 0 },
         });
     }
@@ -271,19 +319,22 @@ export class NetworkAreaDiagramViewer {
         return new LayoutParameters(layoutParametersElement);
     }
 
-    private startDrag(event: Event) {
+    private handleStartDrag(event: Event) {
         const draggableElem = DiagramUtils.getDraggableFrom(event.target as SVGElement);
         if (!draggableElem) {
             return;
         }
+        const isShiftKeyDown = !!(event as MouseEvent).shiftKey;
+        this.processStartDrag(draggableElem, isShiftKeyDown);
+    }
+
+    private processStartDrag(draggableElem: SVGElement, isShiftKeyDown: boolean) {
         this.disablePanzoom(); // to avoid panning the whole SVG when moving or selecting a node
         this.selectedElement = draggableElem as SVGGraphicsElement; // element to be moved or selected
         // change cursor style
         const svg: HTMLElement = <HTMLElement>this.svgDraw?.node.firstElementChild?.parentElement;
-        if (svg != null) {
-            svg.style.cursor = 'grabbing';
-        }
-        if (!(event as MouseEvent).shiftKey) {
+        svg.style.cursor = 'grabbing';
+        if (!isShiftKeyDown) {
             // moving node
             this.shiftKeyOnMouseDown = false;
             this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute mouse movement
@@ -299,29 +350,39 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private drag(event: Event) {
+    private handleDrag(event: Event) {
         if (this.selectedElement) {
             event.preventDefault();
+            const newPosition = this.getMousePosition(event as MouseEvent);
+            this.processDrag(newPosition);
+        }
+    }
+
+    private processDrag(newPosition: Point) {
+        if (this.selectedElement) {
             if (!this.shiftKeyOnMouseDown) {
                 // moving node
-                this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute mouse movement
-                const mousePosition = this.getMousePosition(event as MouseEvent);
-                this.updateGraph(mousePosition);
+                this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute SVG transformations
+                this.updateGraph(newPosition);
                 this.initialPosition = DiagramUtils.getPosition(this.selectedElement);
             }
         }
     }
 
-    private endDrag(event: Event) {
+    private handleEndDrag(event: Event) {
+        const newPosition = this.getMousePosition(event as MouseEvent);
+        this.processEndDrag(newPosition, true);
+    }
+
+    private processEndDrag(newPosition: Point, callMoveNodeCallback: boolean) {
         if (this.selectedElement) {
             if (!this.shiftKeyOnMouseDown) {
                 // moving node
-                const mousePosition = this.getMousePosition(event as MouseEvent);
-                this.updateGraph(mousePosition);
+                this.updateGraph(newPosition);
                 if (this.textNodeSelected) {
-                    this.updateTextNodeMetadataCallCallback(mousePosition);
+                    this.updateTextNodeMetadataCallCallback(newPosition);
                 } else {
-                    this.updateNodeMetadataCallCallback(mousePosition);
+                    this.updateNodeMetadataCallCallback(newPosition, callMoveNodeCallback);
                 }
                 this.initialPosition = new Point(0, 0);
                 this.textNodeSelected = false;
@@ -333,9 +394,7 @@ export class NetworkAreaDiagramViewer {
             }
             // change cursor style
             const svg: HTMLElement = <HTMLElement>this.svgDraw?.node.firstElementChild?.parentElement;
-            if (svg != null) {
-                svg.style.removeProperty('cursor');
-            }
+            svg.style.removeProperty('cursor');
             this.selectedElement = null;
             this.initialPosition = new Point(0, 0);
             this.textNodeSelected = false;
@@ -1130,7 +1189,7 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private updateNodeMetadataCallCallback(mousePosition: Point) {
+    private updateNodeMetadataCallCallback(mousePosition: Point, callMoveNodeCallback: boolean) {
         // get moved node from metadata
         const node: SVGGraphicsElement | null = this.container.querySelector(
             'nad\\:node[svgid="' + this.selectedElement?.id + '"]'
@@ -1141,7 +1200,7 @@ export class NetworkAreaDiagramViewer {
             node.setAttribute('x', nodeMove.xNew);
             node.setAttribute('y', nodeMove.yNew);
             // call the node move callback, if defined
-            if (this.onMoveNodeCallback != null) {
+            if (this.onMoveNodeCallback != null && callMoveNodeCallback) {
                 this.onMoveNodeCallback(
                     node.getAttribute('equipmentid') ?? '',
                     node.getAttribute('svgid') ?? '',
@@ -1201,5 +1260,114 @@ export class NetworkAreaDiagramViewer {
                 this.onSelectNodeCallback(node.getAttribute('equipmentid') ?? '', node.getAttribute('svgid') ?? '');
             }
         }
+    }
+
+    // Will explore the SVG's <style> tags to find the css rule associated with "cssSelector" and update the
+    // rule using "cssDeclaration".
+    // Will create a style tag or/and new css rule if not found in the SVG.
+    public updateSvgCssDisplayValue(svg: SVGSVGElement, cssSelector: string, cssDeclaration: CSS_DECLARATION) {
+        const innerSvg = svg.querySelector('svg');
+        if (!innerSvg) {
+            console.error('Cannot find the SVG to update!');
+            return;
+        }
+
+        let ruleFound = false;
+
+        let svgStyles = innerSvg.querySelectorAll('style');
+
+        if (svgStyles) {
+            for (const svgStyle of svgStyles) {
+                if (!svgStyle?.sheet?.cssRules) {
+                    continue;
+                }
+                for (const rule of svgStyle.sheet.cssRules) {
+                    const styleRule = rule as CSSStyleRule;
+                    if (styleRule.selectorText === cssSelector) {
+                        const key = Object.keys(cssDeclaration)[0];
+                        const value = cssDeclaration[key];
+                        styleRule.style.setProperty(key, value);
+                        ruleFound = true;
+                        break;
+                    }
+                }
+                if (ruleFound) {
+                    break;
+                }
+            }
+        } else {
+            innerSvg.appendChild(document.createElement('style'));
+            console.debug('[updateSvgCssDisplayValue] Style tag missing from SVG file. It has been created.');
+            svgStyles = innerSvg.querySelectorAll('style');
+            if (!svgStyles) {
+                console.error('Failed to create a style tag in the SVG!');
+                return;
+            }
+        }
+
+        if (!ruleFound) {
+            const key = Object.keys(cssDeclaration)[0];
+            const value = cssDeclaration[key];
+            const styleTag = svgStyles[svgStyles.length - 1]; // Adds the new rule to the last <style> tag in the SVG
+            styleTag.textContent = `${cssSelector} {${key}: ${value};}\n` + styleTag.textContent;
+        }
+    }
+
+    public initializeDynamicCssRules(maxDisplayedSize: number) {
+        this.getDynamicCssRules().forEach((rule) => {
+            rule.thresholdStatus = maxDisplayedSize < rule.threshold ? THRESHOLD_STATUS.BELOW : THRESHOLD_STATUS.ABOVE;
+        });
+    }
+
+    public injectDynamicCssRules(htmlElementSvg: HTMLElement) {
+        const rules = this.getDynamicCssRules()
+            .map((rule) => {
+                const ruleToInject =
+                    rule.thresholdStatus === THRESHOLD_STATUS.BELOW
+                        ? rule.belowThresholdCssDeclaration
+                        : rule.aboveThresholdCssDeclaration;
+                const key = Object.keys(ruleToInject)[0];
+                const value = ruleToInject[key];
+                return `${rule.cssSelector} {${key}: ${value};}`;
+            })
+            .join('\n');
+
+        let styleTag = htmlElementSvg.querySelector('style');
+        if (!styleTag) {
+            htmlElementSvg.appendChild(document.createElement('style'));
+            console.debug('[injectDynamicCssRules] Style tag missing from SVG file. It has been created.');
+            styleTag = htmlElementSvg.querySelector('style');
+        }
+        if (styleTag && 'textContent' in styleTag) {
+            styleTag.textContent = rules + styleTag.textContent;
+        } else {
+            console.error('Failed to create Style tag in SVG file!');
+        }
+    }
+
+    public getCurrentlyMaxDisplayedSize(): number {
+        const viewbox = this.getViewBox();
+        return Math.max(viewbox?.height || 0, viewbox?.width || 0);
+    }
+
+    public checkAndUpdateLevelOfDetail(svg: SVGSVGElement) {
+        const maxDisplayedSize = this.getCurrentlyMaxDisplayedSize();
+        // We will check each dynamic css rule to see if we crossed a zoom threshold. If this is the case, we
+        // update the rule's threshold status and trigger the CSS change in the SVG.
+        this.getDynamicCssRules().forEach((rule) => {
+            if (rule.thresholdStatus === THRESHOLD_STATUS.ABOVE && maxDisplayedSize < rule.threshold) {
+                console.debug(
+                    'CSS Rule ' + rule.cssSelector + ' below threshold ' + maxDisplayedSize + ' < ' + rule.threshold
+                );
+                rule.thresholdStatus = THRESHOLD_STATUS.BELOW;
+                this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.belowThresholdCssDeclaration);
+            } else if (rule.thresholdStatus === THRESHOLD_STATUS.BELOW && maxDisplayedSize >= rule.threshold) {
+                console.debug(
+                    'CSS Rule ' + rule.cssSelector + ' above threshold ' + maxDisplayedSize + ' >= ' + rule.threshold
+                );
+                rule.thresholdStatus = THRESHOLD_STATUS.ABOVE;
+                this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.aboveThresholdCssDeclaration);
+            }
+        });
     }
 }

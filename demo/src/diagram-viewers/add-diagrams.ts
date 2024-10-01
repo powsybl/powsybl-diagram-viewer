@@ -43,7 +43,9 @@ export const addNadToDemo = () => {
                 handleNodeMove,
                 handleTextNodeMove,
                 handleNodeSelect,
-                true
+                true,
+                false,
+                null
             );
 
             document
@@ -65,7 +67,9 @@ export const addNadToDemo = () => {
                 handleNodeMove,
                 handleTextNodeMove,
                 handleNodeSelect,
-                false
+                false,
+                false,
+                null
             );
 
             document
@@ -87,7 +91,9 @@ export const addNadToDemo = () => {
                 handleNodeMove,
                 handleTextNodeMove,
                 handleNodeSelect,
-                true
+                true,
+                false,
+                null
             );
 
             document
@@ -109,7 +115,9 @@ export const addNadToDemo = () => {
                 handleNodeMove,
                 handleTextNodeMove,
                 handleNodeSelect,
-                true
+                true,
+                false,
+                null
             );
 
             document
@@ -131,7 +139,9 @@ export const addNadToDemo = () => {
                 handleNodeMove,
                 handleTextNodeMove,
                 handleNodeSelect,
-                true
+                true,
+                false,
+                null
             );
 
             document
@@ -153,7 +163,9 @@ export const addNadToDemo = () => {
                 handleNodeMove,
                 handleTextNodeMove,
                 handleNodeSelect,
-                true
+                true,
+                false,
+                null
             );
 
             document
@@ -175,7 +187,9 @@ export const addNadToDemo = () => {
                 handleNodeMove,
                 handleTextNodeMove,
                 handleNodeSelect,
-                true
+                true,
+                true,
+                null
             );
 
             document

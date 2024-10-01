@@ -1,6 +1,6 @@
 {
     "name": "@powsybl/diagram-viewer",
-    "version": "0.5.4",
+    "version": "0.5.6",
     "description": "TypeScript library to integrate a PowSyBl SVG diagram in a JavaScript project.",
     "author": "PowSyBl team",
     "homepage": "https://www.powsybl.org/",
@@ -27,6 +27,7 @@
         "build": "vite build",
         "prepublishOnly": "$npm_execpath run build",
         "test": "jest",
+        "test:coverage": "jest --coverage",
         "start": "vite demo/ --config vite.config.ts --open",
         "lint": "eslint . --ext js,mjs,jsx,ts,mts,tsx --max-warnings 0",
         "licenses-check": "license-checker --summary --excludePrivatePackages --production --onlyAllow \"$( jq -r .onlyAllow[] license-checker-config.json | tr '\n' ';')\" --excludePackages \"$( jq -r .excludePackages[] license-checker-config.json | tr '\n' ';')\""
