@@ -5,24 +5,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { getNumberParameter } from './diagram-utils';
+import { LayoutParametersMetadata } from './diagram-metadata';
 
 export class LayoutParameters {
-    static readonly TEXT_NODE_EDGE_CONNECTION_Y_SHIFT_PARAMETER_NAME = 'textnodeedgeconnectionyshift';
-
     static readonly TEXT_NODE_EDGE_CONNECTION_Y_SHIFT_DEFAULT = 25.0;
 
-    textNodeEdgeConnectionYShift: number;
+    layoutParametersMetadata: LayoutParametersMetadata | undefined;
 
-    constructor(layoutParametersElement: SVGGraphicsElement | null) {
-        this.textNodeEdgeConnectionYShift = getNumberParameter(
-            layoutParametersElement,
-            LayoutParameters.TEXT_NODE_EDGE_CONNECTION_Y_SHIFT_PARAMETER_NAME,
-            LayoutParameters.TEXT_NODE_EDGE_CONNECTION_Y_SHIFT_DEFAULT
-        );
+    constructor(layoutParametersMetadata: LayoutParametersMetadata | undefined) {
+        this.layoutParametersMetadata = layoutParametersMetadata;
     }
 
     public getTextNodeEdgeConnectionYShift(): number {
-        return this.textNodeEdgeConnectionYShift;
+        return (
+            this.layoutParametersMetadata?.textNodeEdgeConnectionYShift ??
+            LayoutParameters.TEXT_NODE_EDGE_CONNECTION_Y_SHIFT_DEFAULT
+        );
     }
 }

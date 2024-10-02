@@ -6,11 +6,17 @@
  */
 
 import NadSvgExample from './data/nad-eurostag-tutorial-example1.svg';
+import NadSvgExampleMeta from './data/nad-eurostag-tutorial-example1_metadata.json';
 import NadSvgPstHvdcExample from './data/nad-four-substations.svg';
+import NadSvgPstHvdcExampleMeta from './data/nad-four-substations_metadata.json';
 import NadSvgMultibusVLNodesExample from './data/nad-ieee9-zeroimpedance-cdf.svg';
+import NadSvgMultibusVLNodesExampleMeta from './data/nad-ieee9-zeroimpedance-cdf_metadata.json';
 import NadSvgMultibusVLNodes14Example from './data/nad-ieee14cdf-solved.svg';
-import NadSvgTrheeWTDanglingLineUnknownBusExample from './data/nad-scada.svg';
+import NadSvgMultibusVLNodes14ExampleMeta from './data/nad-ieee14cdf-solved_metadata.json';
+import NadSvgThreeWTDanglingLineUnknownBusExample from './data/nad-scada.svg';
+import NadSvgThreeWTDanglingLineUnknownBusExampleMeta from './data/nad-scada_metadata.json';
 import NadSvgPartialNetworkExample from './data/nad-ieee300cdf-VL9006.svg';
+import NadSvgPartialNetworkExampleMeta from './data/nad-ieee300cdf-VL9006_metadata.json';
 import SldSvgExample from './data/sld-example.svg';
 import SldSvgExampleMeta from './data/sld-example-meta.json';
 import SldSvgSubExample from './data/sld-sub-example.svg';
@@ -36,6 +42,7 @@ export const addNadToDemo = () => {
             new NetworkAreaDiagramViewer(
                 document.getElementById('svg-container-nad')!,
                 svgContent,
+                NadSvgExampleMeta,
                 500,
                 600,
                 1000,
@@ -60,6 +67,7 @@ export const addNadToDemo = () => {
             new NetworkAreaDiagramViewer(
                 document.getElementById('svg-container-nad-no-moving')!,
                 svgContent,
+                NadSvgExampleMeta,
                 500,
                 600,
                 1000,
@@ -84,6 +92,7 @@ export const addNadToDemo = () => {
             new NetworkAreaDiagramViewer(
                 document.getElementById('svg-container-nad-multibus-vlnodes')!,
                 svgContent,
+                NadSvgMultibusVLNodesExampleMeta,
                 500,
                 600,
                 1000,
@@ -108,6 +117,7 @@ export const addNadToDemo = () => {
             new NetworkAreaDiagramViewer(
                 document.getElementById('svg-container-nad-multibus-vlnodes14')!,
                 svgContent,
+                NadSvgMultibusVLNodes14ExampleMeta,
                 500,
                 600,
                 1000,
@@ -132,6 +142,7 @@ export const addNadToDemo = () => {
             new NetworkAreaDiagramViewer(
                 document.getElementById('svg-container-nad-pst-hvdc')!,
                 svgContent,
+                NadSvgPstHvdcExampleMeta,
                 500,
                 600,
                 1000,
@@ -150,12 +161,13 @@ export const addNadToDemo = () => {
                 .setAttribute('style', 'border:2px; border-style:solid;');
         });
 
-    fetch(NadSvgTrheeWTDanglingLineUnknownBusExample)
+    fetch(NadSvgThreeWTDanglingLineUnknownBusExample)
         .then((response) => response.text())
         .then((svgContent) => {
             new NetworkAreaDiagramViewer(
                 document.getElementById('svg-container-nad-threewt-dl-ub')!,
                 svgContent,
+                NadSvgThreeWTDanglingLineUnknownBusExampleMeta,
                 500,
                 600,
                 1000,
@@ -180,6 +192,7 @@ export const addNadToDemo = () => {
             new NetworkAreaDiagramViewer(
                 document.getElementById('svg-container-nad-partial-network')!,
                 svgContent,
+                NadSvgPartialNetworkExampleMeta,
                 500,
                 600,
                 1000,
