@@ -476,15 +476,15 @@ export function getNodeMove(node: SVGGraphicsElement, nodePosition: Point): NODE
     return { xOrig: xOrig, yOrig: yOrig, xNew: xNew, yNew: yNew };
 }
 
-function hasParentNode(element: SVGElement): boolean {
+function isHoverable(element: SVGElement): boolean {
     return hasId(element) && element.parentNode != null;
 }
 
-export function getHoverableForm(element: SVGElement): SVGElement | undefined {
-    if (!hasParentNode(element.parentNode as SVGElement)) {
+export function getHoverableFrom(element: SVGElement): SVGElement | undefined {
+    if (!isHoverable(element.parentNode as SVGElement)) {
         return element;
     } else if (element.parentElement) {
-        return getHoverableForm(element.parentNode as SVGElement);
+        return getHoverableFrom(element.parentNode as SVGElement);
     }
 }
 export function getStringEdgeType(edge: SVGGraphicsElement): string | null {

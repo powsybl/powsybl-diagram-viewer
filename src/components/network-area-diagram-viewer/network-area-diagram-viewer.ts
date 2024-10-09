@@ -380,7 +380,7 @@ export class NetworkAreaDiagramViewer {
             return;
         }
 
-        const hoverableElem = DiagramUtils.getHoverableForm(mouseEvent.target as SVGElement);
+        const hoverableElem = DiagramUtils.getHoverableFrom(mouseEvent.target as SVGElement);
         const parentElement = hoverableElem?.parentElement;
         if (hoverableElem == null || parentElement == null) {
             this.handleTogglePopover(false, null, '', '');

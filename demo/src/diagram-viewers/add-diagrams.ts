@@ -47,7 +47,7 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                HandleToggleNadPopover
+                handleToggleNadPopover
             );
 
             document
@@ -72,7 +72,7 @@ export const addNadToDemo = () => {
                 false,
                 false,
                 null,
-                HandleToggleNadPopover
+                handleToggleNadPopover
             );
 
             document
@@ -97,7 +97,7 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                HandleToggleNadPopover
+                handleToggleNadPopover
             );
 
             document
@@ -122,7 +122,7 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                HandleToggleNadPopover
+                handleToggleNadPopover
             );
 
             document
@@ -147,7 +147,7 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                HandleToggleNadPopover
+                handleToggleNadPopover
             );
 
             document
@@ -172,7 +172,7 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                HandleToggleNadPopover
+                handleToggleNadPopover
             );
 
             document
@@ -197,7 +197,7 @@ export const addNadToDemo = () => {
                 true,
                 true,
                 null,
-                HandleToggleNadPopover
+                handleToggleNadPopover
             );
 
             document
@@ -388,7 +388,7 @@ const handleNodeSelect: OnSelectNodeCallbackType = (equipmentId, nodeId) => {
     console.log(msg);
 };
 
-const HandleToggleNadPopover: HandleToggleNadPopoverType = (
+const handleToggleNadPopover: HandleToggleNadPopoverType = (
     shouldDisplay,
     mousePosition,
     equipmentId,
