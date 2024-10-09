@@ -38,6 +38,12 @@ export type OnMoveTextNodeCallbackType = (
 ) => void;
 
 export type OnSelectNodeCallbackType = (equipmentId: string, nodeId: string) => void;
+export type HandleToggleNadPopoverType = (
+    shouldDisplay: boolean,
+    mousePosition: Point | null,
+    equipmentId: string,
+    equipmentType: string
+) => void;
 
 export class NetworkAreaDiagramViewer {
     container: HTMLElement;
@@ -63,6 +69,7 @@ export class NetworkAreaDiagramViewer {
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
     shiftKeyOnMouseDown: boolean = false;
     dynamicCssRules: CSS_RULE[];
+    handleTogglePopover: HandleToggleNadPopoverType | null;
 
     constructor(
         container: HTMLElement,
@@ -76,7 +83,8 @@ export class NetworkAreaDiagramViewer {
         onSelectNodeCallback: OnSelectNodeCallbackType | null,
         enableNodeMoving: boolean,
         enableLevelOfDetail: boolean,
-        customDynamicCssRules: CSS_RULE[] | null
+        customDynamicCssRules: CSS_RULE[] | null,
+        handleTogglePopover: HandleToggleNadPopoverType | null
     ) {
         this.container = container;
         this.svgContent = svgContent;
@@ -90,6 +98,7 @@ export class NetworkAreaDiagramViewer {
         this.onMoveNodeCallback = onMoveNodeCallback;
         this.onMoveTextNodeCallback = onMoveTextNodeCallback;
         this.onSelectNodeCallback = onSelectNodeCallback;
+        this.handleTogglePopover = handleTogglePopover;
     }
 
     public setWidth(width: number): void {
@@ -220,6 +229,9 @@ export class NetworkAreaDiagramViewer {
                 this.handleEndDrag(e);
             });
         }
+        this.svgDraw.on('mouseover', (e: Event) => {
+            this.onHover(e as MouseEvent);
+        });
         this.svgDraw.on('panStart', function () {
             if (drawnSvg.parentElement != undefined) {
                 drawnSvg.parentElement.style.cursor = 'move';
@@ -360,6 +372,40 @@ export class NetworkAreaDiagramViewer {
                 this.updateGraph(newPosition);
                 this.initialPosition = DiagramUtils.getPosition(this.selectedElement);
             }
+        }
+    }
+    private onHover(mouseEvent: MouseEvent) {
+        const equipmentsWithPopover = ['LINE', 'TWO_WINDINGS_TRANSFORMER', 'PHASE_SHIFT_TRANSFORMER'];
+        if (this.handleTogglePopover == null) {
+            return;
+        }
+
+        const hoverableElem = DiagramUtils.getHoverableFrom(mouseEvent.target as SVGElement);
+        const parentElement = hoverableElem?.parentElement;
+        if (hoverableElem == null || parentElement == null) {
+            this.handleTogglePopover(false, null, '', '');
+            return;
+        }
+        if (!DiagramUtils.classIsContainerOfHoverables(parentElement)) {
+            this.handleTogglePopover(false, null, '', '');
+            return;
+        }
+
+        //get edge by svgId
+        const edge: SVGGraphicsElement | null = this.container.querySelector(
+            `nad\\:edge[svgid="${hoverableElem?.id}"]`
+        );
+
+        if (edge && equipmentsWithPopover.includes(DiagramUtils.getStringEdgeType(edge) ?? '')) {
+            const mousePosition = this.getMousePosition(mouseEvent);
+            this.handleTogglePopover(
+                true,
+                mousePosition,
+                edge.getAttribute('equipmentid') ?? '',
+                DiagramUtils.getStringEdgeType(edge) ?? ''
+            );
+        } else {
+            this.handleTogglePopover(false, null, '', '');
         }
     }
 
