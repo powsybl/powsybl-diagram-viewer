@@ -170,8 +170,8 @@ export class NetworkAreaDiagramViewer {
             const elemToMove: SVGElement | null = this.container.querySelector('[id="' + nodeId + '"]');
             if (elemToMove) {
                 const newPosition = new Point(x, y);
-                this.processStartDrag(elemToMove, false);
-                this.processEndDrag(newPosition, false);
+                this.initializeDrag(elemToMove);
+                this.completeDrag(newPosition, false);
             }
         }
     }
@@ -213,16 +213,16 @@ export class NetworkAreaDiagramViewer {
         // add events
         if (enableNodeMoving) {
             this.svgDraw.on('mousedown', (e: Event) => {
-                this.handleStartDrag(e);
+                this.handleStartDragSelectEvent(e);
             });
             this.svgDraw.on('mousemove', (e: Event) => {
-                this.handleDrag(e);
+                this.handleDragEvent(e);
             });
             this.svgDraw.on('mouseup', (e: Event) => {
-                this.handleEndDrag(e);
+                this.handleEndDragSelectEvent(e);
             });
             this.svgDraw.on('mouseleave', (e: Event) => {
-                this.handleEndDrag(e);
+                this.handleEndDragSelectEvent(e);
             });
         }
         this.svgDraw.on('panStart', function () {
@@ -312,87 +312,96 @@ export class NetworkAreaDiagramViewer {
         });
     }
 
-    private handleStartDrag(event: Event) {
+    private handleStartDragSelectEvent(event: Event) {
+        // check element is draggable or selectable
         const draggableElem = DiagramUtils.getDraggableFrom(event.target as SVGElement);
         if (!draggableElem) {
             return;
         }
-        const isShiftKeyDown = !!(event as MouseEvent).shiftKey;
-        this.processStartDrag(draggableElem, isShiftKeyDown);
-    }
-
-    private processStartDrag(draggableElem: SVGElement, isShiftKeyDown: boolean) {
         this.disablePanzoom(); // to avoid panning the whole SVG when moving or selecting a node
-        this.selectedElement = draggableElem as SVGGraphicsElement; // element to be moved or selected
         // change cursor style
         const svg: HTMLElement = <HTMLElement>this.svgDraw?.node.firstElementChild?.parentElement;
         svg.style.cursor = 'grabbing';
-        if (!isShiftKeyDown) {
+        // check dragging vs. selection
+        this.shiftKeyOnMouseDown = !!(event as MouseEvent).shiftKey;
+        if (!this.shiftKeyOnMouseDown) {
             // moving node
-            this.shiftKeyOnMouseDown = false;
-            this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute mouse movement
-            this.initialPosition = DiagramUtils.getPosition(this.selectedElement); // used for the offset
-            this.edgeAngles = new Map<string, number>();
-            // check if I'm moving a text node
-            if (DiagramUtils.isTextNode(this.selectedElement)) {
-                this.textNodeSelected = true;
-            }
+            this.initializeDrag(draggableElem);
         } else {
             // selecting node
-            this.shiftKeyOnMouseDown = true;
+            this.selectedElement = draggableElem as SVGGraphicsElement; // element to be selected
         }
     }
 
-    private handleDrag(event: Event) {
-        if (this.selectedElement) {
+    private initializeDrag(draggableElem: SVGElement) {
+        this.selectedElement = draggableElem as SVGGraphicsElement; // element to be moved
+        this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute mouse movement
+        this.initialPosition = DiagramUtils.getPosition(this.selectedElement); // used for the offset
+        this.edgeAngles = new Map<string, number>(); // used for node redrawing
+        // check if I'm moving a text node
+        if (DiagramUtils.isTextNode(this.selectedElement)) {
+            this.textNodeSelected = true;
+        }
+    }
+
+    private handleDragEvent(event: Event) {
+        if (this.selectedElement && !this.shiftKeyOnMouseDown) {
             event.preventDefault();
+            this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute SVG transformations
             const newPosition = this.getMousePosition(event as MouseEvent);
-            this.processDrag(newPosition);
+            this.drag(newPosition);
         }
     }
 
-    private processDrag(newPosition: Point) {
+    private drag(newPosition: Point) {
         if (this.selectedElement) {
-            if (!this.shiftKeyOnMouseDown) {
-                // moving node
-                this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute SVG transformations
-                this.updateGraph(newPosition);
-                this.initialPosition = DiagramUtils.getPosition(this.selectedElement);
-            }
-        }
-    }
-
-    private handleEndDrag(event: Event) {
-        const newPosition = this.getMousePosition(event as MouseEvent);
-        this.processEndDrag(newPosition, true);
-    }
-
-    private processEndDrag(newPosition: Point, callMoveNodeCallback: boolean) {
-        if (this.selectedElement) {
-            if (!this.shiftKeyOnMouseDown) {
-                // moving node
-                this.updateGraph(newPosition);
-                if (this.textNodeSelected) {
-                    this.updateTextNodeMetadataCallCallback(newPosition);
-                } else {
-                    this.updateNodeMetadataCallCallback(newPosition, callMoveNodeCallback);
-                }
-                this.initialPosition = new Point(0, 0);
-                this.textNodeSelected = false;
-                this.endTextEdge = new Point(0, 0);
+            if (this.textNodeSelected) {
+                this.dragVoltageLevelText(newPosition);
             } else {
-                // selecting node
-                this.callSelectNodeCallback();
-                this.shiftKeyOnMouseDown = false;
+                this.dragVoltageLevelNode(newPosition);
             }
-            // change cursor style
-            const svg: HTMLElement = <HTMLElement>this.svgDraw?.node.firstElementChild?.parentElement;
-            svg.style.removeProperty('cursor');
-            this.selectedElement = null;
+            this.initialPosition = DiagramUtils.getPosition(this.selectedElement);
+        }
+    }
+
+    private handleEndDragSelectEvent(event: Event) {
+        if (!this.shiftKeyOnMouseDown) {
+            // moving node
+            const newPosition = this.getMousePosition(event as MouseEvent);
+            this.completeDrag(newPosition, true);
+        } else {
+            // selecting node
+            this.completeSelect();
+        }
+        // change cursor style
+        const svg: HTMLElement = <HTMLElement>this.svgDraw?.node.firstElementChild?.parentElement;
+        svg.style.removeProperty('cursor');
+        this.enablePanzoom();
+    }
+
+    private completeDrag(newPosition: Point, callMoveNodeCallback: boolean) {
+        if (this.selectedElement) {
+            if (this.textNodeSelected) {
+                this.dragVoltageLevelText(newPosition);
+                this.updateTextNodeMetadataCallCallback(newPosition);
+            } else {
+                this.dragVoltageLevelNode(newPosition);
+                this.updateNodeMetadataCallCallback(newPosition, callMoveNodeCallback);
+            }
+            // reset data
             this.initialPosition = new Point(0, 0);
             this.textNodeSelected = false;
             this.endTextEdge = new Point(0, 0);
-            this.enablePanzoom();
+            this.selectedElement = null;
+        }
+    }
+
+    private completeSelect() {
+        if (this.selectedElement) {
+            this.callSelectNodeCallback();
+            // reset data
+            this.shiftKeyOnMouseDown = false;
+            this.selectedElement = null;
         }
     }
 
@@ -409,26 +418,26 @@ export class NetworkAreaDiagramViewer {
         return new Point(mousePosition.x - this.initialPosition.x, mousePosition.y - this.initialPosition.y);
     }
 
-    private updateGraph(mousePosition: Point) {
-        if (this.textNodeSelected) {
-            window.getSelection()?.empty(); // to avoid text highlighting in firefox
-            const vlNode: SVGGraphicsElement | null = this.container.querySelector(
-                "[id='" + DiagramUtils.getVoltageLevelNodeId(this.selectedElement?.id) + "']"
-            );
-            this.moveText(this.selectedElement, vlNode, mousePosition, DiagramUtils.getTextNodeAngleFromCentre);
-        } else {
-            this.moveNode(mousePosition);
-            const textNode: SVGGraphicsElement | null = this.container.querySelector(
-                "[id='" + DiagramUtils.getTextNodeId(this.selectedElement?.id) + "']"
-            );
-            this.moveText(
-                textNode,
-                this.selectedElement,
-                this.getTranslation(mousePosition),
-                DiagramUtils.getTextNodeTranslatedPosition
-            );
-            this.moveEdges(mousePosition);
-        }
+    private dragVoltageLevelText(mousePosition: Point) {
+        window.getSelection()?.empty(); // to avoid text highlighting in firefox
+        const vlNode: SVGGraphicsElement | null = this.container.querySelector(
+            "[id='" + DiagramUtils.getVoltageLevelNodeId(this.selectedElement?.id) + "']"
+        );
+        this.moveText(this.selectedElement, vlNode, mousePosition, DiagramUtils.getTextNodeAngleFromCentre);
+    }
+
+    private dragVoltageLevelNode(mousePosition: Point) {
+        this.moveNode(mousePosition);
+        const textNode: SVGGraphicsElement | null = this.container.querySelector(
+            "[id='" + DiagramUtils.getTextNodeId(this.selectedElement?.id) + "']"
+        );
+        this.moveText(
+            textNode,
+            this.selectedElement,
+            this.getTranslation(mousePosition),
+            DiagramUtils.getTextNodeTranslatedPosition
+        );
+        this.moveEdges(mousePosition);
     }
 
     private moveNode(mousePosition: Point) {
