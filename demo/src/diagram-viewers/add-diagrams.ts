@@ -28,7 +28,7 @@ import {
     OnMoveTextNodeCallbackType,
     OnSelectNodeCallbackType,
 } from '../../../src';
-import { HandleToggleNadPopoverType } from '../../../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
+import { OnNadToggleHoverCallbackType } from '../../../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
 
 export const addNadToDemo = () => {
     fetch(NadSvgExample)
@@ -388,7 +388,7 @@ const handleNodeSelect: OnSelectNodeCallbackType = (equipmentId, nodeId) => {
     console.log(msg);
 };
 
-const handleToggleNadPopover: HandleToggleNadPopoverType = (
+const handleToggleNadPopover: OnNadToggleHoverCallbackType = (
     shouldDisplay,
     mousePosition,
     equipmentId,

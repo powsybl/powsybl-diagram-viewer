@@ -38,7 +38,7 @@ export type OnMoveTextNodeCallbackType = (
 ) => void;
 
 export type OnSelectNodeCallbackType = (equipmentId: string, nodeId: string) => void;
-export type HandleToggleNadPopoverType = (
+export type OnNadToggleHoverCallbackType = (
     shouldDisplay: boolean,
     mousePosition: Point | null,
     equipmentId: string,
@@ -69,7 +69,7 @@ export class NetworkAreaDiagramViewer {
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
     shiftKeyOnMouseDown: boolean = false;
     dynamicCssRules: CSS_RULE[];
-    handleTogglePopover: HandleToggleNadPopoverType | null;
+    handleTogglePopover: OnNadToggleHoverCallbackType | null;
 
     constructor(
         container: HTMLElement,
@@ -84,7 +84,7 @@ export class NetworkAreaDiagramViewer {
         enableNodeMoving: boolean,
         enableLevelOfDetail: boolean,
         customDynamicCssRules: CSS_RULE[] | null,
-        handleTogglePopover: HandleToggleNadPopoverType | null
+        handleTogglePopover: OnNadToggleHoverCallbackType | null
     ) {
         this.container = container;
         this.svgContent = svgContent;
@@ -374,6 +374,7 @@ export class NetworkAreaDiagramViewer {
             }
         }
     }
+
     private onHover(mouseEvent: MouseEvent) {
         const equipmentsWithPopover = ['LINE', 'TWO_WINDINGS_TRANSFORMER', 'PHASE_SHIFT_TRANSFORMER'];
         if (this.handleTogglePopover == null) {
@@ -381,12 +382,8 @@ export class NetworkAreaDiagramViewer {
         }
 
         const hoverableElem = DiagramUtils.getHoverableFrom(mouseEvent.target as SVGElement);
-        const parentElement = hoverableElem?.parentElement;
-        if (hoverableElem == null || parentElement == null) {
-            this.handleTogglePopover(false, null, '', '');
-            return;
-        }
-        if (!DiagramUtils.classIsContainerOfHoverables(parentElement)) {
+        //const parentElement = hoverableElem?.parentElement;
+        if (!hoverableElem) {
             this.handleTogglePopover(false, null, '', '');
             return;
         }
@@ -398,12 +395,9 @@ export class NetworkAreaDiagramViewer {
 
         if (edge && equipmentsWithPopover.includes(DiagramUtils.getStringEdgeType(edge) ?? '')) {
             const mousePosition = this.getMousePosition(mouseEvent);
-            this.handleTogglePopover(
-                true,
-                mousePosition,
-                edge.getAttribute('equipmentid') ?? '',
-                DiagramUtils.getStringEdgeType(edge) ?? ''
-            );
+            const equipmentId = edge?.getAttribute('equipmentid') ?? '';
+            const edgeType = DiagramUtils.getStringEdgeType(edge) ?? '';
+            this.handleTogglePopover(true, mousePosition, equipmentId, edgeType);
         } else {
             this.handleTogglePopover(false, null, '', '');
         }
@@ -688,7 +682,7 @@ export class NetworkAreaDiagramViewer {
                 } else {
                     // get edge type
                     const edgeType = DiagramUtils.getEdgeType(edge);
-                    if (edgeType == null) {
+                    if (edgeType == DiagramUtils.EdgeType.UNKNOWN) {
                         return;
                     }
                     if (edgeNodes[0] == null || edgeNodes[1] == null) {
@@ -762,7 +756,7 @@ export class NetworkAreaDiagramViewer {
     private moveStraightEdge(edge: SVGGraphicsElement, mousePosition: Point) {
         // get edge type
         const edgeType = DiagramUtils.getEdgeType(edge);
-        if (edgeType == null) {
+        if (edgeType == DiagramUtils.EdgeType.UNKNOWN) {
             return;
         }
         const edgeNodes = this.getEdgeNodes(edge);
