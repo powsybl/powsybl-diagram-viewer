@@ -365,18 +365,21 @@ export class NetworkAreaDiagramViewer {
     }
 
     private handleEndDragSelectEvent(event: Event) {
-        if (!this.shiftKeyOnMouseDown) {
-            // moving node
-            const newPosition = this.getMousePosition(event as MouseEvent);
-            this.completeDrag(newPosition, true);
-        } else {
-            // selecting node
-            this.completeSelect();
+        // check if I moved or selected an element
+        if (this.selectedElement) {
+            if (!this.shiftKeyOnMouseDown) {
+                // moving node
+                const newPosition = this.getMousePosition(event as MouseEvent);
+                this.completeDrag(newPosition, true);
+            } else {
+                // selecting node
+                this.completeSelect();
+            }
+            // change cursor style
+            const svg: HTMLElement = <HTMLElement>this.svgDraw?.node.firstElementChild?.parentElement;
+            svg.style.removeProperty('cursor');
+            this.enablePanzoom();
         }
-        // change cursor style
-        const svg: HTMLElement = <HTMLElement>this.svgDraw?.node.firstElementChild?.parentElement;
-        svg.style.removeProperty('cursor');
-        this.enablePanzoom();
     }
 
     private completeDrag(newPosition: Point, callMoveNodeCallback: boolean) {
