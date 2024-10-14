@@ -64,6 +64,7 @@ export class NetworkAreaDiagramViewer {
     onMoveTextNodeCallback: OnMoveTextNodeCallbackType | null;
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
     shiftKeyOnMouseDown: boolean = false;
+    enableNodeMoving: boolean = false;
     dynamicCssRules: CSS_RULE[];
 
     constructor(
@@ -88,13 +89,14 @@ export class NetworkAreaDiagramViewer {
         this.height = 0;
         this.originalWidth = 0;
         this.originalHeight = 0;
+        this.enableNodeMoving = enableNodeMoving;
         this.dynamicCssRules = customDynamicCssRules ?? DEFAULT_DYNAMIC_CSS_RULES;
-        this.init(minWidth, minHeight, maxWidth, maxHeight, enableNodeMoving, enableLevelOfDetail);
-        this.svgParameters = new SvgParameters(diagramMetadata?.svgParameters);
-        this.layoutParameters = new LayoutParameters(diagramMetadata?.layoutParameters);
         this.onMoveNodeCallback = onMoveNodeCallback;
         this.onMoveTextNodeCallback = onMoveTextNodeCallback;
         this.onSelectNodeCallback = onSelectNodeCallback;
+        this.init(minWidth, minHeight, maxWidth, maxHeight, enableLevelOfDetail);
+        this.svgParameters = new SvgParameters(diagramMetadata?.svgParameters);
+        this.layoutParameters = new LayoutParameters(diagramMetadata?.layoutParameters);
     }
 
     public setWidth(width: number): void {
@@ -181,7 +183,6 @@ export class NetworkAreaDiagramViewer {
         minHeight: number,
         maxWidth: number,
         maxHeight: number,
-        enableNodeMoving: boolean,
         enableLevelOfDetail: boolean
     ): void {
         if (!this.container || !this.svgContent) {
@@ -211,13 +212,17 @@ export class NetworkAreaDiagramViewer {
         drawnSvg.style.overflow = 'visible';
 
         // add events
-        if (enableNodeMoving) {
+        if (this.enableNodeMoving || this.onSelectNodeCallback !== null) {
             this.svgDraw.on('mousedown', (e: Event) => {
                 this.handleStartDragSelectEvent(e);
             });
+        }
+        if (this.enableNodeMoving) {
             this.svgDraw.on('mousemove', (e: Event) => {
                 this.handleDragEvent(e);
             });
+        }
+        if (this.enableNodeMoving || this.onSelectNodeCallback !== null) {
             this.svgDraw.on('mouseup', (e: Event) => {
                 this.handleEndDragSelectEvent(e);
             });
@@ -269,7 +274,7 @@ export class NetworkAreaDiagramViewer {
             observer.observe(targetNode, { attributeFilter: ['viewBox'] });
         }
 
-        if (enableNodeMoving) {
+        if (this.enableNodeMoving || this.onSelectNodeCallback !== null) {
             // fill empty elements: unknown buses and three windings transformers
             const emptyElements: NodeListOf<SVGGraphicsElement> = this.container.querySelectorAll(
                 '.nad-unknown-busnode, .nad-3wt-nodes .nad-winding'
@@ -313,9 +318,23 @@ export class NetworkAreaDiagramViewer {
     }
 
     private handleStartDragSelectEvent(event: Event) {
+        // check mouse button
+        if ((event as MouseEvent).button !== 0) {
+            return;
+        }
         // check element is draggable or selectable
         const draggableElem = DiagramUtils.getDraggableFrom(event.target as SVGElement);
         if (!draggableElem) {
+            return;
+        }
+        this.shiftKeyOnMouseDown = !!(event as MouseEvent).shiftKey;
+        // here to avoid disabling pannig and changing cursor
+        // when moving is disabled and the shift key is not pressed
+        if (!this.shiftKeyOnMouseDown && !this.enableNodeMoving) {
+            return;
+        }
+        // avoid selecting text nodes
+        if (this.shiftKeyOnMouseDown && DiagramUtils.isTextNode(draggableElem as SVGGraphicsElement)) {
             return;
         }
         this.disablePanzoom(); // to avoid panning the whole SVG when moving or selecting a node
@@ -323,7 +342,6 @@ export class NetworkAreaDiagramViewer {
         const svg: HTMLElement = <HTMLElement>this.svgDraw?.node.firstElementChild?.parentElement;
         svg.style.cursor = 'grabbing';
         // check dragging vs. selection
-        this.shiftKeyOnMouseDown = !!(event as MouseEvent).shiftKey;
         if (!this.shiftKeyOnMouseDown) {
             // moving node
             this.initializeDrag(draggableElem);
@@ -345,6 +363,13 @@ export class NetworkAreaDiagramViewer {
     }
 
     private handleDragEvent(event: Event) {
+        // check mouse button
+        if ((event as MouseEvent).button !== 0) {
+            return;
+        }
+        if (!this.enableNodeMoving) {
+            return;
+        }
         if (this.selectedElement && !this.shiftKeyOnMouseDown) {
             event.preventDefault();
             this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute SVG transformations
@@ -365,10 +390,17 @@ export class NetworkAreaDiagramViewer {
     }
 
     private handleEndDragSelectEvent(event: Event) {
+        // check mouse button
+        if ((event as MouseEvent).button !== 0) {
+            return;
+        }
         // check if I moved or selected an element
         if (this.selectedElement) {
             if (!this.shiftKeyOnMouseDown) {
                 // moving node
+                if (!this.enableNodeMoving) {
+                    return;
+                }
                 const newPosition = this.getMousePosition(event as MouseEvent);
                 this.completeDrag(newPosition, true);
             } else {
