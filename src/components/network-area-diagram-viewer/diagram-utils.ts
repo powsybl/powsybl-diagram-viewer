@@ -492,6 +492,6 @@ export function getHoverableFrom(element: SVGElement): SVGElement | undefined {
         return getHoverableFrom(element.parentNode as SVGElement);
     }
 }
-export function getStringEdgeType(edge: SVGGraphicsElement): string | undefined {
+export function getStringEdgeType(edge: SVGGraphicsElement): string {
     return EdgeType[getEdgeType(edge)];
 }
