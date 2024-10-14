@@ -28,7 +28,7 @@ import {
     OnMoveTextNodeCallbackType,
     OnSelectNodeCallbackType,
 } from '../../../src';
-import { OnNadToggleHoverCallbackType } from '../../../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
+import { OnToggleHoverCallbackType } from '../../../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
 
 const equipmentsWithPopover = ['LINE', 'TWO_WINDINGS_TRANSFORMER', 'PHASE_SHIFT_TRANSFORMER'];
 
@@ -397,7 +397,7 @@ const handleNodeSelect: OnSelectNodeCallbackType = (equipmentId, nodeId) => {
     console.log(msg);
 };
 
-const handleToggleNadPopover: OnNadToggleHoverCallbackType = (
+const handleToggleNadPopover: OnToggleHoverCallbackType = (
     shouldDisplay,
     mousePosition,
     equipmentId,
