@@ -28,6 +28,9 @@ import {
     OnMoveTextNodeCallbackType,
     OnSelectNodeCallbackType,
 } from '../../../src';
+import { OnToggleHoverCallbackType } from '../../../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
+
+const equipmentsWithPopover = ['LINE', 'TWO_WINDINGS_TRANSFORMER', 'PHASE_SHIFT_TRANSFORMER'];
 
 export const addNadToDemo = () => {
     fetch(NadSvgExample)
@@ -45,7 +48,9 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                handleToggleNadPopover,
+                equipmentsWithPopover
             );
 
             document
@@ -69,7 +74,9 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 false,
                 false,
-                null
+                null,
+                handleToggleNadPopover,
+                equipmentsWithPopover
             );
 
             document
@@ -93,7 +100,9 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                handleToggleNadPopover,
+                equipmentsWithPopover
             );
 
             document
@@ -117,7 +126,9 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                handleToggleNadPopover,
+                equipmentsWithPopover
             );
 
             document
@@ -141,7 +152,9 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                handleToggleNadPopover,
+                equipmentsWithPopover
             );
 
             document
@@ -165,7 +178,9 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                handleToggleNadPopover,
+                equipmentsWithPopover
             );
 
             document
@@ -189,7 +204,9 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 true,
-                null
+                null,
+                handleToggleNadPopover,
+                equipmentsWithPopover
             );
 
             document
@@ -378,4 +395,24 @@ const handleTextNodeMove: OnMoveTextNodeCallbackType = (
 const handleNodeSelect: OnSelectNodeCallbackType = (equipmentId, nodeId) => {
     const msg = 'Node ' + nodeId + ' equipment ' + equipmentId + ' selected';
     console.log(msg);
+};
+
+const handleToggleNadPopover: OnToggleHoverCallbackType = (
+    shouldDisplay,
+    mousePosition,
+    equipmentId,
+    equipmentType
+) => {
+    if (shouldDisplay) {
+        const msg =
+            'Hovers on equipment: ' +
+            equipmentId +
+            ', equipmentType: ' +
+            equipmentType +
+            ', mousePosition : x =' +
+            mousePosition?.x +
+            ', y=' +
+            mousePosition?.y;
+        console.log(msg);
+    }
 };

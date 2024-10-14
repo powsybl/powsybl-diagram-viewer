@@ -23,6 +23,7 @@ export enum EdgeType {
     DANGLING_LINE,
     TIE_LINE,
     THREE_WINDINGS_TRANSFORMER,
+    UNKNOWN,
 }
 
 const EdgeTypeMapping: { [key: string]: EdgeType } = {
@@ -124,10 +125,10 @@ export function getEdgeFork(point: Point, edgeForkLength: number, angleFork: num
 }
 
 // get the type of edge
-export function getEdgeType(edge: SVGGraphicsElement): EdgeType | null {
+export function getEdgeType(edge: SVGGraphicsElement): EdgeType {
     const edgeType = edge.getAttribute('type');
     if (edgeType == null) {
-        return null;
+        return EdgeType.UNKNOWN;
     }
     return EdgeTypeMapping[edgeType];
 }
@@ -227,6 +228,9 @@ function classIsContainerOfDraggables(element: SVGElement): boolean {
     );
 }
 
+function classIsContainerOfHoverables(element: SVGElement): boolean {
+    return element.classList.contains('nad-branch-edges') || element.classList.contains('nad-3wt-edges');
+}
 // get radius of voltage level
 export function getVoltageLevelCircleRadius(nbNeighbours: number, voltageLevelCircleRadius: number): number {
     return Math.min(Math.max(nbNeighbours + 1, 1), 2) * voltageLevelCircleRadius;
@@ -471,4 +475,23 @@ export function getNodeMove(node: SVGGraphicsElement, nodePosition: Point): NODE
     const xNew = getFormattedValue(nodePosition.x);
     const yNew = getFormattedValue(nodePosition.y);
     return { xOrig: xOrig, yOrig: yOrig, xNew: xNew, yNew: yNew };
+}
+
+// Checks if the element is hoverable
+// Function to check if the element is hoverable
+function isHoverable(element: SVGElement): boolean {
+    return (
+        hasId(element) && element.parentNode != null && classIsContainerOfHoverables(element.parentNode as SVGElement)
+    );
+}
+
+export function getHoverableFrom(element: SVGElement): SVGElement | undefined {
+    if (isHoverable(element)) {
+        return element;
+    } else if (element.parentElement) {
+        return getHoverableFrom(element.parentNode as SVGElement);
+    }
+}
+export function getStringEdgeType(edge: SVGGraphicsElement): string {
+    return EdgeType[getEdgeType(edge)];
 }
