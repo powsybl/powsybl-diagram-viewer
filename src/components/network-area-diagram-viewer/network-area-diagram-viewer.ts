@@ -318,6 +318,10 @@ export class NetworkAreaDiagramViewer {
     }
 
     private handleStartDragSelectEvent(event: Event) {
+        // check mouse button
+        if ((event as MouseEvent).button !== 0) {
+            return;
+        }
         // check element is draggable or selectable
         const draggableElem = DiagramUtils.getDraggableFrom(event.target as SVGElement);
         if (!draggableElem) {
@@ -327,6 +331,10 @@ export class NetworkAreaDiagramViewer {
         // here to avoid disabling pannig and changing cursor
         // when moving is disabled and the shift key is not pressed
         if (!this.shiftKeyOnMouseDown && !this.enableNodeMoving) {
+            return;
+        }
+        // avoid selecting text nodes
+        if (this.shiftKeyOnMouseDown && DiagramUtils.isTextNode(draggableElem as SVGGraphicsElement)) {
             return;
         }
         this.disablePanzoom(); // to avoid panning the whole SVG when moving or selecting a node
@@ -355,6 +363,10 @@ export class NetworkAreaDiagramViewer {
     }
 
     private handleDragEvent(event: Event) {
+        // check mouse button
+        if ((event as MouseEvent).button !== 0) {
+            return;
+        }
         if (!this.enableNodeMoving) {
             return;
         }
@@ -378,6 +390,10 @@ export class NetworkAreaDiagramViewer {
     }
 
     private handleEndDragSelectEvent(event: Event) {
+        // check mouse button
+        if ((event as MouseEvent).button !== 0) {
+            return;
+        }
         // check if I moved or selected an element
         if (this.selectedElement) {
             if (!this.shiftKeyOnMouseDown) {
