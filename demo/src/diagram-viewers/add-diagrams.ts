@@ -49,7 +49,7 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                handleToggleNadPopover,
+                handleToggleNadHover,
                 equipmentsWithPopover
             );
 
@@ -75,7 +75,7 @@ export const addNadToDemo = () => {
                 false,
                 false,
                 null,
-                handleToggleNadPopover,
+                handleToggleNadHover,
                 equipmentsWithPopover
             );
 
@@ -101,7 +101,7 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                handleToggleNadPopover,
+                handleToggleNadHover,
                 equipmentsWithPopover
             );
 
@@ -127,7 +127,7 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                handleToggleNadPopover,
+                handleToggleNadHover,
                 equipmentsWithPopover
             );
 
@@ -153,7 +153,7 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                handleToggleNadPopover,
+                handleToggleNadHover,
                 equipmentsWithPopover
             );
 
@@ -179,7 +179,7 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                handleToggleNadPopover,
+                handleToggleNadHover,
                 equipmentsWithPopover
             );
 
@@ -205,7 +205,7 @@ export const addNadToDemo = () => {
                 true,
                 true,
                 null,
-                handleToggleNadPopover,
+                handleToggleNadHover,
                 equipmentsWithPopover
             );
 
@@ -397,13 +397,8 @@ const handleNodeSelect: OnSelectNodeCallbackType = (equipmentId, nodeId) => {
     console.log(msg);
 };
 
-const handleToggleNadPopover: OnToggleHoverCallbackType = (
-    shouldDisplay,
-    mousePosition,
-    equipmentId,
-    equipmentType
-) => {
-    if (shouldDisplay) {
+const handleToggleNadHover: OnToggleHoverCallbackType = (shouldHover, mousePosition, equipmentId, equipmentType) => {
+    if (shouldHover) {
         const msg =
             'Hovers on equipment: ' +
             equipmentId +
