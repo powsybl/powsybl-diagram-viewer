@@ -70,7 +70,6 @@ export class NetworkAreaDiagramViewer {
     shiftKeyOnMouseDown: boolean = false;
     dynamicCssRules: CSS_RULE[];
     OnToggleHoverCallback: OnToggleHoverCallbackType | null;
-    hoverableEquipments: string[] | null;
 
     constructor(
         container: HTMLElement,
@@ -85,8 +84,7 @@ export class NetworkAreaDiagramViewer {
         enableNodeMoving: boolean,
         enableLevelOfDetail: boolean,
         customDynamicCssRules: CSS_RULE[] | null,
-        OnToggleHoverCallback: OnToggleHoverCallbackType | null,
-        hoverableEquipments: string[] | null
+        OnToggleHoverCallback: OnToggleHoverCallbackType | null
     ) {
         this.container = container;
         this.svgContent = svgContent;
@@ -101,7 +99,6 @@ export class NetworkAreaDiagramViewer {
         this.onMoveTextNodeCallback = onMoveTextNodeCallback;
         this.onSelectNodeCallback = onSelectNodeCallback;
         this.OnToggleHoverCallback = OnToggleHoverCallback;
-        this.hoverableEquipments = hoverableEquipments;
     }
 
     public setWidth(width: number): void {
@@ -395,7 +392,7 @@ export class NetworkAreaDiagramViewer {
             `nad\\:edge[svgid="${hoverableElem?.id}"]`
         );
 
-        if (edge && this.hoverableEquipments?.includes(DiagramUtils.getStringEdgeType(edge))) {
+        if (edge) {
             const mousePosition = this.getMousePosition(mouseEvent);
             const equipmentId = edge?.getAttribute('equipmentid') ?? '';
             const edgeType = DiagramUtils.getStringEdgeType(edge) ?? '';
