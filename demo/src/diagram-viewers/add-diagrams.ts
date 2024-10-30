@@ -388,8 +388,8 @@ const handleNodeSelect: OnSelectNodeCallbackType = (equipmentId, nodeId) => {
     console.log(msg);
 };
 
-const handleToggleNadHover: OnToggleHoverCallbackType = (shouldHover, mousePosition, equipmentId, equipmentType) => {
-    if (shouldHover) {
+const handleToggleNadHover: OnToggleHoverCallbackType = (hovered, mousePosition, equipmentId, equipmentType) => {
+    if (hovered) {
         const msg =
             'Hovers on equipment: ' +
             equipmentId +

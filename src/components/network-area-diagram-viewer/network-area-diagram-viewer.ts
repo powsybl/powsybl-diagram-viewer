@@ -39,7 +39,7 @@ export type OnMoveTextNodeCallbackType = (
 
 export type OnSelectNodeCallbackType = (equipmentId: string, nodeId: string) => void;
 export type OnToggleHoverCallbackType = (
-    shouldHover: boolean,
+    hovered: boolean,
     mousePosition: Point | null,
     equipmentId: string,
     equipmentType: string
@@ -69,7 +69,7 @@ export class NetworkAreaDiagramViewer {
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
     shiftKeyOnMouseDown: boolean = false;
     dynamicCssRules: CSS_RULE[];
-    OnToggleHoverCallback: OnToggleHoverCallbackType | null;
+    onToggleHoverCallback: OnToggleHoverCallbackType | null;
 
     constructor(
         container: HTMLElement,
@@ -84,7 +84,7 @@ export class NetworkAreaDiagramViewer {
         enableNodeMoving: boolean,
         enableLevelOfDetail: boolean,
         customDynamicCssRules: CSS_RULE[] | null,
-        OnToggleHoverCallback: OnToggleHoverCallbackType | null
+        onToggleHoverCallback: OnToggleHoverCallbackType | null
     ) {
         this.container = container;
         this.svgContent = svgContent;
@@ -98,7 +98,7 @@ export class NetworkAreaDiagramViewer {
         this.onMoveNodeCallback = onMoveNodeCallback;
         this.onMoveTextNodeCallback = onMoveTextNodeCallback;
         this.onSelectNodeCallback = onSelectNodeCallback;
-        this.OnToggleHoverCallback = OnToggleHoverCallback;
+        this.onToggleHoverCallback = onToggleHoverCallback;
     }
 
     public setWidth(width: number): void {
@@ -376,14 +376,14 @@ export class NetworkAreaDiagramViewer {
     }
 
     private onHover(mouseEvent: MouseEvent) {
-        if (this.OnToggleHoverCallback == null) {
+        if (this.onToggleHoverCallback == null) {
             return;
         }
 
         const hoverableElem = DiagramUtils.getHoverableFrom(mouseEvent.target as SVGElement);
         //const parentElement = hoverableElem?.parentElement;
         if (!hoverableElem) {
-            this.OnToggleHoverCallback(false, null, '', '');
+            this.onToggleHoverCallback(false, null, '', '');
             return;
         }
 
@@ -396,9 +396,9 @@ export class NetworkAreaDiagramViewer {
             const mousePosition = this.getMousePosition(mouseEvent);
             const equipmentId = edge?.getAttribute('equipmentid') ?? '';
             const edgeType = DiagramUtils.getStringEdgeType(edge) ?? '';
-            this.OnToggleHoverCallback(true, mousePosition, equipmentId, edgeType);
+            this.onToggleHoverCallback(true, mousePosition, equipmentId, edgeType);
         } else {
-            this.OnToggleHoverCallback(false, null, '', '');
+            this.onToggleHoverCallback(false, null, '', '');
         }
     }
 
