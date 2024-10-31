@@ -6,13 +6,14 @@
  */
 
 import { Point } from '@svgdotjs/svg.js';
+import { EdgeMetadata, BusNodeMetadata, NodeMetadata, TextNodeMetadata } from './diagram-metadata';
 
 // node move: original and new position
 export type NODEMOVE = {
-    xOrig: string;
-    yOrig: string;
-    xNew: string;
-    yNew: string;
+    xOrig: number;
+    yOrig: number;
+    xNew: number;
+    yNew: number;
 };
 
 export enum EdgeType {
@@ -64,6 +65,11 @@ export function degToRad(deg: number): number {
 // transform angle radians to degrees
 export function radToDeg(rad: number): number {
     return (rad * 180.0) / Math.PI;
+}
+
+// round number to 2 decimals, for storing positions in metadata
+export function round(num: number): number {
+    return Math.round(num * 100) / 100;
 }
 
 // get the transform element of an SVG graphic element
@@ -125,12 +131,11 @@ export function getEdgeFork(point: Point, edgeForkLength: number, angleFork: num
 }
 
 // get the type of edge
-export function getEdgeType(edge: SVGGraphicsElement): EdgeType {
-    const edgeType = edge.getAttribute('type');
-    if (edgeType == null) {
+export function getEdgeType(edge: EdgeMetadata): EdgeType {
+    if (edge.type == null) {
         return EdgeType.UNKNOWN;
     }
-    return EdgeTypeMapping[edgeType];
+    return EdgeTypeMapping[edge.type];
 }
 
 // get the matrix used for the position of the arrow drawn in a PS transformer
@@ -370,12 +375,11 @@ export function getPathAngle(path: HTMLElement): number | null {
 }
 
 // sort list of bus nodes by index
-export function getSortedBusNodes(busNodes: NodeListOf<SVGGraphicsElement>): SVGGraphicsElement[] {
-    const sortedBusNodes: SVGGraphicsElement[] = [];
-    busNodes.forEach((busNode) => {
-        const index = busNode.getAttribute('index') ?? '-1';
-        if (+index >= 0) {
-            sortedBusNodes[+index] = busNode;
+export function getSortedBusNodes(busNodes: BusNodeMetadata[] | undefined): BusNodeMetadata[] {
+    const sortedBusNodes: BusNodeMetadata[] = [];
+    busNodes?.forEach((busNode) => {
+        if (busNode.index >= 0) {
+            sortedBusNodes[busNode.index] = busNode;
         }
     });
     return sortedBusNodes;
@@ -458,12 +462,10 @@ export function getTextNodePosition(textNode: SVGGraphicsElement | null): Point 
 }
 
 // get node move (original and new position)
-export function getNodeMove(node: SVGGraphicsElement, nodePosition: Point): NODEMOVE {
-    const xOrig = node.getAttribute('x') ?? '0';
-    const yOrig = node.getAttribute('y') ?? '0';
-    const xNew = getFormattedValue(nodePosition.x);
-    const yNew = getFormattedValue(nodePosition.y);
-    return { xOrig: xOrig, yOrig: yOrig, xNew: xNew, yNew: yNew };
+export function getNodeMove(node: NodeMetadata, nodePosition: Point): NODEMOVE {
+    const xNew = round(nodePosition.x);
+    const yNew = round(nodePosition.y);
+    return { xOrig: node.x, yOrig: node.y, xNew: xNew, yNew: yNew };
 }
 
 // Checks if the element is hoverable
@@ -481,49 +483,23 @@ export function getHoverableFrom(element: SVGElement): SVGElement | undefined {
         return getHoverableFrom(element.parentNode as SVGElement);
     }
 }
-export function getStringEdgeType(edge: SVGGraphicsElement): string {
+export function getStringEdgeType(edge: EdgeMetadata): string {
     return EdgeType[getEdgeType(edge)];
 }
 
 // get moves (original and new position) of position and connetion of text node
 export function getTextNodeMoves(
-    textNode: SVGGraphicsElement,
-    vlNode: SVGGraphicsElement,
+    textNode: TextNodeMetadata,
+    vlNode: NodeMetadata,
     textPosition: Point,
     connectionPosition: Point
 ): [NODEMOVE, NODEMOVE] {
-    const xNode = vlNode.getAttribute('x') ?? '0';
-    const yNode = vlNode.getAttribute('y') ?? '0';
-    const xOrig = textNode.getAttribute('shiftx') ?? '0';
-    const yOrig = textNode.getAttribute('shifty') ?? '0';
-    const xNew = getFormattedValue(textPosition.x - +xNode);
-    const yNew = getFormattedValue(textPosition.y - +yNode);
-    const connXOrig = textNode.getAttribute('connectionshiftx') ?? '0';
-    const connYOrig = textNode.getAttribute('connectionshifty') ?? '0';
-    const connXNew = getFormattedValue(connectionPosition.x - +xNode);
-    const connYNew = getFormattedValue(connectionPosition.y - +yNode);
+    const xNew = round(textPosition.x - vlNode.x);
+    const yNew = round(textPosition.y - vlNode.y);
+    const connXNew = round(connectionPosition.x - vlNode.x);
+    const connYNew = round(connectionPosition.y - vlNode.y);
     return [
-        { xOrig: xOrig, yOrig: yOrig, xNew: xNew, yNew: yNew },
-        { xOrig: connXOrig, yOrig: connYOrig, xNew: connXNew, yNew: connYNew },
+        { xOrig: textNode.shiftX, yOrig: textNode.shiftY, xNew: xNew, yNew: yNew },
+        { xOrig: textNode.connectionShiftX, yOrig: textNode.connectionShiftY, xNew: connXNew, yNew: connYNew },
     ];
-}
-
-// get number parameter from metadata element
-export function getNumberParameter(
-    parametersMetadataElement: SVGGraphicsElement | null,
-    parameterName: string,
-    parameterDefault: number
-): number {
-    const parameter = parametersMetadataElement?.getAttribute(parameterName);
-    return parameter !== undefined && parameter !== null ? +parameter : parameterDefault;
-}
-
-// get boolean parameter from metadata element
-export function getBooleanParameter(
-    parametersMetadataElement: SVGGraphicsElement | null,
-    parameterName: string,
-    parameterDefault: boolean
-): boolean {
-    const parameter = parametersMetadataElement?.getAttribute(parameterName);
-    return parameter !== undefined && parameter !== null ? parameter === 'true' : parameterDefault;
 }

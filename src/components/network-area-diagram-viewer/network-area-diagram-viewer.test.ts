@@ -15,6 +15,7 @@ describe('Test network-area-diagram-viewer', () => {
         const nad: NetworkAreaDiagramViewer = new NetworkAreaDiagramViewer(
             container,
             '',
+            null,
             0,
             0,
             0,

@@ -5,25 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { getNumberParameter, getBooleanParameter } from './diagram-utils';
+import { SvgParametersMetadata } from './diagram-metadata';
+import { degToRad } from './diagram-utils';
 
 export class SvgParameters {
-    static readonly VOLTAGE_LEVEL_CIRCLE_RADIUS_PARAMETER_NAME = 'voltagelevelcircleradius';
-    static readonly INTER_ANNULUS_SPACE_PARAMETER_NAME = 'interannulusspace';
-    static readonly TRANSFORMER_CIRCLE_RADIUS_PARAMETER_NAME = 'transformercircleradius';
-    static readonly EDGES_FORK_APERTURE_PARAMETER_NAME = 'edgesforkaperture';
-    static readonly EDGES_FORK_LENGTH_PARAMETER_NAME = 'edgesforklength';
-    static readonly ARROW_SHIFT_PARAMETER_NAME = 'arrowshift';
-    static readonly ARROW_LABEL_SHIFT_PARAMETER_NAME = 'arrowlabelshift';
-    static readonly CONVERTER_STATION_WIDTH_PARAMETER_NAME = 'converterstationwidth';
-    static readonly NODE_HOLLOW_WIDTH_PARAMETER_NAME = 'nodehollowwidth';
-    static readonly UNKNOWN_BUS_NODE_EXTRA_RADIUS_PARAMETER_NAME = 'unknownbusnodeextraradius';
-    static readonly EDGE_NAME_DISPLAYED_PARAMETER_NAME = 'edgenamedisplayed';
-
     static readonly VOLTAGE_LEVEL_CIRCLE_RADIUS_DEFAULT = 30.0;
     static readonly INTER_ANNULUS_SPACE_DEFAULT = 5.0;
     static readonly TRANSFORMER_CIRCLE_RADIUS_DEFAULT = 20.0;
-    static readonly EDGES_FORK_APERTURE_DEFAULT = 1.05;
+    static readonly EDGES_FORK_APERTURE_DEFAULT = 60;
     static readonly EDGES_FORK_LENGTH_DEFAULT = 80.0;
     static readonly ARROW_SHIFT_DEFAULT = 30.0;
     static readonly ARROW_LABEL_SHIFT_DEFAULT = 19.0;
@@ -32,117 +21,57 @@ export class SvgParameters {
     static readonly UNKNOWN_BUS_NODE_EXTRA_RADIUS_DEFAULT = 10.0;
     static readonly EDGE_NAME_DISPLAYED_DEFAULT = true;
 
-    voltageLevelCircleRadius: number;
-    interAnnulusSpace: number;
-    transformerCircleRadius: number;
-    edgesForkAperture: number;
-    edgesForkLength: number;
-    arrowShift: number;
-    arrowLabelShift: number;
-    converterStationWidth: number;
-    nodeHollowWidth: number;
-    unknownBusNodeExtraRadius: number;
-    edgeNameDisplayed: boolean;
+    svgParametersMetadata: SvgParametersMetadata | undefined;
 
-    constructor(svgParametersElement: SVGGraphicsElement | null) {
-        this.voltageLevelCircleRadius = getNumberParameter(
-            svgParametersElement,
-            SvgParameters.VOLTAGE_LEVEL_CIRCLE_RADIUS_PARAMETER_NAME,
-            SvgParameters.VOLTAGE_LEVEL_CIRCLE_RADIUS_DEFAULT
-        );
-        this.interAnnulusSpace = getNumberParameter(
-            svgParametersElement,
-            SvgParameters.INTER_ANNULUS_SPACE_PARAMETER_NAME,
-            SvgParameters.INTER_ANNULUS_SPACE_DEFAULT
-        );
-        this.transformerCircleRadius = getNumberParameter(
-            svgParametersElement,
-            SvgParameters.TRANSFORMER_CIRCLE_RADIUS_PARAMETER_NAME,
-            SvgParameters.TRANSFORMER_CIRCLE_RADIUS_DEFAULT
-        );
-        this.edgesForkAperture = getNumberParameter(
-            svgParametersElement,
-            SvgParameters.EDGES_FORK_APERTURE_PARAMETER_NAME,
-            SvgParameters.EDGES_FORK_APERTURE_DEFAULT
-        );
-        this.edgesForkLength = getNumberParameter(
-            svgParametersElement,
-            SvgParameters.EDGES_FORK_LENGTH_PARAMETER_NAME,
-            SvgParameters.EDGES_FORK_LENGTH_DEFAULT
-        );
-        this.arrowShift = getNumberParameter(
-            svgParametersElement,
-            SvgParameters.ARROW_SHIFT_PARAMETER_NAME,
-            SvgParameters.ARROW_SHIFT_DEFAULT
-        );
-        this.arrowLabelShift = getNumberParameter(
-            svgParametersElement,
-            SvgParameters.ARROW_LABEL_SHIFT_PARAMETER_NAME,
-            SvgParameters.ARROW_LABEL_SHIFT_DEFAULT
-        );
-        this.converterStationWidth = getNumberParameter(
-            svgParametersElement,
-            SvgParameters.CONVERTER_STATION_WIDTH_PARAMETER_NAME,
-            SvgParameters.CONVERTER_STATION_WIDTH_DEFAULT
-        );
-        this.nodeHollowWidth = getNumberParameter(
-            svgParametersElement,
-            SvgParameters.NODE_HOLLOW_WIDTH_PARAMETER_NAME,
-            SvgParameters.NODE_HOLLOW_WIDTH_DEFAULT
-        );
-        this.unknownBusNodeExtraRadius = getNumberParameter(
-            svgParametersElement,
-            SvgParameters.UNKNOWN_BUS_NODE_EXTRA_RADIUS_PARAMETER_NAME,
-            SvgParameters.UNKNOWN_BUS_NODE_EXTRA_RADIUS_DEFAULT
-        );
-        this.edgeNameDisplayed = getBooleanParameter(
-            svgParametersElement,
-            SvgParameters.EDGE_NAME_DISPLAYED_PARAMETER_NAME,
-            SvgParameters.EDGE_NAME_DISPLAYED_DEFAULT
-        );
+    constructor(svgParametersMetadata: SvgParametersMetadata | undefined) {
+        this.svgParametersMetadata = svgParametersMetadata;
     }
 
     public getVoltageLevelCircleRadius(): number {
-        return this.voltageLevelCircleRadius;
+        return (
+            this.svgParametersMetadata?.voltageLevelCircleRadius ?? SvgParameters.VOLTAGE_LEVEL_CIRCLE_RADIUS_DEFAULT
+        );
     }
 
     public getInterAnnulusSpace(): number {
-        return this.interAnnulusSpace;
+        return this.svgParametersMetadata?.interAnnulusSpace ?? SvgParameters.INTER_ANNULUS_SPACE_DEFAULT;
     }
 
     public getTransformerCircleRadius(): number {
-        return this.transformerCircleRadius;
+        return this.svgParametersMetadata?.transformerCircleRadius ?? SvgParameters.TRANSFORMER_CIRCLE_RADIUS_DEFAULT;
     }
 
     public getEdgesForkAperture(): number {
-        return this.edgesForkAperture;
+        return degToRad(this.svgParametersMetadata?.edgesForkAperture ?? SvgParameters.EDGES_FORK_APERTURE_DEFAULT);
     }
 
     public getEdgesForkLength(): number {
-        return this.edgesForkLength;
+        return this.svgParametersMetadata?.edgesForkLength ?? SvgParameters.EDGES_FORK_LENGTH_DEFAULT;
     }
 
     public getArrowShift(): number {
-        return this.arrowShift;
+        return this.svgParametersMetadata?.arrowShift ?? SvgParameters.ARROW_SHIFT_DEFAULT;
     }
 
     public getArrowLabelShift(): number {
-        return this.arrowLabelShift;
+        return this.svgParametersMetadata?.arrowLabelShift ?? SvgParameters.ARROW_LABEL_SHIFT_DEFAULT;
     }
 
     public getConverterStationWidth(): number {
-        return this.converterStationWidth;
+        return this.svgParametersMetadata?.converterStationWidth ?? SvgParameters.CONVERTER_STATION_WIDTH_DEFAULT;
     }
 
     public getNodeHollowWidth(): number {
-        return this.nodeHollowWidth;
+        return this.svgParametersMetadata?.nodeHollowWidth ?? SvgParameters.NODE_HOLLOW_WIDTH_DEFAULT;
     }
 
     public getUnknownBusNodeExtraRadius(): number {
-        return this.unknownBusNodeExtraRadius;
+        return (
+            this.svgParametersMetadata?.unknownBusNodeExtraRadius ?? SvgParameters.UNKNOWN_BUS_NODE_EXTRA_RADIUS_DEFAULT
+        );
     }
 
     public getEdgeNameDisplayed(): boolean {
-        return this.edgeNameDisplayed;
+        return this.svgParametersMetadata?.edgeNameDisplayed ?? SvgParameters.EDGE_NAME_DISPLAYED_DEFAULT;
     }
 }
