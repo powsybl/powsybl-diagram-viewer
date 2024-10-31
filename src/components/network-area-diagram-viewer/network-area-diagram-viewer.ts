@@ -38,6 +38,12 @@ export type OnMoveTextNodeCallbackType = (
 ) => void;
 
 export type OnSelectNodeCallbackType = (equipmentId: string, nodeId: string) => void;
+export type OnToggleNadHoverCallbackType = (
+    hovered: boolean,
+    mousePosition: Point | null,
+    equipmentId: string,
+    equipmentType: string
+) => void;
 
 export class NetworkAreaDiagramViewer {
     container: HTMLElement;
@@ -63,6 +69,7 @@ export class NetworkAreaDiagramViewer {
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
     shiftKeyOnMouseDown: boolean = false;
     dynamicCssRules: CSS_RULE[];
+    onToggleHoverCallback: OnToggleNadHoverCallbackType | null;
 
     constructor(
         container: HTMLElement,
@@ -76,7 +83,8 @@ export class NetworkAreaDiagramViewer {
         onSelectNodeCallback: OnSelectNodeCallbackType | null,
         enableNodeMoving: boolean,
         enableLevelOfDetail: boolean,
-        customDynamicCssRules: CSS_RULE[] | null
+        customDynamicCssRules: CSS_RULE[] | null,
+        onToggleHoverCallback: OnToggleNadHoverCallbackType | null
     ) {
         this.container = container;
         this.svgContent = svgContent;
@@ -90,6 +98,7 @@ export class NetworkAreaDiagramViewer {
         this.onMoveNodeCallback = onMoveNodeCallback;
         this.onMoveTextNodeCallback = onMoveTextNodeCallback;
         this.onSelectNodeCallback = onSelectNodeCallback;
+        this.onToggleHoverCallback = onToggleHoverCallback;
     }
 
     public setWidth(width: number): void {
@@ -220,6 +229,9 @@ export class NetworkAreaDiagramViewer {
                 this.handleEndDrag(e);
             });
         }
+        this.svgDraw.on('mouseover', (e: Event) => {
+            this.onHover(e as MouseEvent);
+        });
         this.svgDraw.on('panStart', function () {
             if (drawnSvg.parentElement != undefined) {
                 drawnSvg.parentElement.style.cursor = 'move';
@@ -360,6 +372,32 @@ export class NetworkAreaDiagramViewer {
                 this.updateGraph(newPosition);
                 this.initialPosition = DiagramUtils.getPosition(this.selectedElement);
             }
+        }
+    }
+
+    private onHover(mouseEvent: MouseEvent) {
+        if (this.onToggleHoverCallback == null) {
+            return;
+        }
+
+        const hoverableElem = DiagramUtils.getHoverableFrom(mouseEvent.target as SVGElement);
+        if (!hoverableElem) {
+            this.onToggleHoverCallback(false, null, '', '');
+            return;
+        }
+
+        //get edge by svgId
+        const edge: SVGGraphicsElement | null = this.container.querySelector(
+            `nad\\:edge[svgid="${hoverableElem?.id}"]`
+        );
+
+        if (edge) {
+            const mousePosition = this.getMousePosition(mouseEvent);
+            const equipmentId = edge?.getAttribute('equipmentid') ?? '';
+            const edgeType = DiagramUtils.getStringEdgeType(edge) ?? '';
+            this.onToggleHoverCallback(true, mousePosition, equipmentId, edgeType);
+        } else {
+            this.onToggleHoverCallback(false, null, '', '');
         }
     }
 
@@ -642,7 +680,7 @@ export class NetworkAreaDiagramViewer {
                 } else {
                     // get edge type
                     const edgeType = DiagramUtils.getEdgeType(edge);
-                    if (edgeType == null) {
+                    if (edgeType == DiagramUtils.EdgeType.UNKNOWN) {
                         return;
                     }
                     if (edgeNodes[0] == null || edgeNodes[1] == null) {
@@ -716,7 +754,7 @@ export class NetworkAreaDiagramViewer {
     private moveStraightEdge(edge: SVGGraphicsElement, mousePosition: Point) {
         // get edge type
         const edgeType = DiagramUtils.getEdgeType(edge);
-        if (edgeType == null) {
+        if (edgeType == DiagramUtils.EdgeType.UNKNOWN) {
             return;
         }
         const edgeNodes = this.getEdgeNodes(edge);

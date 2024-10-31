@@ -19,7 +19,7 @@ import SldSvgSubExampleMeta from './data/sld-sub-example-meta.json';
 import {
     NetworkAreaDiagramViewer,
     SingleLineDiagramViewer,
-    HandleTogglePopoverType,
+    OnToggleSldHoverCallbackType,
     OnBreakerCallbackType,
     OnBusCallbackType,
     OnFeederCallbackType,
@@ -28,6 +28,7 @@ import {
     OnMoveTextNodeCallbackType,
     OnSelectNodeCallbackType,
 } from '../../../src';
+import { OnToggleNadHoverCallbackType } from '../../../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
 
 export const addNadToDemo = () => {
     fetch(NadSvgExample)
@@ -45,7 +46,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                handleToggleNadHover
             );
 
             document
@@ -69,7 +71,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 false,
                 false,
-                null
+                null,
+                handleToggleNadHover
             );
 
             document
@@ -93,7 +96,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                handleToggleNadHover
             );
 
             document
@@ -117,7 +121,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                handleToggleNadHover
             );
 
             document
@@ -141,7 +146,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                handleToggleNadHover
             );
 
             document
@@ -165,7 +171,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 false,
-                null
+                null,
+                handleToggleNadHover
             );
 
             document
@@ -189,7 +196,8 @@ export const addNadToDemo = () => {
                 handleNodeSelect,
                 true,
                 true,
-                null
+                null,
+                handleToggleNadHover
             );
 
             document
@@ -245,7 +253,7 @@ export const addSldToDemo = () => {
                 handleFeeder, //callback on the feeders
                 handleBus, //callback on the buses
                 'lightblue', //arrows color
-                handleTogglePopover //hovers on equipments callback
+                handleToggleSldHover //hovers on equipments callback
             );
 
             document
@@ -272,7 +280,7 @@ export const addSldToDemo = () => {
                 handleFeeder, //callback on the feeders
                 handleBus, //callback on the buses
                 'lightblue', //arrows color
-                handleTogglePopover //hovers on equipments callback
+                handleToggleSldHover //hovers on equipments callback
             );
 
             document
@@ -310,8 +318,8 @@ const handleBus: OnBusCallbackType = (id, svgId, x, y) => {
     console.log(msg);
 };
 
-const handleTogglePopover: HandleTogglePopoverType = (shouldDisplay, anchorEl, equipmentId, equipmentType) => {
-    if (shouldDisplay) {
+const handleToggleSldHover: OnToggleSldHoverCallbackType = (hovered, anchorEl, equipmentId, equipmentType) => {
+    if (hovered) {
         const msg = 'Hovers on equipment: ' + equipmentId + ', equipmentType: ' + equipmentType;
         console.log(msg);
     }
@@ -378,4 +386,19 @@ const handleTextNodeMove: OnMoveTextNodeCallbackType = (
 const handleNodeSelect: OnSelectNodeCallbackType = (equipmentId, nodeId) => {
     const msg = 'Node ' + nodeId + ' equipment ' + equipmentId + ' selected';
     console.log(msg);
+};
+
+const handleToggleNadHover: OnToggleNadHoverCallbackType = (hovered, mousePosition, equipmentId, equipmentType) => {
+    if (hovered) {
+        const msg =
+            'Hovers on equipment: ' +
+            equipmentId +
+            ', equipmentType: ' +
+            equipmentType +
+            ', mousePosition : x =' +
+            mousePosition?.x +
+            ', y=' +
+            mousePosition?.y;
+        console.log(msg);
+    }
 };
