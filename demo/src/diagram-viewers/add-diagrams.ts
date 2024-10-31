@@ -19,7 +19,7 @@ import SldSvgSubExampleMeta from './data/sld-sub-example-meta.json';
 import {
     NetworkAreaDiagramViewer,
     SingleLineDiagramViewer,
-    OnToggleSLDHoverCallbackType,
+    OnToggleSldHoverCallbackType,
     OnBreakerCallbackType,
     OnBusCallbackType,
     OnFeederCallbackType,
@@ -28,7 +28,7 @@ import {
     OnMoveTextNodeCallbackType,
     OnSelectNodeCallbackType,
 } from '../../../src';
-import { OnToggleNADHoverCallbackType } from '../../../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
+import { OnToggleNadHoverCallbackType } from '../../../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
 
 export const addNadToDemo = () => {
     fetch(NadSvgExample)
@@ -47,7 +47,7 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                handleToggleNADHover
+                handleToggleNadHover
             );
 
             document
@@ -72,7 +72,7 @@ export const addNadToDemo = () => {
                 false,
                 false,
                 null,
-                handleToggleNADHover
+                handleToggleNadHover
             );
 
             document
@@ -97,7 +97,7 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                handleToggleNADHover
+                handleToggleNadHover
             );
 
             document
@@ -122,7 +122,7 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                handleToggleNADHover
+                handleToggleNadHover
             );
 
             document
@@ -147,7 +147,7 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                handleToggleNADHover
+                handleToggleNadHover
             );
 
             document
@@ -172,7 +172,7 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                handleToggleNADHover
+                handleToggleNadHover
             );
 
             document
@@ -197,7 +197,7 @@ export const addNadToDemo = () => {
                 true,
                 true,
                 null,
-                handleToggleNADHover
+                handleToggleNadHover
             );
 
             document
@@ -253,7 +253,7 @@ export const addSldToDemo = () => {
                 handleFeeder, //callback on the feeders
                 handleBus, //callback on the buses
                 'lightblue', //arrows color
-                handleToggleSLDHover //hovers on equipments callback
+                handleToggleSldHover //hovers on equipments callback
             );
 
             document
@@ -280,7 +280,7 @@ export const addSldToDemo = () => {
                 handleFeeder, //callback on the feeders
                 handleBus, //callback on the buses
                 'lightblue', //arrows color
-                handleToggleSLDHover //hovers on equipments callback
+                handleToggleSldHover //hovers on equipments callback
             );
 
             document
@@ -318,7 +318,7 @@ const handleBus: OnBusCallbackType = (id, svgId, x, y) => {
     console.log(msg);
 };
 
-const handleToggleSLDHover: OnToggleSLDHoverCallbackType = (shouldDisplay, anchorEl, equipmentId, equipmentType) => {
+const handleToggleSldHover: OnToggleSldHoverCallbackType = (shouldDisplay, anchorEl, equipmentId, equipmentType) => {
     if (shouldDisplay) {
         const msg = 'Hovers on equipment: ' + equipmentId + ', equipmentType: ' + equipmentType;
         console.log(msg);
@@ -388,7 +388,7 @@ const handleNodeSelect: OnSelectNodeCallbackType = (equipmentId, nodeId) => {
     console.log(msg);
 };
 
-const handleToggleNADHover: OnToggleNADHoverCallbackType = (hovered, mousePosition, equipmentId, equipmentType) => {
+const handleToggleNadHover: OnToggleNadHoverCallbackType = (hovered, mousePosition, equipmentId, equipmentType) => {
     if (hovered) {
         const msg =
             'Hovers on equipment: ' +

@@ -38,7 +38,7 @@ export type OnMoveTextNodeCallbackType = (
 ) => void;
 
 export type OnSelectNodeCallbackType = (equipmentId: string, nodeId: string) => void;
-export type OnToggleNADHoverCallbackType = (
+export type OnToggleNadHoverCallbackType = (
     hovered: boolean,
     mousePosition: Point | null,
     equipmentId: string,
@@ -69,7 +69,7 @@ export class NetworkAreaDiagramViewer {
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
     shiftKeyOnMouseDown: boolean = false;
     dynamicCssRules: CSS_RULE[];
-    onToggleHoverCallback: OnToggleNADHoverCallbackType | null;
+    onToggleHoverCallback: OnToggleNadHoverCallbackType | null;
 
     constructor(
         container: HTMLElement,
@@ -84,7 +84,7 @@ export class NetworkAreaDiagramViewer {
         enableNodeMoving: boolean,
         enableLevelOfDetail: boolean,
         customDynamicCssRules: CSS_RULE[] | null,
-        onToggleHoverCallback: OnToggleNADHoverCallbackType | null
+        onToggleHoverCallback: OnToggleNadHoverCallbackType | null
     ) {
         this.container = container;
         this.svgContent = svgContent;

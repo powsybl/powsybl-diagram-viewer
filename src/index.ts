@@ -15,7 +15,7 @@ export { THRESHOLD_STATUS } from './components/network-area-diagram-viewer/dynam
 export type { CSS_DECLARATION, CSS_RULE } from './components/network-area-diagram-viewer/dynamic-css-utils';
 export { SingleLineDiagramViewer } from './components/single-line-diagram-viewer/single-line-diagram-viewer';
 export type {
-    OnToggleSLDHoverCallbackType,
+    OnToggleSldHoverCallbackType,
     OnBreakerCallbackType,
     OnFeederCallbackType,
     OnNextVoltageCallbackType,
