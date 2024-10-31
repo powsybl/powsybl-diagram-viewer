@@ -381,7 +381,6 @@ export class NetworkAreaDiagramViewer {
         }
 
         const hoverableElem = DiagramUtils.getHoverableFrom(mouseEvent.target as SVGElement);
-        //const parentElement = hoverableElem?.parentElement;
         if (!hoverableElem) {
             this.onToggleHoverCallback(false, null, '', '');
             return;

@@ -318,8 +318,8 @@ const handleBus: OnBusCallbackType = (id, svgId, x, y) => {
     console.log(msg);
 };
 
-const handleToggleSldHover: OnToggleSldHoverCallbackType = (shouldDisplay, anchorEl, equipmentId, equipmentType) => {
-    if (shouldDisplay) {
+const handleToggleSldHover: OnToggleSldHoverCallbackType = (hovered, anchorEl, equipmentId, equipmentType) => {
+    if (hovered) {
         const msg = 'Hovers on equipment: ' + equipmentId + ', equipmentType: ' + equipmentType;
         console.log(msg);
     }
