@@ -204,7 +204,7 @@ export function getConverterStationPolyline(
     return getFormattedPolyline(points[0], null, points[1]);
 }
 
-// get the drabbable element, if present,
+// get the draggable element, if present,
 // from the element selected using the mouse
 export function getDraggableFrom(element: SVGElement): SVGElement | undefined {
     if (isDraggable(element)) {
@@ -214,9 +214,27 @@ export function getDraggableFrom(element: SVGElement): SVGElement | undefined {
     }
 }
 
+// get the selectable element, if present,
+// from the element selected using the mouse
+export function getSelectableFrom(element: SVGElement): SVGElement | undefined {
+    if (isSelectable(element)) {
+        return element;
+    } else if (element.parentElement) {
+        return getSelectableFrom(element.parentNode as SVGElement);
+    }
+}
+
 function isDraggable(element: SVGElement): boolean {
     return (
         hasId(element) && element.parentNode != null && classIsContainerOfDraggables(element.parentNode as SVGElement)
+    );
+}
+
+function isSelectable(element: SVGElement): boolean {
+    return (
+        hasId(element) &&
+        element.parentNode != null &&
+        (element.parentNode as SVGElement).classList.contains('nad-vl-nodes')
     );
 }
 
@@ -398,9 +416,9 @@ export function getEdgeNameAngle(point1: Point, point2: Point): number {
 }
 
 // check if a DOM element is a text node
-export function isTextNode(element: SVGGraphicsElement | null): boolean | undefined {
+export function isTextNode(element: SVGGraphicsElement | null): boolean {
     return (
-        element != null && element.parentElement != null && element.parentElement?.classList.contains('nad-text-nodes')
+        element != null && element.parentElement != null && element.parentElement.classList.contains('nad-text-nodes')
     );
 }
 

@@ -58,6 +58,7 @@ export class NetworkAreaDiagramViewer {
     svgDraw: Svg | undefined;
     ratio = 1;
     selectedElement: SVGGraphicsElement | null = null;
+    draggedElement: SVGGraphicsElement | null = null;
     transform: SVGTransform | undefined;
     ctm: DOMMatrix | null | undefined = null;
     initialPosition: Point = new Point(0, 0);
@@ -69,7 +70,6 @@ export class NetworkAreaDiagramViewer {
     onMoveNodeCallback: OnMoveNodeCallbackType | null;
     onMoveTextNodeCallback: OnMoveTextNodeCallbackType | null;
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
-    shiftKeyOnMouseDown: boolean = false;
     dynamicCssRules: CSS_RULE[];
     onToggleHoverCallback: OnToggleNadHoverCallbackType | null;
 
@@ -84,7 +84,7 @@ export class NetworkAreaDiagramViewer {
         onMoveNodeCallback: OnMoveNodeCallbackType | null,
         onMoveTextNodeCallback: OnMoveTextNodeCallbackType | null,
         onSelectNodeCallback: OnSelectNodeCallbackType | null,
-        enableNodeMoving: boolean,
+        enableNodeInteraction: boolean,
         enableLevelOfDetail: boolean,
         customDynamicCssRules: CSS_RULE[] | null,
         onToggleHoverCallback: OnToggleNadHoverCallbackType | null
@@ -97,7 +97,7 @@ export class NetworkAreaDiagramViewer {
         this.originalWidth = 0;
         this.originalHeight = 0;
         this.dynamicCssRules = customDynamicCssRules ?? DEFAULT_DYNAMIC_CSS_RULES;
-        this.init(minWidth, minHeight, maxWidth, maxHeight, enableNodeMoving, enableLevelOfDetail);
+        this.init(minWidth, minHeight, maxWidth, maxHeight, enableNodeInteraction, enableLevelOfDetail);
         this.svgParameters = new SvgParameters(diagramMetadata?.svgParameters);
         this.layoutParameters = new LayoutParameters(diagramMetadata?.layoutParameters);
         this.onMoveNodeCallback = onMoveNodeCallback;
@@ -179,8 +179,8 @@ export class NetworkAreaDiagramViewer {
             const elemToMove: SVGElement | null = this.container.querySelector('[id="' + nodeId + '"]');
             if (elemToMove) {
                 const newPosition = new Point(x, y);
-                this.initializeDrag(elemToMove);
-                this.completeDrag(newPosition, false);
+                this.onDragStart(elemToMove);
+                this.onDragEnd(newPosition, false);
             }
         }
     }
@@ -190,7 +190,7 @@ export class NetworkAreaDiagramViewer {
         minHeight: number,
         maxWidth: number,
         maxHeight: number,
-        enableNodeMoving: boolean,
+        enableNodeInteraction: boolean,
         enableLevelOfDetail: boolean
     ): void {
         if (!this.container || !this.svgContent) {
@@ -220,18 +220,19 @@ export class NetworkAreaDiagramViewer {
         drawnSvg.style.overflow = 'visible';
 
         // add events
-        if (enableNodeMoving) {
+        if (enableNodeInteraction) {
             this.svgDraw.on('mousedown', (e: Event) => {
-                this.handleStartDragSelectEvent(e);
+                if ((e as MouseEvent).button == 0) {
+                    this.onMouseLeftDown(e as MouseEvent);
+                }
             });
             this.svgDraw.on('mousemove', (e: Event) => {
-                this.handleDragEvent(e);
+                this.onMouseMove(e as MouseEvent);
             });
-            this.svgDraw.on('mouseup', (e: Event) => {
-                this.handleEndDragSelectEvent(e);
-            });
-            this.svgDraw.on('mouseleave', (e: Event) => {
-                this.handleEndDragSelectEvent(e);
+            this.svgDraw.on('mouseup mouseleave', (e: Event) => {
+                if ((e as MouseEvent).button == 0) {
+                    this.onMouseLeftUpOrLeave(e as MouseEvent);
+                }
             });
         }
         this.svgDraw.on('mouseover', (e: Event) => {
@@ -281,7 +282,7 @@ export class NetworkAreaDiagramViewer {
             observer.observe(targetNode, { attributeFilter: ['viewBox'] });
         }
 
-        if (enableNodeMoving) {
+        if (enableNodeInteraction) {
             // fill empty elements: unknown buses and three windings transformers
             const emptyElements: NodeListOf<SVGGraphicsElement> = this.container.querySelectorAll(
                 '.nad-unknown-busnode, .nad-3wt-nodes .nad-winding'
@@ -324,68 +325,63 @@ export class NetworkAreaDiagramViewer {
         });
     }
 
-    private handleStartDragSelectEvent(event: Event) {
-        // check mouse button
-        if ((event as MouseEvent).button !== 0) {
-            return;
+    private onMouseLeftDown(event: MouseEvent) {
+        // check dragging vs. selection
+        if (event.shiftKey) {
+            // selecting node
+            this.onSelectStart(DiagramUtils.getSelectableFrom(event.target as SVGElement));
+        } else {
+            // moving node
+            this.onDragStart(DiagramUtils.getDraggableFrom(event.target as SVGElement));
         }
-        // check element is draggable or selectable
-        const draggableElem = DiagramUtils.getDraggableFrom(event.target as SVGElement);
-        if (!draggableElem) {
-            return;
-        }
-        this.shiftKeyOnMouseDown = !!(event as MouseEvent).shiftKey;
-        // avoid selecting text nodes
-        if (this.shiftKeyOnMouseDown && DiagramUtils.isTextNode(draggableElem as SVGGraphicsElement)) {
+    }
+
+    private onSelectStart(selectableElem: SVGElement | undefined) {
+        if (!selectableElem) {
             return;
         }
         this.disablePanzoom(); // to avoid panning the whole SVG when moving or selecting a node
+        this.selectedElement = selectableElem as SVGGraphicsElement; // element to be selected
+    }
+
+    private onDragStart(draggableElem: SVGElement | undefined) {
+        if (!draggableElem) {
+            return;
+        }
+
         // change cursor style
         const svg: HTMLElement = <HTMLElement>this.svgDraw?.node.firstElementChild?.parentElement;
         svg.style.cursor = 'grabbing';
-        // check dragging vs. selection
-        if (!this.shiftKeyOnMouseDown) {
-            // moving node
-            this.initializeDrag(draggableElem);
-        } else {
-            // selecting node
-            this.selectedElement = draggableElem as SVGGraphicsElement; // element to be selected
-        }
-    }
 
-    private initializeDrag(draggableElem: SVGElement) {
-        this.selectedElement = draggableElem as SVGGraphicsElement; // element to be moved
+        this.disablePanzoom(); // to avoid panning the whole SVG when moving or selecting a node
+        this.draggedElement = draggableElem as SVGGraphicsElement; // element to be moved
         this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute mouse movement
-        this.initialPosition = DiagramUtils.getPosition(this.selectedElement); // used for the offset
+        this.initialPosition = DiagramUtils.getPosition(this.draggedElement); // used for the offset
         this.edgeAngles = new Map<string, number>(); // used for node redrawing
+
         // check if I'm moving a text node
-        if (DiagramUtils.isTextNode(this.selectedElement)) {
-            this.textNodeSelected = true;
+        this.textNodeSelected = DiagramUtils.isTextNode(this.draggedElement);
+        if (this.textNodeSelected) {
+            this.endTextEdge = new Point(0, 0);
         }
     }
 
-    private handleDragEvent(event: Event) {
-        // check mouse button
-        if ((event as MouseEvent).button !== 0) {
-            return;
-        }
-        if (this.selectedElement && !this.shiftKeyOnMouseDown) {
+    private onMouseMove(event: MouseEvent) {
+        if (this.draggedElement) {
             event.preventDefault();
             this.ctm = this.svgDraw?.node.getScreenCTM(); // used to compute SVG transformations
-            const newPosition = this.getMousePosition(event as MouseEvent);
+            const newPosition = this.getMousePosition(event);
             this.drag(newPosition);
         }
     }
 
     private drag(newPosition: Point) {
-        if (this.selectedElement) {
-            if (this.textNodeSelected) {
-                this.dragVoltageLevelText(newPosition);
-            } else {
-                this.dragVoltageLevelNode(newPosition);
-            }
-            this.initialPosition = DiagramUtils.getPosition(this.selectedElement);
+        if (this.textNodeSelected) {
+            this.dragVoltageLevelText(newPosition);
+        } else {
+            this.dragVoltageLevelNode(newPosition);
         }
+        this.initialPosition = DiagramUtils.getPosition(this.draggedElement);
     }
 
     private onHover(mouseEvent: MouseEvent) {
@@ -414,52 +410,38 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private handleEndDragSelectEvent(event: Event) {
-        // check mouse button
-        if ((event as MouseEvent).button !== 0) {
-            return;
-        }
+    private onMouseLeftUpOrLeave(event: MouseEvent) {
         // check if I moved or selected an element
-        if (this.selectedElement) {
-            if (!this.shiftKeyOnMouseDown) {
-                // moving node
-                const newPosition = this.getMousePosition(event as MouseEvent);
-                this.completeDrag(newPosition, true);
-            } else {
-                // selecting node
-                this.completeSelect();
-            }
-            // change cursor style
-            const svg: HTMLElement = <HTMLElement>this.svgDraw?.node.firstElementChild?.parentElement;
-            svg.style.removeProperty('cursor');
-            this.enablePanzoom();
+        if (this.draggedElement) {
+            // moving node
+            this.onDragEnd(this.getMousePosition(event), true);
+        } else if (this.selectedElement) {
+            // selecting node
+            this.onSelectEnd();
         }
     }
 
-    private completeDrag(newPosition: Point, callMoveNodeCallback: boolean) {
-        if (this.selectedElement) {
-            if (this.textNodeSelected) {
-                this.dragVoltageLevelText(newPosition);
-                this.updateTextNodeMetadataCallCallback(newPosition);
-            } else {
-                this.dragVoltageLevelNode(newPosition);
-                this.updateNodeMetadataCallCallback(newPosition, callMoveNodeCallback);
-            }
-            // reset data
-            this.initialPosition = new Point(0, 0);
-            this.textNodeSelected = false;
-            this.endTextEdge = new Point(0, 0);
-            this.selectedElement = null;
+    private onDragEnd(newPosition: Point, callMoveNodeCallback: boolean) {
+        if (this.textNodeSelected) {
+            this.dragVoltageLevelText(newPosition);
+            this.updateTextNodeMetadataCallCallback(newPosition);
+        } else {
+            this.dragVoltageLevelNode(newPosition);
+            this.updateNodeMetadataCallCallback(newPosition, callMoveNodeCallback);
         }
+        // reset data
+        this.draggedElement = null;
+        this.enablePanzoom();
+
+        // change cursor style back to normal
+        const svg: HTMLElement = <HTMLElement>this.svgDraw?.node.firstElementChild?.parentElement;
+        svg.style.removeProperty('cursor');
     }
 
-    private completeSelect() {
-        if (this.selectedElement) {
-            this.callSelectNodeCallback();
-            // reset data
-            this.shiftKeyOnMouseDown = false;
-            this.selectedElement = null;
-        }
+    private onSelectEnd() {
+        this.callSelectNodeCallback();
+        this.selectedElement = null;
+        this.enablePanzoom();
     }
 
     // position w.r.t the SVG box
@@ -478,19 +460,19 @@ export class NetworkAreaDiagramViewer {
     private dragVoltageLevelText(mousePosition: Point) {
         window.getSelection()?.empty(); // to avoid text highlighting in firefox
         const vlNode: SVGGraphicsElement | null = this.container.querySelector(
-            "[id='" + DiagramUtils.getVoltageLevelNodeId(this.selectedElement?.id) + "']"
+            "[id='" + DiagramUtils.getVoltageLevelNodeId(this.draggedElement?.id) + "']"
         );
-        this.moveText(this.selectedElement, vlNode, mousePosition, DiagramUtils.getTextNodeAngleFromCentre);
+        this.moveText(this.draggedElement, vlNode, mousePosition, DiagramUtils.getTextNodeAngleFromCentre);
     }
 
     private dragVoltageLevelNode(mousePosition: Point) {
         this.moveNode(mousePosition);
         const textNode: SVGGraphicsElement | null = this.container.querySelector(
-            "[id='" + DiagramUtils.getTextNodeId(this.selectedElement?.id) + "']"
+            "[id='" + DiagramUtils.getTextNodeId(this.draggedElement?.id) + "']"
         );
         this.moveText(
             textNode,
-            this.selectedElement,
+            this.draggedElement,
             this.getTranslation(mousePosition),
             DiagramUtils.getTextNodeTranslatedPosition
         );
@@ -498,7 +480,7 @@ export class NetworkAreaDiagramViewer {
     }
 
     private moveNode(mousePosition: Point) {
-        this.selectedElement?.setAttribute(
+        this.draggedElement?.setAttribute(
             'transform',
             'translate(' + DiagramUtils.getFormattedPoint(mousePosition) + ')'
         );
@@ -589,7 +571,7 @@ export class NetworkAreaDiagramViewer {
     private moveEdges(mousePosition: Point) {
         // get edges connected to the the node we are moving
         const edges: EdgeMetadata[] | undefined = this.diagramMetadata?.edges.filter(
-            (edge) => edge.node1 == this.selectedElement?.id || edge.node2 == this.selectedElement?.id
+            (edge) => edge.node1 == this.draggedElement?.id || edge.node2 == this.draggedElement?.id
         );
         // group edges, to have multibranches - branches connecting the same nodes - together
         const groupedEdges: Map<string, EdgeMetadata[]> = new Map<string, EdgeMetadata[]>();
@@ -613,7 +595,7 @@ export class NetworkAreaDiagramViewer {
                 }
                 edgeGroup.push(edge);
                 groupedEdges.set(edgeGroupId, edgeGroup);
-                const busNodeId = edge.node1 == this.selectedElement?.id ? edge.busNode1 : edge.busNode2;
+                const busNodeId = edge.node1 == this.draggedElement?.id ? edge.busNode1 : edge.busNode2;
                 this.addBusNodeEdge(busNodeId, edge, busNodeEdges);
             }
         });
@@ -626,7 +608,7 @@ export class NetworkAreaDiagramViewer {
             this.moveLoopEdgeGroup(edgeGroup, mousePosition);
         }
         // redraw node
-        this.redrawVoltageLevelNode(this.selectedElement, busNodeEdges, null);
+        this.redrawVoltageLevelNode(this.draggedElement, busNodeEdges, null);
     }
 
     private addBusNodeEdge(busNodeId: string | null, edge: EdgeMetadata, busNodeEdges: Map<string, EdgeMetadata[]>) {
@@ -642,15 +624,15 @@ export class NetworkAreaDiagramViewer {
 
     // get the nodes at the sides of an edge
     private getEdgeNodes(edge: EdgeMetadata): [SVGGraphicsElement | null, SVGGraphicsElement | null] {
-        const otherNodeId = this.selectedElement?.id === edge.node1 ? edge.node2 : edge.node1;
+        const otherNodeId = this.draggedElement?.id === edge.node1 ? edge.node2 : edge.node1;
         const otherNode: SVGGraphicsElement | null = this.container.querySelector("[id='" + otherNodeId + "']");
-        const node1 = this.selectedElement?.id === edge.node1 ? this.selectedElement : otherNode;
-        const node2 = otherNode?.id === edge.node1 ? this.selectedElement : otherNode;
+        const node1 = this.draggedElement?.id === edge.node1 ? this.draggedElement : otherNode;
+        const node2 = otherNode?.id === edge.node1 ? this.draggedElement : otherNode;
         return [node1, node2];
     }
 
     private getOtherNode(edgeNodes: [SVGGraphicsElement | null, SVGGraphicsElement | null]): SVGGraphicsElement | null {
-        return edgeNodes[0]?.id == this.selectedElement?.id ? edgeNodes[1] : edgeNodes[0];
+        return edgeNodes[0]?.id == this.draggedElement?.id ? edgeNodes[1] : edgeNodes[0];
     }
 
     private getNodeRadius(busNodeId: string): [number, number, number] {
@@ -1169,7 +1151,7 @@ export class NetworkAreaDiagramViewer {
             if (points != null) {
                 // compute polyline points
                 const edgeNodes = this.getEdgeNodes(edge);
-                const threeWtMoved = edgeNodes[1]?.id == this.selectedElement?.id;
+                const threeWtMoved = edgeNodes[1]?.id == this.draggedElement?.id;
                 const nodeRadius1 = this.getNodeRadius(edge.busNode1 != null ? edge.busNode1 : '-1');
                 const edgeStart = this.getEdgeStart(edge.busNode1, nodeRadius1[1], edgeNodes[0], edgeNodes[1]);
                 const translation = this.getTranslation(mousePosition);
@@ -1234,14 +1216,14 @@ export class NetworkAreaDiagramViewer {
         if (this.onMoveTextNodeCallback != null) {
             // get from metadata node connected to moved text node
             const node: NodeMetadata | undefined = this.diagramMetadata?.nodes.find(
-                (node) => node.svgId == DiagramUtils.getVoltageLevelNodeId(this.selectedElement?.id)
+                (node) => node.svgId == DiagramUtils.getVoltageLevelNodeId(this.draggedElement?.id)
             );
             const textNode: TextNodeMetadata | undefined = this.diagramMetadata?.textNodes.find(
-                (textNode) => textNode.svgId == this.selectedElement?.id
+                (textNode) => textNode.svgId == this.draggedElement?.id
             );
             if (node != null && textNode != null) {
                 // get new text node position
-                const textPosition = DiagramUtils.getTextNodeAngleFromCentre(this.selectedElement, mousePosition);
+                const textPosition = DiagramUtils.getTextNodeAngleFromCentre(this.draggedElement, mousePosition);
                 const textNodeMoves = DiagramUtils.getTextNodeMoves(textNode, node, textPosition, this.endTextEdge);
                 // update text node position in metadata
                 textNode.shiftX = textNodeMoves[0].xNew;
