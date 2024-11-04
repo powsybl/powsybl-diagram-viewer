@@ -1,5 +1,5 @@
 {
-    "name": "@powsybl/diagram-viewer",
+    "name": "@powsybl/network-viewer",
     "version": "0.5.6",
     "description": "TypeScript library to integrate a PowSyBl SVG diagram in a JavaScript project.",
     "author": "PowSyBl team",
@@ -7,16 +7,16 @@
     "license": "MPL-2.0",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/powsybl/powsybl-diagram-viewer.git"
+        "url": "git+https://github.com/powsybl/powsybl-network-viewer.git"
     },
     "type": "module",
     "types": "./dist/index.d.ts",
-    "main": "./dist/powsybl-diagram-viewer.umd.cjs",
-    "module": "./dist/powsybl-diagram-viewer.js",
+    "main": "./dist/powsybl-network-viewer.umd.cjs",
+    "module": "./dist/powsybl-network-viewer.js",
     "exports": {
         ".": {
-            "import": "./dist/powsybl-diagram-viewer.js",
-            "require": "./dist/powsybl-diagram-viewer.umd.cjs"
+            "import": "./dist/powsybl-network-viewer.js",
+            "require": "./dist/powsybl-network-viewer.umd.cjs"
         }
     },
     "files": [
