@@ -25,15 +25,10 @@ To fix this, run this command from the app **after** running "npm install"
 If you want to deploy a new version of powsybl-diagram-viewer in the [NPM package registry](https://www.npmjs.com/package/@powsybl/powsybl-diagram-viewer),
 you need to follow the steps below:
 
--   Update to the new version in [package.json](https://github.com/powsybl/powsybl-diagram-viewer/blob/main/package.json) (example `0.6.0`)
--   Update the package-lock.json: `npm install`
--   Commit the package.json and package-lock.json files, push to a branch, make a PR, have it reviewed and merged to main.
--   [Make a release](https://github.com/powsybl/powsybl-diagram-viewer/releases/new) on GitHub by creating a new tag on the last commit. On the release creation page:
-  - In "Choose a tag": type the tag you want to create (ex.: v0.6.0) and select "create new tag"
-  - In "Target": click on "recent commit" tab and select your release commit
-  - Click on "Generate release note"
-  - Click on "Publish release"
--   It will trigger a job that will publish the release on NPM
+- [Make a release action](https://github.com/powsybl/powsybl-diagram-viewer/actions/workflows/release.yml)
+- In the 'run workflow' combobox select, let the branch on main
+- Enter the type of evolution (major | minor | patch)
+- Click 'run workflow'
 
 Notes :
 * Check [license-checker-config.json](license-checker-config.json) for license white list and exclusion.
