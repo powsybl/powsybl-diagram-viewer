@@ -97,9 +97,15 @@ export class NetworkAreaDiagramViewer {
         this.originalWidth = 0;
         this.originalHeight = 0;
         this.dynamicCssRules = customDynamicCssRules ?? DEFAULT_DYNAMIC_CSS_RULES;
-        // if no metadata is available disable node interaction
-        enableNodeInteraction = diagramMetadata == null ? false : enableNodeInteraction;
-        this.init(minWidth, minHeight, maxWidth, maxHeight, enableNodeInteraction, enableLevelOfDetail);
+        this.init(
+            minWidth,
+            minHeight,
+            maxWidth,
+            maxHeight,
+            enableNodeInteraction,
+            enableLevelOfDetail,
+            diagramMetadata !== null
+        );
         this.svgParameters = new SvgParameters(diagramMetadata?.svgParameters);
         this.layoutParameters = new LayoutParameters(diagramMetadata?.layoutParameters);
         this.onMoveNodeCallback = onMoveNodeCallback;
@@ -193,7 +199,8 @@ export class NetworkAreaDiagramViewer {
         maxWidth: number,
         maxHeight: number,
         enableNodeInteraction: boolean,
-        enableLevelOfDetail: boolean
+        enableLevelOfDetail: boolean,
+        hasMetadata: boolean
     ): void {
         if (!this.container || !this.svgContent) {
             return;
@@ -222,7 +229,7 @@ export class NetworkAreaDiagramViewer {
         drawnSvg.style.overflow = 'visible';
 
         // add events
-        if (enableNodeInteraction) {
+        if (enableNodeInteraction && hasMetadata) {
             this.svgDraw.on('mousedown', (e: Event) => {
                 if ((e as MouseEvent).button == 0) {
                     this.onMouseLeftDown(e as MouseEvent);
@@ -237,9 +244,11 @@ export class NetworkAreaDiagramViewer {
                 }
             });
         }
-        this.svgDraw.on('mouseover', (e: Event) => {
-            this.onHover(e as MouseEvent);
-        });
+        if (hasMetadata) {
+            this.svgDraw.on('mouseover', (e: Event) => {
+                this.onHover(e as MouseEvent);
+            });
+        }
         this.svgDraw.on('panStart', function () {
             if (drawnSvg.parentElement != undefined) {
                 drawnSvg.parentElement.style.cursor = 'move';
@@ -284,7 +293,7 @@ export class NetworkAreaDiagramViewer {
             observer.observe(targetNode, { attributeFilter: ['viewBox'] });
         }
 
-        if (enableNodeInteraction) {
+        if (enableNodeInteraction && hasMetadata) {
             // fill empty elements: unknown buses and three windings transformers
             const emptyElements: NodeListOf<SVGGraphicsElement> = this.container.querySelectorAll(
                 '.nad-unknown-busnode, .nad-3wt-nodes .nad-winding'
