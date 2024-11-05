@@ -1191,7 +1191,7 @@ export class NetworkAreaDiagramViewer {
     private updateNodeMetadataCallCallback(mousePosition: Point, callMoveNodeCallback: boolean) {
         // get moved node from metadata
         const node: NodeMetadata | undefined = this.diagramMetadata?.nodes.find(
-            (node) => node.svgId == this.selectedElement?.id
+            (node) => node.svgId == this.draggedElement?.id
         );
         if (node != null) {
             const nodeMove = DiagramUtils.getNodeMove(node, mousePosition);
