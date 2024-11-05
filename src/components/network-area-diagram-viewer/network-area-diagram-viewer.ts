@@ -97,6 +97,8 @@ export class NetworkAreaDiagramViewer {
         this.originalWidth = 0;
         this.originalHeight = 0;
         this.dynamicCssRules = customDynamicCssRules ?? DEFAULT_DYNAMIC_CSS_RULES;
+        // if no metadata is available disable node interaction
+        enableNodeInteraction = diagramMetadata == null ? false : enableNodeInteraction;
         this.init(minWidth, minHeight, maxWidth, maxHeight, enableNodeInteraction, enableLevelOfDetail);
         this.svgParameters = new SvgParameters(diagramMetadata?.svgParameters);
         this.layoutParameters = new LayoutParameters(diagramMetadata?.layoutParameters);
