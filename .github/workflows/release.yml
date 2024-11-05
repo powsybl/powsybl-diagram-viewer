@@ -4,17 +4,24 @@ on:
   workflow_dispatch:
     inputs:
       versionType:
-        description: version type increment (major | minor | patch)
+        description: version type increment
         required: true
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
       nodeAuthToken:
+        description: NPM access token
         required: true
         type: string
+
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - name: Mask Node Auth Token
-      - run: |
+        run: |
           NODE_AUTH_TOKEN=$(jq -r '.inputs.nodeAuthToken' $GITHUB_EVENT_PATH)
           echo ::add-mask::$NODE_AUTH_TOKEN
           echo NODE_AUTH_TOKEN=$NODE_AUTH_TOKEN >> $GITHUB_ENV
