@@ -1372,7 +1372,7 @@ export class NetworkAreaDiagramViewer {
                             ' will be update for ' +
                             maxDisplayedSize +
                             ' from ' +
-                            rule.currentValue +
+                            rule.currentValue[property] +
                             ' to ' +
                             valueToUpdate
                     );

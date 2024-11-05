@@ -15,9 +15,7 @@ export { THRESHOLD_STATUS } from './components/network-area-diagram-viewer/dynam
 export type {
     CSS_DECLARATION,
     CSS_RULE,
-    CSS_RULE_TEST,
     getValueFromThreshold,
-    CSS_DECLARATION_TEST,
 } from './components/network-area-diagram-viewer/dynamic-css-utils';
 export { SingleLineDiagramViewer } from './components/single-line-diagram-viewer/single-line-diagram-viewer';
 export type {
