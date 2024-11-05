@@ -765,8 +765,8 @@ export class NetworkAreaDiagramViewer {
         // if dangling line edge -> redraw boundary node
         if (edgeType == DiagramUtils.EdgeType.DANGLING_LINE) {
             this.redrawBoundaryNode(edgeNodes[1], DiagramUtils.getAngle(edgeStart2, edgeMiddle), nodeRadius2[1]);
-            if (this.selectedElement?.id == edgeNodes[1]?.id) {
-                // if boudary node moved -> redraw other voltage level node
+            if (this.draggedElement?.id == edgeNodes[1]?.id) {
+                // if boundary node moved -> redraw other voltage level node
                 this.redrawOtherVoltageLevelNode(edgeNodes[0], [edge]);
             }
         } else {
