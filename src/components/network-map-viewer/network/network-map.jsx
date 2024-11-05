@@ -188,7 +188,8 @@ const NetworkMap = forwardRef((props, ref) => {
                     mapRef.current?.flyTo({
                         center: [geodata.lon, geodata.lat],
                         duration: 2000,
-                        zoom: props.locateSubStationZoomLevel,
+                        // only zoom if the current zoom is smaller than the new one
+                        zoom: Math.max(mapRef.current?.getZoom(), props.locateSubStationZoomLevel),
                         essential: true,
                     });
                     setCentered({
