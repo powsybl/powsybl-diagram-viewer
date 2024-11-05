@@ -9,10 +9,9 @@ import { Point, SVG, ViewBoxLike, Svg } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 import * as DiagramUtils from './diagram-utils';
 import { SvgParameters } from './svg-parameters';
-import { CSS_RULE_TEST, DEFAULT_DYNAMIC_CSS_RULES_TEST } from './dynamic-css-utils';
+import { CSS_RULE, DEFAULT_DYNAMIC_CSS_RULES } from './dynamic-css-utils';
 import { LayoutParameters } from './layout-parameters';
 import { DiagramMetadata, EdgeMetadata, BusNodeMetadata, NodeMetadata, TextNodeMetadata } from './diagram-metadata';
-import { CSS_DECLARATION, CSS_RULE, THRESHOLD_STATUS, DEFAULT_DYNAMIC_CSS_RULES } from './dynamic-css-utils';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
@@ -71,7 +70,7 @@ export class NetworkAreaDiagramViewer {
     onMoveNodeCallback: OnMoveNodeCallbackType | null;
     onMoveTextNodeCallback: OnMoveTextNodeCallbackType | null;
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
-    dynamicCssRules: CSS_RULE_TEST[];
+    dynamicCssRules: CSS_RULE[];
     onToggleHoverCallback: OnToggleNadHoverCallbackType | null;
 
     constructor(
@@ -87,7 +86,7 @@ export class NetworkAreaDiagramViewer {
         onSelectNodeCallback: OnSelectNodeCallbackType | null,
         enableNodeInteraction: boolean,
         enableLevelOfDetail: boolean,
-        customDynamicCssRules: CSS_RULE_TEST[] | null,
+        customDynamicCssRules: CSS_RULE[] | null,
         onToggleHoverCallback: OnToggleNadHoverCallbackType | null
     ) {
         this.container = container;
@@ -97,7 +96,7 @@ export class NetworkAreaDiagramViewer {
         this.height = 0;
         this.originalWidth = 0;
         this.originalHeight = 0;
-        this.dynamicCssRules = customDynamicCssRules ?? DEFAULT_DYNAMIC_CSS_RULES_TEST;
+        this.dynamicCssRules = customDynamicCssRules ?? DEFAULT_DYNAMIC_CSS_RULES;
         this.init(
             minWidth,
             minHeight,
@@ -1326,8 +1325,8 @@ export class NetworkAreaDiagramViewer {
 
     public initializeDynamicCssRules(maxDisplayedSize: number) {
         this.getDynamicCssRules().forEach((rule) => {
-            for (const [property, func] of Object.entries(rule.cssDeclaration)) {
-                rule.currentValue[property] = func(maxDisplayedSize);
+            for (const [property, getPropertyValue] of Object.entries(rule.cssDeclaration)) {
+                rule.currentValue[property] = getPropertyValue(maxDisplayedSize);
             }
         });
     }
@@ -1364,8 +1363,8 @@ export class NetworkAreaDiagramViewer {
         // We will check each dynamic css rule to see if we crossed a zoom threshold. If this is the case, we
         // update the rule's threshold status and trigger the CSS change in the SVG.
         this.getDynamicCssRules().forEach((rule) => {
-            for (const [property, func] of Object.entries(rule.cssDeclaration)) {
-                const valueToUpdate = func(maxDisplayedSize);
+            for (const [property, getPropertyValue] of Object.entries(rule.cssDeclaration)) {
+                const valueToUpdate = getPropertyValue(maxDisplayedSize);
                 if (valueToUpdate !== rule.currentValue[property]) {
                     console.debug(
                         'CSS Rule ' +
