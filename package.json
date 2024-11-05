@@ -1,7 +1,7 @@
 {
     "name": "@powsybl/network-viewer",
     "version": "0.5.6",
-    "description": "TypeScript library to integrate a PowSyBl SVG diagram in a JavaScript project.",
+    "description": "TypeScript library to integrate PowSyBl network viewers in a JavaScript project.",
     "author": "PowSyBl team",
     "homepage": "https://www.powsybl.org/",
     "license": "MPL-2.0",
