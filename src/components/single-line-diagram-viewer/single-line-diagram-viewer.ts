@@ -96,8 +96,8 @@ export type OnFeederCallbackType = (
 
 export type OnBusCallbackType = (busId: string, svgId: string, x: number, y: number) => void;
 
-export type HandleTogglePopoverType = (
-    shouldDisplay: boolean,
+export type OnToggleSldHoverCallbackType = (
+    hovered: boolean,
     anchorEl: EventTarget | null,
     equipmentId: string,
     equipmentType: string
@@ -120,7 +120,7 @@ export class SingleLineDiagramViewer {
     arrowSvg: string;
     arrowHoverSvg: string;
     svgDraw: Svg | undefined;
-    handleTogglePopover: HandleTogglePopoverType | null;
+    onToggleHoverCallback: OnToggleSldHoverCallbackType | null;
 
     constructor(
         container: HTMLElement,
@@ -136,7 +136,7 @@ export class SingleLineDiagramViewer {
         onFeederCallback: OnFeederCallbackType | null,
         onBusCallback: OnBusCallbackType | null,
         selectionBackColor: string,
-        handleTogglePopover: HandleTogglePopoverType | null
+        onToggleHoverCallback: OnToggleSldHoverCallbackType | null
     ) {
         this.container = container;
         this.svgType = svgType;
@@ -155,7 +155,7 @@ export class SingleLineDiagramViewer {
         this.arrowSvg = ARROW_SVG;
         this.arrowHoverSvg = ARROW_HOVER_SVG;
         this.addNavigationArrow();
-        this.handleTogglePopover = handleTogglePopover;
+        this.onToggleHoverCallback = onToggleHoverCallback;
     }
 
     public setWidth(width: number): void {
@@ -586,10 +586,10 @@ export class SingleLineDiagramViewer {
                     equipment.componentType === 'PHASE_SHIFT_TRANSFORMER'
                         ? 'TWO_WINDINGS_TRANSFORMER'
                         : equipment.componentType;
-                this.handleTogglePopover?.(true, event.currentTarget, equipment.equipmentId, equipmentType);
+                this.onToggleHoverCallback?.(true, event.currentTarget, equipment.equipmentId, equipmentType);
             });
             svgEquipment?.addEventListener('mouseout', () => {
-                this.handleTogglePopover?.(false, null, '', '');
+                this.onToggleHoverCallback?.(false, null, '', '');
             });
         });
     }

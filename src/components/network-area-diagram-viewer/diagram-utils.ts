@@ -6,13 +6,14 @@
  */
 
 import { Point } from '@svgdotjs/svg.js';
+import { EdgeMetadata, BusNodeMetadata, NodeMetadata, TextNodeMetadata } from './diagram-metadata';
 
 // node move: original and new position
 export type NODEMOVE = {
-    xOrig: string;
-    yOrig: string;
-    xNew: string;
-    yNew: string;
+    xOrig: number;
+    yOrig: number;
+    xNew: number;
+    yNew: number;
 };
 
 export enum EdgeType {
@@ -23,6 +24,7 @@ export enum EdgeType {
     DANGLING_LINE,
     TIE_LINE,
     THREE_WINDINGS_TRANSFORMER,
+    UNKNOWN,
 }
 
 const EdgeTypeMapping: { [key: string]: EdgeType } = {
@@ -63,6 +65,11 @@ export function degToRad(deg: number): number {
 // transform angle radians to degrees
 export function radToDeg(rad: number): number {
     return (rad * 180.0) / Math.PI;
+}
+
+// round number to 2 decimals, for storing positions in metadata
+export function round(num: number): number {
+    return Math.round(num * 100) / 100;
 }
 
 // get the transform element of an SVG graphic element
@@ -124,12 +131,11 @@ export function getEdgeFork(point: Point, edgeForkLength: number, angleFork: num
 }
 
 // get the type of edge
-export function getEdgeType(edge: SVGGraphicsElement): EdgeType | null {
-    const edgeType = edge.getAttribute('type');
-    if (edgeType == null) {
-        return null;
+export function getEdgeType(edge: EdgeMetadata): EdgeType {
+    if (edge.type == null) {
+        return EdgeType.UNKNOWN;
     }
-    return EdgeTypeMapping[edgeType];
+    return EdgeTypeMapping[edge.type];
 }
 
 // get the matrix used for the position of the arrow drawn in a PS transformer
@@ -198,7 +204,7 @@ export function getConverterStationPolyline(
     return getFormattedPolyline(points[0], null, points[1]);
 }
 
-// get the drabbable element, if present,
+// get the draggable element, if present,
 // from the element selected using the mouse
 export function getDraggableFrom(element: SVGElement): SVGElement | undefined {
     if (isDraggable(element)) {
@@ -208,9 +214,27 @@ export function getDraggableFrom(element: SVGElement): SVGElement | undefined {
     }
 }
 
+// get the selectable element, if present,
+// from the element selected using the mouse
+export function getSelectableFrom(element: SVGElement): SVGElement | undefined {
+    if (isSelectable(element)) {
+        return element;
+    } else if (element.parentElement) {
+        return getSelectableFrom(element.parentNode as SVGElement);
+    }
+}
+
 function isDraggable(element: SVGElement): boolean {
     return (
         hasId(element) && element.parentNode != null && classIsContainerOfDraggables(element.parentNode as SVGElement)
+    );
+}
+
+function isSelectable(element: SVGElement): boolean {
+    return (
+        hasId(element) &&
+        element.parentNode != null &&
+        (element.parentNode as SVGElement).classList.contains('nad-vl-nodes')
     );
 }
 
@@ -227,6 +251,9 @@ function classIsContainerOfDraggables(element: SVGElement): boolean {
     );
 }
 
+function classIsContainerOfHoverables(element: SVGElement): boolean {
+    return element.classList.contains('nad-branch-edges') || element.classList.contains('nad-3wt-edges');
+}
 // get radius of voltage level
 export function getVoltageLevelCircleRadius(nbNeighbours: number, voltageLevelCircleRadius: number): number {
     return Math.min(Math.max(nbNeighbours + 1, 1), 2) * voltageLevelCircleRadius;
@@ -366,12 +393,11 @@ export function getPathAngle(path: HTMLElement): number | null {
 }
 
 // sort list of bus nodes by index
-export function getSortedBusNodes(busNodes: NodeListOf<SVGGraphicsElement>): SVGGraphicsElement[] {
-    const sortedBusNodes: SVGGraphicsElement[] = [];
-    busNodes.forEach((busNode) => {
-        const index = busNode.getAttribute('index') ?? '-1';
-        if (+index >= 0) {
-            sortedBusNodes[+index] = busNode;
+export function getSortedBusNodes(busNodes: BusNodeMetadata[] | undefined): BusNodeMetadata[] {
+    const sortedBusNodes: BusNodeMetadata[] = [];
+    busNodes?.forEach((busNode) => {
+        if (busNode.index >= 0) {
+            sortedBusNodes[busNode.index] = busNode;
         }
     });
     return sortedBusNodes;
@@ -390,9 +416,9 @@ export function getEdgeNameAngle(point1: Point, point2: Point): number {
 }
 
 // check if a DOM element is a text node
-export function isTextNode(element: SVGGraphicsElement | null): boolean | undefined {
+export function isTextNode(element: SVGGraphicsElement | null): boolean {
     return (
-        element != null && element.parentElement != null && element.parentElement?.classList.contains('nad-text-nodes')
+        element != null && element.parentElement != null && element.parentElement.classList.contains('nad-text-nodes')
     );
 }
 
@@ -440,7 +466,7 @@ export function getTextNodeAngleFromCentre(textNode: SVGGraphicsElement | null, 
 }
 
 // get the position of a translated text box
-export function getTextNodeTranslatedPosition(textNode: SVGGraphicsElement | null, translation: Point) {
+export function getTextNodeTranslatedPosition(textNode: SVGGraphicsElement | null, translation: Point): Point {
     const textNodeX = textNode?.getAttribute('x') ?? '0';
     const textNodeY = textNode?.getAttribute('y') ?? '0';
     return new Point(+textNodeX + translation.x, +textNodeY + translation.y);
@@ -453,22 +479,45 @@ export function getTextNodePosition(textNode: SVGGraphicsElement | null): Point 
     return new Point(+textNodeX, +textNodeY);
 }
 
-// get text node move (original and new shift of position)
-export function getTextNodeMove(initialTextPosition: Point, textPosition: Point, vlNode: SVGGraphicsElement): NODEMOVE {
-    const xNode = vlNode.getAttribute('x') ?? '0';
-    const yNode = vlNode.getAttribute('y') ?? '0';
-    const xOrig = getFormattedValue(initialTextPosition.x - +xNode);
-    const yOrig = getFormattedValue(initialTextPosition.y - +yNode);
-    const xNew = getFormattedValue(textPosition.x - +xNode);
-    const yNew = getFormattedValue(textPosition.y - +yNode);
-    return { xOrig: xOrig, yOrig: yOrig, xNew: xNew, yNew: yNew };
+// get node move (original and new position)
+export function getNodeMove(node: NodeMetadata, nodePosition: Point): NODEMOVE {
+    const xNew = round(nodePosition.x);
+    const yNew = round(nodePosition.y);
+    return { xOrig: node.x, yOrig: node.y, xNew: xNew, yNew: yNew };
 }
 
-// get node move (original and new position)
-export function getNodeMove(node: SVGGraphicsElement, nodePosition: Point): NODEMOVE {
-    const xOrig = node.getAttribute('x') ?? '0';
-    const yOrig = node.getAttribute('y') ?? '0';
-    const xNew = getFormattedValue(nodePosition.x);
-    const yNew = getFormattedValue(nodePosition.y);
-    return { xOrig: xOrig, yOrig: yOrig, xNew: xNew, yNew: yNew };
+// Checks if the element is hoverable
+// Function to check if the element is hoverable
+function isHoverable(element: SVGElement): boolean {
+    return (
+        hasId(element) && element.parentNode != null && classIsContainerOfHoverables(element.parentNode as SVGElement)
+    );
+}
+
+export function getHoverableFrom(element: SVGElement): SVGElement | undefined {
+    if (isHoverable(element)) {
+        return element;
+    } else if (element.parentElement) {
+        return getHoverableFrom(element.parentNode as SVGElement);
+    }
+}
+export function getStringEdgeType(edge: EdgeMetadata): string {
+    return EdgeType[getEdgeType(edge)];
+}
+
+// get moves (original and new position) of position and connetion of text node
+export function getTextNodeMoves(
+    textNode: TextNodeMetadata,
+    vlNode: NodeMetadata,
+    textPosition: Point,
+    connectionPosition: Point
+): [NODEMOVE, NODEMOVE] {
+    const xNew = round(textPosition.x - vlNode.x);
+    const yNew = round(textPosition.y - vlNode.y);
+    const connXNew = round(connectionPosition.x - vlNode.x);
+    const connYNew = round(connectionPosition.y - vlNode.y);
+    return [
+        { xOrig: textNode.shiftX, yOrig: textNode.shiftY, xNew: xNew, yNew: yNew },
+        { xOrig: textNode.connectionShiftX, yOrig: textNode.connectionShiftY, xNew: connXNew, yNew: connYNew },
+    ];
 }
