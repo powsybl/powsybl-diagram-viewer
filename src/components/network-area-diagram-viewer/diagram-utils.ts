@@ -3,6 +3,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * SPDX-License-Identifier: MPL-2.0
  */
 
 import { Point } from '@svgdotjs/svg.js';
@@ -126,7 +127,7 @@ export function getLabelData(point1: Point, point2: Point, arrowLabelShift: numb
 }
 
 // get fork position of a multibranch edge
-export function getEdgeFork(point: Point, edgeForkLength: number, angleFork: number) {
+export function getEdgeFork(point: Point, edgeForkLength: number, angleFork: number): Point {
     return new Point(point.x + edgeForkLength * Math.cos(angleFork), point.y + edgeForkLength * Math.sin(angleFork));
 }
 
@@ -520,4 +521,50 @@ export function getTextNodeMoves(
         { xOrig: textNode.shiftX, yOrig: textNode.shiftY, xNew: xNew, yNew: yNew },
         { xOrig: textNode.connectionShiftX, yOrig: textNode.connectionShiftY, xNew: connXNew, yNew: connYNew },
     ];
+}
+
+function getButton(svg: string, pressed: boolean): HTMLButtonElement {
+    const button = document.createElement('button');
+    button.innerHTML = svg;
+    button.style.height = '20px';
+    button.style.width = '20px';
+    button.style.marginRight = '1px';
+    button.style.marginLeft = '2px';
+    button.style.marginTop = '1px';
+    button.style.padding = '0px';
+    if (pressed) {
+        button.style.boxShadow = 'none';
+    } else {
+        button.style.boxShadow = '0px 1px 2px rgba(0, 0, 0, 1)';
+    }
+    return button;
+}
+
+export function getSaveButton(): HTMLButtonElement {
+    return getButton(
+        '<svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#5f6368"><path d="m720-120 160-160-56-56-64 64v-167h-80v167l-64-64-56 56 160 160ZM560 0v-80h320V0H560ZM240-160q-33 0-56.5-23.5T160-240v-560q0-33 23.5-56.5T240-880h280l240 240v121h-80v-81H480v-200H240v560h240v80H240Zm0-80v-560 560Z"/></svg>',
+        false
+    );
+}
+
+export function getMoveButton(pressed: boolean): HTMLButtonElement {
+    return getButton(
+        '<svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#5f6368"><path d="M806-440H320v-80h486l-62-62 56-58 160 160-160 160-56-58 62-62ZM600-600v-160H200v560h400v-160h80v160q0 33-23.5 56.5T600-120H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h400q33 0 56.5 23.5T680-760v160h-80Z"/></svg>',
+        pressed
+    );
+}
+
+export function getSelectButton(pressed: boolean): HTMLButtonElement {
+    return getButton(
+        '<svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#5f6368"><path d="M40-480v-80h80v80H40Zm800 0v-80h80v80h-80ZM40-640v-80h80v80H40Zm800 0v-80h80v80h-80ZM40-800v-80h80v80H40Zm160 320v-80h80v80h-80Zm480 0v-80h80v80h-80Zm160-320v-80h80v80h-80Zm-640 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80ZM473-40q-24 0-46-9t-39-26L184-280l33-34q14-14 34-19t40 0l69 20v-327q0-17 11.5-28.5T400-680q17 0 28.5 11.5T440-640v433l-98-28 103 103q6 6 13 9t15 3h167q33 0 56.5-23.5T720-200v-160q0-17 11.5-28.5T760-400q17 0 28.5 11.5T800-360v160q0 66-47 113T640-40H473Zm7-280v-160q0-17 11.5-28.5T520-520q17 0 28.5 11.5T560-480v160h-80Zm120 0v-120q0-17 11.5-28.5T640-480q17 0 28.5 11.5T680-440v120h-80Zm40 200H445h195Z"/></svg>',
+        pressed
+    );
+}
+
+export function pressButton(button: HTMLButtonElement) {
+    button.style.boxShadow = 'none';
+}
+
+export function releaseButton(button: HTMLButtonElement) {
+    button.style.boxShadow = '0px 1px 2px rgba(0, 0, 0, 1)';
 }

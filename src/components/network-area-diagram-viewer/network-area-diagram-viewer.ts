@@ -3,6 +3,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * SPDX-License-Identifier: MPL-2.0
  */
 
 import { Point, SVG, ViewBoxLike, Svg } from '@svgdotjs/svg.js';
@@ -15,6 +16,11 @@ import { CSS_DECLARATION, CSS_RULE, THRESHOLD_STATUS, DEFAULT_DYNAMIC_CSS_RULES 
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
+
+export enum MouseMode {
+    MOVE,
+    SELECT,
+}
 
 export type OnMoveNodeCallbackType = (
     equipmentId: string,
@@ -40,6 +46,7 @@ export type OnMoveTextNodeCallbackType = (
 ) => void;
 
 export type OnSelectNodeCallbackType = (equipmentId: string, nodeId: string) => void;
+
 export type OnToggleNadHoverCallbackType = (
     hovered: boolean,
     mousePosition: Point | null,
@@ -47,8 +54,11 @@ export type OnToggleNadHoverCallbackType = (
     equipmentType: string
 ) => void;
 
+export type OnSaveCallbackType = (svg: string | null, metadata: string | null) => void;
+
 export class NetworkAreaDiagramViewer {
     container: HTMLElement;
+    svgDiv: HTMLElement;
     svgContent: string;
     diagramMetadata: DiagramMetadata | null;
     width: number;
@@ -72,6 +82,8 @@ export class NetworkAreaDiagramViewer {
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
     dynamicCssRules: CSS_RULE[];
     onToggleHoverCallback: OnToggleNadHoverCallbackType | null;
+    onSaveCallback: OnSaveCallbackType | null;
+    mouseMode: MouseMode;
 
     constructor(
         container: HTMLElement,
@@ -87,9 +99,13 @@ export class NetworkAreaDiagramViewer {
         enableNodeInteraction: boolean,
         enableLevelOfDetail: boolean,
         customDynamicCssRules: CSS_RULE[] | null,
-        onToggleHoverCallback: OnToggleNadHoverCallbackType | null
+        onToggleHoverCallback: OnToggleNadHoverCallbackType | null,
+        onSaveCallback: OnSaveCallbackType | null,
+        addButtons: boolean,
+        defaultMouseMode: MouseMode | null
     ) {
         this.container = container;
+        this.svgDiv = document.createElement('div');
         this.svgContent = svgContent;
         this.diagramMetadata = diagramMetadata;
         this.width = 0;
@@ -97,6 +113,12 @@ export class NetworkAreaDiagramViewer {
         this.originalWidth = 0;
         this.originalHeight = 0;
         this.dynamicCssRules = customDynamicCssRules ?? DEFAULT_DYNAMIC_CSS_RULES;
+        this.mouseMode = defaultMouseMode ?? MouseMode.MOVE;
+        this.onMoveNodeCallback = onMoveNodeCallback;
+        this.onMoveTextNodeCallback = onMoveTextNodeCallback;
+        this.onSelectNodeCallback = onSelectNodeCallback;
+        this.onToggleHoverCallback = onToggleHoverCallback;
+        this.onSaveCallback = onSaveCallback;
         this.init(
             minWidth,
             minHeight,
@@ -104,14 +126,11 @@ export class NetworkAreaDiagramViewer {
             maxHeight,
             enableNodeInteraction,
             enableLevelOfDetail,
-            diagramMetadata !== null
+            diagramMetadata !== null,
+            addButtons
         );
         this.svgParameters = new SvgParameters(diagramMetadata?.svgParameters);
         this.layoutParameters = new LayoutParameters(diagramMetadata?.layoutParameters);
-        this.onMoveNodeCallback = onMoveNodeCallback;
-        this.onMoveTextNodeCallback = onMoveTextNodeCallback;
-        this.onSelectNodeCallback = onSelectNodeCallback;
-        this.onToggleHoverCallback = onToggleHoverCallback;
     }
 
     public setWidth(width: number): void {
@@ -184,7 +203,7 @@ export class NetworkAreaDiagramViewer {
     public moveNodeToCoordinates(equipmentId: string, x: number, y: number) {
         const nodeId = this.getNodeIdFromEquipmentId(equipmentId);
         if (nodeId != null) {
-            const elemToMove: SVGElement | null = this.container.querySelector('[id="' + nodeId + '"]');
+            const elemToMove: SVGElement | null = this.svgDiv.querySelector('[id="' + nodeId + '"]');
             if (elemToMove) {
                 const newPosition = new Point(x, y);
                 this.onDragStart(elemToMove);
@@ -200,7 +219,8 @@ export class NetworkAreaDiagramViewer {
         maxHeight: number,
         enableNodeInteraction: boolean,
         enableLevelOfDetail: boolean,
-        hasMetadata: boolean
+        hasMetadata: boolean,
+        addButtons: boolean
     ): void {
         if (!this.container || !this.svgContent) {
             return;
@@ -214,6 +234,14 @@ export class NetworkAreaDiagramViewer {
         // clear the previous svg in div element before replacing
         this.container.innerHTML = '';
 
+        // add buttons bar
+        if (addButtons) {
+            this.container.appendChild(this.GetButtonsBar(enableNodeInteraction));
+        }
+
+        // add svg div
+        this.container.appendChild(this.svgDiv);
+
         // set dimensions
         this.setOriginalWidth(dimensions.width);
         this.setOriginalHeight(dimensions.height);
@@ -222,7 +250,7 @@ export class NetworkAreaDiagramViewer {
 
         // set the SVG
         this.svgDraw = SVG()
-            .addTo(this.container)
+            .addTo(this.svgDiv)
             .size(this.width, this.height)
             .viewbox(dimensions.viewbox.x, dimensions.viewbox.y, dimensions.viewbox.width, dimensions.viewbox.height);
         const drawnSvg: HTMLElement = <HTMLElement>this.svgDraw.svg(this.svgContent).node.firstElementChild;
@@ -295,13 +323,55 @@ export class NetworkAreaDiagramViewer {
 
         if (enableNodeInteraction && hasMetadata) {
             // fill empty elements: unknown buses and three windings transformers
-            const emptyElements: NodeListOf<SVGGraphicsElement> = this.container.querySelectorAll(
+            const emptyElements: NodeListOf<SVGGraphicsElement> = this.svgDiv.querySelectorAll(
                 '.nad-unknown-busnode, .nad-3wt-nodes .nad-winding'
             );
             emptyElements.forEach((emptyElement) => {
                 emptyElement.style.fill = '#0000';
             });
         }
+    }
+
+    private GetButtonsBar(enableNodeMoving: boolean): HTMLDivElement {
+        const buttonsDiv = document.createElement('div');
+        buttonsDiv.style.display = 'flex';
+        buttonsDiv.style.alignItems = 'center';
+        buttonsDiv.style.position = 'absolute';
+        buttonsDiv.style.zIndex = '2';
+        if (enableNodeMoving) {
+            const moveButton = DiagramUtils.getMoveButton(this.mouseMode === MouseMode.MOVE);
+            buttonsDiv.appendChild(moveButton);
+            const selectButton = DiagramUtils.getSelectButton(this.mouseMode === MouseMode.SELECT);
+            buttonsDiv.appendChild(selectButton);
+            moveButton.addEventListener('click', () => {
+                this.mouseMode = MouseMode.MOVE;
+                DiagramUtils.pressButton(moveButton);
+                DiagramUtils.releaseButton(selectButton);
+            });
+            selectButton.addEventListener('click', () => {
+                this.mouseMode = MouseMode.SELECT;
+                DiagramUtils.pressButton(selectButton);
+                DiagramUtils.releaseButton(moveButton);
+            });
+        }
+        if (this.onSaveCallback != null) {
+            const saveSvgButton = DiagramUtils.getSaveButton();
+            buttonsDiv.appendChild(saveSvgButton);
+            saveSvgButton.addEventListener('click', () => {
+                if (this.onSaveCallback != null) {
+                    this.onSaveCallback(this.getSvg(), this.getMetadata());
+                }
+            });
+        }
+        return buttonsDiv;
+    }
+
+    public getSvg(): string | null {
+        return this.svgDraw !== undefined ? this.svgDraw.svg() : null;
+    }
+
+    public getMetadata(): string | null {
+        return JSON.stringify(this.diagramMetadata);
     }
 
     public getDimensionsFromSvg(): DIMENSIONS | null {
@@ -338,10 +408,10 @@ export class NetworkAreaDiagramViewer {
 
     private onMouseLeftDown(event: MouseEvent) {
         // check dragging vs. selection
-        if (event.shiftKey) {
+        if (this.mouseMode == MouseMode.SELECT) {
             // selecting node
             this.onSelectStart(DiagramUtils.getSelectableFrom(event.target as SVGElement));
-        } else {
+        } else if (this.mouseMode == MouseMode.MOVE) {
             // moving node
             this.onDragStart(DiagramUtils.getDraggableFrom(event.target as SVGElement));
         }
@@ -470,7 +540,7 @@ export class NetworkAreaDiagramViewer {
 
     private dragVoltageLevelText(mousePosition: Point) {
         window.getSelection()?.empty(); // to avoid text highlighting in firefox
-        const vlNode: SVGGraphicsElement | null = this.container.querySelector(
+        const vlNode: SVGGraphicsElement | null = this.svgDiv.querySelector(
             "[id='" + DiagramUtils.getVoltageLevelNodeId(this.draggedElement?.id) + "']"
         );
         this.moveText(this.draggedElement, vlNode, mousePosition, DiagramUtils.getTextNodeAngleFromCentre);
@@ -478,7 +548,7 @@ export class NetworkAreaDiagramViewer {
 
     private dragVoltageLevelNode(mousePosition: Point) {
         this.moveNode(mousePosition);
-        const textNode: SVGGraphicsElement | null = this.container.querySelector(
+        const textNode: SVGGraphicsElement | null = this.svgDiv.querySelector(
             "[id='" + DiagramUtils.getTextNodeId(this.draggedElement?.id) + "']"
         );
         this.moveText(
@@ -533,7 +603,7 @@ export class NetworkAreaDiagramViewer {
         textHeight: number,
         textWidth: number
     ) {
-        const textEdge: SVGGraphicsElement | null = this.container.querySelector("[id='" + textEdgeId + "']");
+        const textEdge: SVGGraphicsElement | null = this.svgDiv.querySelector("[id='" + textEdgeId + "']");
         if (textEdge != null) {
             // compute voltage level circle radius
             const busNodes: BusNodeMetadata[] | undefined = this.diagramMetadata?.busNodes.filter(
@@ -565,7 +635,7 @@ export class NetworkAreaDiagramViewer {
     }
 
     private moveSvgElement(svgElementId: string, translation: Point) {
-        const svgElement: SVGGraphicsElement | null = this.container.querySelector("[id='" + svgElementId + "']");
+        const svgElement: SVGGraphicsElement | null = this.svgDiv.querySelector("[id='" + svgElementId + "']");
         if (svgElement) {
             const transform = DiagramUtils.getTransform(svgElement);
             const totalTranslation = new Point(
@@ -636,7 +706,7 @@ export class NetworkAreaDiagramViewer {
     // get the nodes at the sides of an edge
     private getEdgeNodes(edge: EdgeMetadata): [SVGGraphicsElement | null, SVGGraphicsElement | null] {
         const otherNodeId = this.draggedElement?.id === edge.node1 ? edge.node2 : edge.node1;
-        const otherNode: SVGGraphicsElement | null = this.container.querySelector("[id='" + otherNodeId + "']");
+        const otherNode: SVGGraphicsElement | null = this.svgDiv.querySelector("[id='" + otherNodeId + "']");
         const node1 = this.draggedElement?.id === edge.node1 ? this.draggedElement : otherNode;
         const node2 = otherNode?.id === edge.node1 ? this.draggedElement : otherNode;
         return [node1, node2];
@@ -684,9 +754,7 @@ export class NetworkAreaDiagramViewer {
                         return;
                     }
                     // get edge element
-                    const edgeNode: SVGGraphicsElement | null = this.container.querySelector(
-                        "[id='" + edge.svgId + "']"
-                    );
+                    const edgeNode: SVGGraphicsElement | null = this.svgDiv.querySelector("[id='" + edge.svgId + "']");
                     if (!edgeNode) {
                         return;
                     }
@@ -757,7 +825,7 @@ export class NetworkAreaDiagramViewer {
             return;
         }
         // get edge element
-        const edgeNode: SVGGraphicsElement | null = this.container.querySelector("[id='" + edge.svgId + "']");
+        const edgeNode: SVGGraphicsElement | null = this.svgDiv.querySelector("[id='" + edge.svgId + "']");
         if (!edgeNode) {
             return;
         }
@@ -1085,7 +1153,7 @@ export class NetworkAreaDiagramViewer {
         const angleId = busNode.svgId == edge.busNode1 ? edgeId + '.1' : edgeId + '.2';
         if (!this.edgeAngles.has(angleId)) {
             // if not yet stored in angle map -> compute and store it
-            const edgeNode: SVGGraphicsElement | null = this.container.querySelector("[id='" + edgeId + "']");
+            const edgeNode: SVGGraphicsElement | null = this.svgDiv.querySelector("[id='" + edgeId + "']");
             if (edgeNode) {
                 const side = busNode.svgId == edge.busNode1 ? 0 : 1;
                 const halfEdge: HTMLElement = <HTMLElement>edgeNode.children.item(side)?.firstElementChild;

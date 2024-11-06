@@ -10,7 +10,10 @@ export type {
     OnMoveNodeCallbackType,
     OnMoveTextNodeCallbackType,
     OnSelectNodeCallbackType,
+    OnToggleNadHoverCallbackType,
+    OnSaveCallbackType,
 } from './components/network-area-diagram-viewer/network-area-diagram-viewer';
+export { MouseMode } from './components/network-area-diagram-viewer/network-area-diagram-viewer';
 export { THRESHOLD_STATUS } from './components/network-area-diagram-viewer/dynamic-css-utils';
 export type { CSS_DECLARATION, CSS_RULE } from './components/network-area-diagram-viewer/dynamic-css-utils';
 export { SingleLineDiagramViewer } from './components/single-line-diagram-viewer/single-line-diagram-viewer';
