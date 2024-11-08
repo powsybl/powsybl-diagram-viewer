@@ -236,7 +236,7 @@ export class NetworkAreaDiagramViewer {
 
         // add buttons bar
         if (addButtons) {
-            this.container.appendChild(this.GetButtonsBar(enableNodeInteraction));
+            this.container.appendChild(this.GetButtonsBar(enableNodeInteraction && hasMetadata));
         }
 
         // add svg div
@@ -332,13 +332,13 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private GetButtonsBar(enableNodeMoving: boolean): HTMLDivElement {
+    private GetButtonsBar(showNodeInteractionButtons: boolean): HTMLDivElement {
         const buttonsDiv = document.createElement('div');
         buttonsDiv.style.display = 'flex';
         buttonsDiv.style.alignItems = 'center';
         buttonsDiv.style.position = 'absolute';
         buttonsDiv.style.zIndex = '2';
-        if (enableNodeMoving) {
+        if (showNodeInteractionButtons) {
             const moveButton = DiagramUtils.getMoveButton(this.mouseMode === MouseMode.MOVE);
             buttonsDiv.appendChild(moveButton);
             const selectButton = DiagramUtils.getSelectButton(this.mouseMode === MouseMode.SELECT);
