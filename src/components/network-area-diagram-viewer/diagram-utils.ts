@@ -526,16 +526,16 @@ export function getTextNodeMoves(
 function getButton(svg: string, pressed: boolean): HTMLButtonElement {
     const button = document.createElement('button');
     button.innerHTML = svg;
-    button.style.height = '20px';
-    button.style.width = '20px';
+    button.style.height = '25px';
+    button.style.width = '25px';
     button.style.marginRight = '1px';
-    button.style.marginLeft = '2px';
-    button.style.marginTop = '1px';
+    button.style.marginLeft = '3px';
+    button.style.marginTop = '3px';
     button.style.padding = '0px';
     if (pressed) {
-        button.style.boxShadow = 'none';
+        button.style.border = 'medium solid orange';
     } else {
-        button.style.boxShadow = '0px 1px 2px rgba(0, 0, 0, 1)';
+        button.style.border = 'none';
     }
     return button;
 }
@@ -562,9 +562,9 @@ export function getSelectButton(pressed: boolean): HTMLButtonElement {
 }
 
 export function pressButton(button: HTMLButtonElement) {
-    button.style.boxShadow = 'none';
+    button.style.border = 'medium solid orange';
 }
 
 export function releaseButton(button: HTMLButtonElement) {
-    button.style.boxShadow = '0px 1px 2px rgba(0, 0, 0, 1)';
+    button.style.border = 'none';
 }
