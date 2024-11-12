@@ -5,18 +5,34 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { LineLayer } from 'deck.gl';
+import { Accessor, LineLayer, LineLayerProps } from 'deck.gl';
+import { DefaultProps } from '@deck.gl/core';
+import { UniformValue } from '@luma.gl/core';
 import GL from '@luma.gl/constants';
 
-const defaultProps = {
+export type ForkLineLayerProps<DataT = unknown> = _ForkLineLayerProps<DataT> & LineLayerProps;
+
+type _ForkLineLayerProps<DataT> = {
+    getLineParallelIndex: Accessor<DataT, number>;
+    getLineAngle: Accessor<DataT, number>;
+    distanceBetweenLines: Accessor<DataT, number>;
+    maxParallelOffset: Accessor<DataT, number>;
+    minParallelOffset: Accessor<DataT, number>;
+    substationRadius: Accessor<DataT, number>;
+    substationMaxPixel: Accessor<DataT, number>;
+    minSubstationRadiusPixel: Accessor<DataT, number>;
+    getDistanceBetweenLines: Accessor<DataT, number>;
+    getMaxParallelOffset: Accessor<DataT, number>;
+    getMinParallelOffset: Accessor<DataT, number>;
+    getSubstationRadius: Accessor<DataT, number>;
+    getSubstationMaxPixel: Accessor<DataT, number>;
+    getMinSubstationRadiusPixel: Accessor<DataT, number>;
+};
+
+const defaultProps: DefaultProps<ForkLineLayerProps> = {
     getLineParallelIndex: { type: 'accessor', value: 0 },
     getLineAngle: { type: 'accessor', value: 0 },
     distanceBetweenLines: { type: 'number', value: 1000 },
-    maxParallelOffset: { type: 'number', value: 100 },
-    minParallelOffset: { type: 'number', value: 3 },
-    substationRadius: { type: 'number', value: 500 },
-    substationMaxPixel: { type: 'number', value: 5 },
-    minSubstationRadiusPixel: { type: 'number', value: 1 },
 };
 
 /**
@@ -32,7 +48,10 @@ const defaultProps = {
  *         substationMaxPixel: max pixel for a voltage level in substation
  *         minSubstationRadiusPixel : min pixel for a substation
  */
-export default class ForkLineLayer extends LineLayer {
+export default class ForkLineLayer<DataT = unknown> extends LineLayer<DataT, Required<_ForkLineLayerProps<DataT>>> {
+    static layerName = 'ForkLineLayer';
+    static defaultProps = defaultProps;
+
     getShaders() {
         const shaders = super.getShaders();
         shaders.inject = {
@@ -71,11 +90,11 @@ uniform float minSubstationRadiusPixel;
         return shaders;
     }
 
-    initializeState(params) {
-        super.initializeState(params);
+    initializeState() {
+        super.initializeState();
 
         const attributeManager = this.getAttributeManager();
-        attributeManager.addInstanced({
+        attributeManager?.addInstanced({
             instanceLineParallelIndex: {
                 size: 1,
                 type: GL.FLOAT,
@@ -99,7 +118,7 @@ uniform float minSubstationRadiusPixel;
         });
     }
 
-    draw({ uniforms }) {
+    draw({ uniforms }: { uniforms: Record<string, UniformValue> }) {
         super.draw({
             uniforms: {
                 ...uniforms,
@@ -113,6 +132,3 @@ uniform float minSubstationRadiusPixel;
         });
     }
 }
-
-ForkLineLayer.layerName = 'ForkLineLayer';
-ForkLineLayer.defaultProps = defaultProps;
