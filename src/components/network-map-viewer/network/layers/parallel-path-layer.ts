@@ -6,8 +6,8 @@
  */
 import { Accessor, PathLayer, PathLayerProps } from 'deck.gl';
 import { DefaultProps } from '@deck.gl/core';
-import { UniformValue } from '@luma.gl/core';
 import GL from '@luma.gl/constants';
+import { UniformValues } from 'maplibre-gl';
 
 /**
  * A layer based on PathLayer allowing to shift path by an offset + angle
@@ -132,7 +132,8 @@ gl_Position += project_common_position_to_clipspace(trans) - project_uCenter;
         });
     }
 
-    draw({ uniforms }: { uniforms: Record<string, UniformValue> }) {
+    // TODO find the full type for record values
+    draw({ uniforms }: { uniforms: Record<string, UniformValues<object>> }) {
         super.draw({
             uniforms: {
                 ...uniforms,

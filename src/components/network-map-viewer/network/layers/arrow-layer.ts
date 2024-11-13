@@ -4,23 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { project32, picking } from '@deck.gl/core';
+import { picking, project32 } from '@deck.gl/core';
 import GL from '@luma.gl/constants';
-import {
-    Model,
-    Geometry,
-    Texture2D,
-    FEATURES,
-    hasFeatures,
-    isWebGL2,
-    TextureFormat,
-    UniformValue,
-} from '@luma.gl/core';
-
+import { FEATURES, Geometry, hasFeatures, isWebGL2, Model, Texture2D } from '@luma.gl/core';
 import vs from './arrow-layer-vertex.vert?raw';
 import fs from './arrow-layer-fragment.frag?raw';
 import { Accessor, Color, Layer, LayerContext, LayerProps, Position, Texture, UpdateParameters } from 'deck.gl';
 import { Line } from '../../utils/equipment-types';
+import { type UniformValues } from 'maplibre-gl';
 
 const DEFAULT_COLOR = [0, 0, 0, 255] satisfies Color;
 
@@ -240,8 +231,8 @@ export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
         gl: WebGLRenderingContext,
         data: Array<number>,
         elementSize: number,
-        format: TextureFormat,
-        dataFormat: TextureFormat
+        format: number, // is it TextureFormat?
+        dataFormat: number // is it TextureFormat?
     ) {
         const start = performance.now();
 
@@ -427,7 +418,8 @@ export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
         window.requestAnimationFrame((timestamp) => this.animate(timestamp));
     }
 
-    draw({ uniforms }: { uniforms: Record<string, UniformValue> }) {
+    // TODO find the full type for record values
+    draw({ uniforms }: { uniforms: Record<string, UniformValues<object>> }) {
         const { sizeMinPixels, sizeMaxPixels } = this.props;
 
         const { linePositionsTexture, lineDistancesTexture, timestamp, webgl2 } = this.state;

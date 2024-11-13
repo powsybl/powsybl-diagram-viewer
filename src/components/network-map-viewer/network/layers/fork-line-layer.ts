@@ -7,8 +7,8 @@
 
 import { Accessor, LineLayer, LineLayerProps } from 'deck.gl';
 import { DefaultProps } from '@deck.gl/core';
-import { UniformValue } from '@luma.gl/core';
 import GL from '@luma.gl/constants';
+import { UniformValues } from 'maplibre-gl';
 
 export type ForkLineLayerProps<DataT = unknown> = _ForkLineLayerProps<DataT> & LineLayerProps;
 
@@ -118,7 +118,8 @@ uniform float minSubstationRadiusPixel;
         });
     }
 
-    draw({ uniforms }: { uniforms: Record<string, UniformValue> }) {
+    // TODO find the full type for record values
+    draw({ uniforms }: { uniforms: Record<string, UniformValues<object>> }) {
         super.draw({
             uniforms: {
                 ...uniforms,
