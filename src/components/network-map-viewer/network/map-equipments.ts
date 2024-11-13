@@ -178,7 +178,7 @@ export class MapEquipments {
         const remainingLines = branchesList.filter(
             (l) => l.voltageLevelId1 !== voltageLevelId && l.voltageLevelId2 !== voltageLevelId
         );
-        branchesList.filter((l) => !remainingLines.includes(l)).map((l) => this.linesById.delete(l.id));
+        branchesList.filter((l) => !remainingLines.includes(l)).forEach((l) => this.linesById.delete(l.id));
 
         return remainingLines;
     }
@@ -212,7 +212,7 @@ export class MapEquipments {
                 if (substation === undefined) {
                     return;
                 }
-                substation.voltageLevels.map((vl) => this.removeEquipment(EQUIPMENT_TYPES.VOLTAGE_LEVEL, vl.id));
+                substation.voltageLevels.forEach((vl) => this.removeEquipment(EQUIPMENT_TYPES.VOLTAGE_LEVEL, vl.id));
                 this.completeSubstationsInfos([substation]);
                 break;
             }
