@@ -31,4 +31,72 @@ declare module '@deck.gl/react' { export * from '@deck.gl/react/typed'; }
  * Has we will migrate to deck.gl v9 very soon, it's acceptable to just let typescript not check types temporally.
  * TODO: remove this file when migrating to deck.gl v9
  */
-declare module '@luma.gl/core'; // just shut down tsc with 'any'
+declare module '@luma.gl/core' {
+    // just shut down tsc with 'any'
+    export { Model, Geometry } from '@luma.gl/engine';
+    export function isWebGL2(gl: any): boolean;
+    export function hasFeatures(gl: any, features: any): any;
+    export class Texture2D extends Resource {
+        static isSupported(gl: any, opts: any): boolean;
+        constructor(gl: any, props?: {});
+        toString(): string;
+        initialize(props?: {}): this | void;
+        get handle(): any;
+        delete({ deleteChildren }?: { deleteChildren?: boolean }): this | void;
+        getParameter(pname: any, opts?: {}): any;
+        getParameters(opts?: {}): {};
+        setParameter(pname: any, value: any): this;
+        setParameters(parameters: any): this;
+        stubRemovedMethods(className: any, version: any, methodNames: any): void;
+        resize({ height, width, mipmaps }: { height: any; width: any; mipmaps?: boolean }): this;
+        generateMipmap(params?: {}): this;
+        setImageData(options: any): this;
+        setSubImageData(args: {
+            target?: any;
+            pixels?: any;
+            data?: any;
+            x?: number;
+            y?: number;
+            width?: any;
+            height?: any;
+            level?: number;
+            format?: any;
+            type?: any;
+            dataFormat?: any;
+            compressed?: boolean;
+            offset?: number;
+            border?: any;
+            parameters?: {};
+        }): void;
+        copyFramebuffer(opts?: {}): any;
+        getActiveUnit(): number;
+        bind(textureUnit?: any): any;
+        unbind(textureUnit?: any): any;
+    }
+    export const FEATURES: {
+        WEBGL2: string;
+        VERTEX_ARRAY_OBJECT: string;
+        TIMER_QUERY: string;
+        INSTANCED_RENDERING: string;
+        MULTIPLE_RENDER_TARGETS: string;
+        ELEMENT_INDEX_UINT32: string;
+        BLEND_EQUATION_MINMAX: string;
+        FLOAT_BLEND: string;
+        COLOR_ENCODING_SRGB: string;
+        TEXTURE_DEPTH: string;
+        TEXTURE_FLOAT: string;
+        TEXTURE_HALF_FLOAT: string;
+        TEXTURE_FILTER_LINEAR_FLOAT: string;
+        TEXTURE_FILTER_LINEAR_HALF_FLOAT: string;
+        TEXTURE_FILTER_ANISOTROPIC: string;
+        COLOR_ATTACHMENT_RGBA32F: string;
+        COLOR_ATTACHMENT_FLOAT: string;
+        COLOR_ATTACHMENT_HALF_FLOAT: string;
+        GLSL_FRAG_DATA: string;
+        GLSL_FRAG_DEPTH: string;
+        GLSL_DERIVATIVES: string;
+        GLSL_TEXTURE_LOD: string;
+    };
+    //export type TextureFormat = any;
+    //export type UniformValue = any;
+}
