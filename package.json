@@ -1,6 +1,6 @@
 {
     "name": "@powsybl/network-viewer",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "TypeScript library to integrate PowSyBl network viewers in a JavaScript project.",
     "author": "PowSyBl team",
     "homepage": "https://www.powsybl.org/",
