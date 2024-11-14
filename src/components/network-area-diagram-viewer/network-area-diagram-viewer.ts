@@ -236,7 +236,7 @@ export class NetworkAreaDiagramViewer {
 
         // add buttons bar
         if (addButtons) {
-            this.container.appendChild(this.GetButtonsBar(enableNodeInteraction && hasMetadata));
+            this.container.appendChild(this.getButtonsBar(enableNodeInteraction && hasMetadata));
         }
 
         // add svg div
@@ -332,7 +332,7 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private GetButtonsBar(showNodeInteractionButtons: boolean): HTMLDivElement {
+    private getButtonsBar(showNodeInteractionButtons: boolean): HTMLDivElement {
         const buttonsDiv = document.createElement('div');
         buttonsDiv.style.display = 'flex';
         buttonsDiv.style.alignItems = 'center';
@@ -359,7 +359,7 @@ export class NetworkAreaDiagramViewer {
             buttonsDiv.appendChild(saveSvgButton);
             saveSvgButton.addEventListener('click', () => {
                 if (this.onSaveCallback != null) {
-                    this.onSaveCallback(this.getSvg(), this.getMetadata());
+                    this.onSaveCallback(this.getSvg(), this.getJsonMetadata());
                 }
             });
         }
@@ -370,7 +370,7 @@ export class NetworkAreaDiagramViewer {
         return this.svgDraw !== undefined ? this.svgDraw.svg() : null;
     }
 
-    public getMetadata(): string | null {
+    public getJsonMetadata(): string | null {
         return JSON.stringify(this.diagramMetadata);
     }
 
