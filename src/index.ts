@@ -10,7 +10,9 @@ export type {
     OnMoveNodeCallbackType,
     OnMoveTextNodeCallbackType,
     OnSelectNodeCallbackType,
+    OnToggleNadHoverCallbackType,
 } from './components/network-area-diagram-viewer/network-area-diagram-viewer';
+export type { DiagramMetadata } from './components/network-area-diagram-viewer/diagram-metadata';
 export { THRESHOLD_STATUS } from './components/network-area-diagram-viewer/dynamic-css-utils';
 export type {
     CSS_DECLARATION,

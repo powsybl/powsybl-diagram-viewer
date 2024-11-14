@@ -12,7 +12,7 @@ on:
           - minor
           - patch
       nodeAuthToken:
-        description: NPM access token
+        description: NPM automation access token
         required: true
         type: string
 

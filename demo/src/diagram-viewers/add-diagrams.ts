@@ -33,8 +33,8 @@ import {
     OnMoveNodeCallbackType,
     OnMoveTextNodeCallbackType,
     OnSelectNodeCallbackType,
+    OnToggleNadHoverCallbackType,
 } from '../../../src';
-import { OnToggleNadHoverCallbackType } from '../../../src/components/network-area-diagram-viewer/network-area-diagram-viewer';
 
 export const addNadToDemo = () => {
     fetch(NadSvgExample)
