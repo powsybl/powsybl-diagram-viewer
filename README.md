@@ -34,7 +34,7 @@ you need to follow the steps below:
 - [Make a release action](https://github.com/powsybl/powsybl-network-viewer/actions/workflows/release.yml)
 - In the 'run workflow' combobox select, let the branch on main
 - Enter the type of evolution (major | minor | patch)
-- Enter your NPM access token (see [access token documentation](https://docs.npmjs.com/creating-and-viewing-access-tokens) for details)
+- Enter your NPM access token (it must be an **automation** access token to bypass 2FA, see the [access token documentation](https://docs.npmjs.com/creating-and-viewing-access-tokens) for details)
 - Click 'run workflow'
 
 Notes :

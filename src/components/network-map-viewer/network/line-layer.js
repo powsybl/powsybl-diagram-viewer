@@ -61,9 +61,10 @@ export function getLineLoadingZoneOfSide(limit, intensity, lineFlowAlertThreshol
         return LineLoadingZone.UNKNOWN;
     } else {
         let threshold = (lineFlowAlertThreshold * limit) / 100;
-        if (intensity > 0 && intensity < threshold) {
+        const absoluteIntensity = Math.abs(intensity);
+        if (absoluteIntensity < threshold) {
             return LineLoadingZone.SAFE;
-        } else if (intensity >= threshold && intensity < limit) {
+        } else if (absoluteIntensity >= threshold && absoluteIntensity < limit) {
             return LineLoadingZone.WARNING;
         } else {
             return LineLoadingZone.OVERLOAD;
