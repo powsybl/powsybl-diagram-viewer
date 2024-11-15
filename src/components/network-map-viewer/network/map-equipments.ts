@@ -196,7 +196,7 @@ export class MapEquipments {
                     return;
                 }
                 const substation = this.substationsById.get(substationId);
-                if (substation === undefined) {
+                if (substation == null) {
                     return;
                 }
                 substation.voltageLevels = substation.voltageLevels.filter((l) => l.id !== equipmentId);

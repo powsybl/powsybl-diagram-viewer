@@ -109,12 +109,7 @@ function getLineLoadingZoneColor(zone: LineLoadingZone): Color {
     }
 }
 
-function getLineColor(
-    line: Line,
-    nominalVoltageColor: Color,
-    props: LineLayer['props'],
-    lineConnection: LineConnection
-) {
+function getLineColor(line: Line, nominalVoltageColor: Color, props: LineLayerProps, lineConnection: LineConnection) {
     if (props.lineFlowColorMode === LineFlowColorMode.NOMINAL_VOLTAGE) {
         if (!lineConnection.terminal1Connected && !lineConnection.terminal2Connected) {
             return props.disconnectedLineColor;
@@ -471,30 +466,34 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
             compositeData.forEach((cData) => {
                 cData.activePower = [];
                 cData.lines?.forEach((line) => {
-                    const lineData = cData.lineMap!.get(line.id)!;
+                    const lineData = cData.lineMap?.get(line.id);
                     const arrowDirection = getArrowDirection(line.p1);
-                    const coordinates1 = props.geoData.labelDisplayPosition(
-                        lineData.positions,
-                        lineData.cumulativeDistances,
-                        START_ARROW_POSITION,
-                        arrowDirection,
-                        line.parallelIndex!,
-                        (line.angle! * 180) / Math.PI,
-                        (line.angleStart! * 180) / Math.PI,
-                        props.distanceBetweenLines,
-                        line.proximityFactorStart!
-                    );
-                    const coordinates2 = props.geoData.labelDisplayPosition(
-                        lineData.positions,
-                        lineData.cumulativeDistances,
-                        END_ARROW_POSITION,
-                        arrowDirection,
-                        line.parallelIndex!,
-                        (line.angle! * 180) / Math.PI,
-                        (line.angleEnd! * 180) / Math.PI,
-                        props.distanceBetweenLines,
-                        line.proximityFactorEnd!
-                    );
+                    const coordinates1 = lineData
+                        ? props.geoData.labelDisplayPosition(
+                              lineData.positions,
+                              lineData.cumulativeDistances,
+                              START_ARROW_POSITION,
+                              arrowDirection,
+                              line.parallelIndex!,
+                              (line.angle! * 180) / Math.PI,
+                              (line.angleStart! * 180) / Math.PI,
+                              props.distanceBetweenLines,
+                              line.proximityFactorStart!
+                          )
+                        : null;
+                    const coordinates2 = lineData
+                        ? props.geoData.labelDisplayPosition(
+                              lineData.positions,
+                              lineData.cumulativeDistances,
+                              END_ARROW_POSITION,
+                              arrowDirection,
+                              line.parallelIndex!,
+                              (line.angle! * 180) / Math.PI,
+                              (line.angleEnd! * 180) / Math.PI,
+                              props.distanceBetweenLines,
+                              line.proximityFactorEnd!
+                          )
+                        : null;
                     if (coordinates1 !== null && coordinates2 !== null) {
                         cData.activePower?.push({
                             line: line,
@@ -531,24 +530,31 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                         lineStatus.operatingStatus !== undefined &&
                         lineStatus.operatingStatus !== 'IN_OPERATION'
                     ) {
-                        const lineData = cData.lineMap!.get(line.id)!;
-                        const coordinatesIcon = props.geoData.labelDisplayPosition(
-                            lineData.positions,
-                            lineData.cumulativeDistances,
-                            0.5,
-                            ArrowDirection.NONE,
-                            line.parallelIndex!,
-                            (line.angle! * 180) / Math.PI,
-                            (line.angleEnd! * 180) / Math.PI,
-                            props.distanceBetweenLines,
-                            line.proximityFactorEnd!
-                        );
-                        if (coordinatesIcon !== null) {
-                            cData.operatingStatus?.push({
-                                status: lineStatus.operatingStatus,
-                                printPosition: [coordinatesIcon.position.longitude, coordinatesIcon.position.latitude],
-                                offset: coordinatesIcon.offset,
-                            });
+                        if (cData.lineMap) {
+                            const lineData = cData.lineMap.get(line.id);
+                            if (lineData) {
+                                const coordinatesIcon = props.geoData.labelDisplayPosition(
+                                    lineData.positions,
+                                    lineData.cumulativeDistances,
+                                    0.5,
+                                    ArrowDirection.NONE,
+                                    line.parallelIndex!,
+                                    (line.angle! * 180) / Math.PI,
+                                    (line.angleEnd! * 180) / Math.PI,
+                                    props.distanceBetweenLines,
+                                    line.proximityFactorEnd!
+                                );
+                                if (coordinatesIcon !== null) {
+                                    cData.operatingStatus?.push({
+                                        status: lineStatus.operatingStatus,
+                                        printPosition: [
+                                            coordinatesIcon.position.longitude,
+                                            coordinatesIcon.position.latitude,
+                                        ],
+                                        offset: coordinatesIcon.offset,
+                                    });
+                                }
+                            }
                         }
                     }
                 });

@@ -304,8 +304,10 @@ export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
                     linePositionsTextureData.push(position[1]);
                     linePointCount++;
                 });
-                lineDistancesTextureData.push(...line.cumulativeDistances!);
-                lineDistance = line.cumulativeDistances![line.cumulativeDistances!.length - 1];
+                if (line.cumulativeDistances) {
+                    lineDistancesTextureData.push(...line.cumulativeDistances);
+                    lineDistance = line.cumulativeDistances[line.cumulativeDistances.length - 1];
+                }
             }
             if (linePointCount > MAX_LINE_POINT_COUNT) {
                 throw new Error(`Too many line point count (${linePointCount}), maximum is ${MAX_LINE_POINT_COUNT}`);
@@ -424,22 +426,24 @@ export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
 
         const { linePositionsTexture, lineDistancesTexture, timestamp, webgl2 } = this.state;
 
-        this.state
-            .model!.setUniforms({
-                ...uniforms,
-                sizeMinPixels,
-                sizeMaxPixels,
-                linePositionsTexture,
-                lineDistancesTexture,
-                linePositionsTextureSize: [linePositionsTexture.width, linePositionsTexture.height],
-                lineDistancesTextureSize: [lineDistancesTexture.width, lineDistancesTexture.height],
-                timestamp,
-                webgl2,
-                distanceBetweenLines: this.props.getDistanceBetweenLines,
-                maxParallelOffset: this.props.maxParallelOffset,
-                minParallelOffset: this.props.minParallelOffset,
-            })
-            .draw();
+        if (this.state.model) {
+            this.state.model
+                .setUniforms({
+                    ...uniforms,
+                    sizeMinPixels,
+                    sizeMaxPixels,
+                    linePositionsTexture,
+                    lineDistancesTexture,
+                    linePositionsTextureSize: [linePositionsTexture.width, linePositionsTexture.height],
+                    lineDistancesTextureSize: [lineDistancesTexture.width, lineDistancesTexture.height],
+                    timestamp,
+                    webgl2,
+                    distanceBetweenLines: this.props.getDistanceBetweenLines,
+                    maxParallelOffset: this.props.maxParallelOffset,
+                    minParallelOffset: this.props.minParallelOffset,
+                })
+                .draw();
+        }
     }
 
     _getModel(gl: WebGLRenderingContext) {
