@@ -523,9 +523,10 @@ export function getTextNodeMoves(
     ];
 }
 
-function getButton(svg: string, pressed: boolean): HTMLButtonElement {
+function getButton(svg: string, title: string, pressed: boolean): HTMLButtonElement {
     const button = document.createElement('button');
     button.innerHTML = svg;
+    button.title = title;
     button.style.height = '25px';
     button.style.width = '25px';
     button.style.marginRight = '1px';
@@ -543,6 +544,7 @@ function getButton(svg: string, pressed: boolean): HTMLButtonElement {
 export function getSaveButton(): HTMLButtonElement {
     return getButton(
         '<svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#5f6368"><path d="m720-120 160-160-56-56-64 64v-167h-80v167l-64-64-56 56 160 160ZM560 0v-80h320V0H560ZM240-160q-33 0-56.5-23.5T160-240v-560q0-33 23.5-56.5T240-880h280l240 240v121h-80v-81H480v-200H240v560h240v80H240Zm0-80v-560 560Z"/></svg>',
+        'Save',
         false
     );
 }
@@ -550,6 +552,7 @@ export function getSaveButton(): HTMLButtonElement {
 export function getMoveButton(pressed: boolean): HTMLButtonElement {
     return getButton(
         '<svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#5f6368"><path d="M806-440H320v-80h486l-62-62 56-58 160 160-160 160-56-58 62-62ZM600-600v-160H200v560h400v-160h80v160q0 33-23.5 56.5T600-120H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h400q33 0 56.5 23.5T680-760v160h-80Z"/></svg>',
+        'Move',
         pressed
     );
 }
@@ -557,6 +560,7 @@ export function getMoveButton(pressed: boolean): HTMLButtonElement {
 export function getSelectButton(pressed: boolean): HTMLButtonElement {
     return getButton(
         '<svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#5f6368"><path d="M40-480v-80h80v80H40Zm800 0v-80h80v80h-80ZM40-640v-80h80v80H40Zm800 0v-80h80v80h-80ZM40-800v-80h80v80H40Zm160 320v-80h80v80h-80Zm480 0v-80h80v80h-80Zm160-320v-80h80v80h-80Zm-640 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80ZM473-40q-24 0-46-9t-39-26L184-280l33-34q14-14 34-19t40 0l69 20v-327q0-17 11.5-28.5T400-680q17 0 28.5 11.5T440-640v433l-98-28 103 103q6 6 13 9t15 3h167q33 0 56.5-23.5T720-200v-160q0-17 11.5-28.5T760-400q17 0 28.5 11.5T800-360v160q0 66-47 113T640-40H473Zm7-280v-160q0-17 11.5-28.5T520-520q17 0 28.5 11.5T560-480v160h-80Zm120 0v-120q0-17 11.5-28.5T640-480q17 0 28.5 11.5T680-440v120h-80Zm40 200H445h195Z"/></svg>',
+        'Select',
         pressed
     );
 }
