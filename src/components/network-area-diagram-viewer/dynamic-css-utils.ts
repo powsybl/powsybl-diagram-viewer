@@ -10,11 +10,12 @@ export enum THRESHOLD_STATUS {
     ABOVE = 'ABOVE',
 }
 
-export type CSS_DECLARATION = Record<string, (value: number) => string>;
+export type DYNAMIC_CSS_DECLARATION = Record<string, ((value: number) => string) | string>;
+export type CSS_DECLARATION = Record<string, string>;
 export type CSS_RULE = {
     cssSelector: string;
-    cssDeclaration: CSS_DECLARATION;
-    currentValue: Record<string, string>;
+    cssDeclaration: DYNAMIC_CSS_DECLARATION;
+    currentValue: CSS_DECLARATION;
 };
 
 export function getValueFromThreshold(

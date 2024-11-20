@@ -9,7 +9,7 @@ import { Point, SVG, ViewBoxLike, Svg } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 import * as DiagramUtils from './diagram-utils';
 import { SvgParameters } from './svg-parameters';
-import { CSS_RULE, DEFAULT_DYNAMIC_CSS_RULES } from './dynamic-css-utils';
+import { CSS_DECLARATION, CSS_RULE, DEFAULT_DYNAMIC_CSS_RULES } from './dynamic-css-utils';
 import { LayoutParameters } from './layout-parameters';
 import { DiagramMetadata, EdgeMetadata, BusNodeMetadata, NodeMetadata, TextNodeMetadata } from './diagram-metadata';
 
@@ -1275,7 +1275,7 @@ export class NetworkAreaDiagramViewer {
     // Will explore the SVG's <style> tags to find the css rule associated with "cssSelector" and update the
     // rule using "cssDeclaration".
     // Will create a style tag or/and new css rule if not found in the SVG.
-    public updateSvgCssDisplayValue(svg: SVGSVGElement, cssSelector: string, cssDeclaration: Record<string, string>) {
+    public updateSvgCssDisplayValue(svg: SVGSVGElement, cssSelector: string, cssDeclaration: CSS_DECLARATION) {
         const innerSvg = svg.querySelector('svg');
         if (!innerSvg) {
             console.error('Cannot find the SVG to update!');
@@ -1323,10 +1323,17 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
+    private getCssPropertyValue(displayedSize: number, propertyValue: ((value: number) => string) | string): string {
+        if (typeof propertyValue === 'function') {
+            return propertyValue(displayedSize);
+        }
+        return propertyValue;
+    }
+
     public initializeDynamicCssRules(maxDisplayedSize: number) {
         this.getDynamicCssRules().forEach((rule) => {
-            for (const [property, getPropertyValue] of Object.entries(rule.cssDeclaration)) {
-                rule.currentValue[property] = getPropertyValue(maxDisplayedSize);
+            for (const [property, propertyValue] of Object.entries(rule.cssDeclaration)) {
+                rule.currentValue[property] = this.getCssPropertyValue(maxDisplayedSize, propertyValue);
             }
         });
     }
@@ -1363,8 +1370,8 @@ export class NetworkAreaDiagramViewer {
         // We will check each dynamic css rule to see if we crossed a zoom threshold. If this is the case, we
         // update the rule's threshold status and trigger the CSS change in the SVG.
         this.getDynamicCssRules().forEach((rule) => {
-            for (const [property, getPropertyValue] of Object.entries(rule.cssDeclaration)) {
-                const valueToUpdate = getPropertyValue(maxDisplayedSize);
+            for (const [property, propertyValue] of Object.entries(rule.cssDeclaration)) {
+                const valueToUpdate = this.getCssPropertyValue(maxDisplayedSize, propertyValue);
                 if (valueToUpdate !== rule.currentValue[property]) {
                     console.debug(
                         'CSS Rule ' +
