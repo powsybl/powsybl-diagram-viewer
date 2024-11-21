@@ -5,41 +5,54 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { CompositeLayer, TextLayer, IconLayer } from 'deck.gl';
+import {
+    CompositeLayer,
+    TextLayer,
+    IconLayer,
+    Position,
+    Color,
+    CompositeLayerProps,
+    LayerContext,
+    UpdateParameters,
+    Layer,
+} from 'deck.gl';
 import PadlockIcon from '../images/lock_black_24dp.svg?react';
 import BoltIcon from '../images/bolt_black_24dp.svg?react';
 import { PathStyleExtension } from '@deck.gl/extensions';
-import { ArrowLayer, ArrowDirection } from './layers/arrow-layer';
+import { ArrowLayer, ArrowDirection, Arrow } from './layers/arrow-layer';
 import ParallelPathLayer from './layers/parallel-path-layer';
 import ForkLineLayer from './layers/fork-line-layer';
 import { getDistance } from 'geolib';
 import { SUBSTATION_RADIUS, SUBSTATION_RADIUS_MAX_PIXEL, SUBSTATION_RADIUS_MIN_PIXEL } from './constants';
-import { INVALID_FLOW_OPACITY } from '../../../utils/colors';
+import { getNominalVoltageColor, INVALID_FLOW_OPACITY } from '../../../utils/colors';
+import { Line, LonLat, VoltageLevel } from '../utils/equipment-types';
+import { MapEquipments } from './map-equipments';
+import { GeoData } from './geo-data';
 
 const DISTANCE_BETWEEN_ARROWS = 10000.0;
 //Constants for Feeders mode
 const START_ARROW_POSITION = 0.1;
 const END_ARROW_POSITION = 0.9;
 
-export const LineFlowMode = {
-    STATIC_ARROWS: 'staticArrows',
-    ANIMATED_ARROWS: 'animatedArrows',
-    FEEDERS: 'feeders',
-};
+export enum LineFlowMode {
+    STATIC_ARROWS = 'staticArrows',
+    ANIMATED_ARROWS = 'animatedArrows',
+    FEEDERS = 'feeders',
+}
 
-export const LineFlowColorMode = {
-    NOMINAL_VOLTAGE: 'nominalVoltage',
-    OVERLOADS: 'overloads',
-};
+export enum LineFlowColorMode {
+    NOMINAL_VOLTAGE = 'nominalVoltage',
+    OVERLOADS = 'overloads',
+}
 
 const noDashArray = [0, 0];
 const dashArray = [15, 10];
 
-function doDash(lineConnection) {
+function doDash(lineConnection: LineConnection) {
     return !lineConnection.terminal1Connected || !lineConnection.terminal2Connected;
 }
 
-function getArrowDirection(p) {
+function getArrowDirection(p: number) {
     if (p < 0) {
         return ArrowDirection.FROM_SIDE_2_TO_SIDE_1;
     } else if (p > 0) {
@@ -49,18 +62,22 @@ function getArrowDirection(p) {
     }
 }
 
-export const LineLoadingZone = {
-    UNKNOWN: 0,
-    SAFE: 1,
-    WARNING: 2,
-    OVERLOAD: 3,
-};
+export enum LineLoadingZone {
+    UNKNOWN = 0,
+    SAFE = 1,
+    WARNING = 2,
+    OVERLOAD = 3,
+}
 
-export function getLineLoadingZoneOfSide(limit, intensity, lineFlowAlertThreshold) {
+export function getLineLoadingZoneOfSide(
+    limit: number | undefined,
+    intensity: number | undefined,
+    lineFlowAlertThreshold: number
+) {
     if (limit === undefined || intensity === undefined || intensity === 0) {
         return LineLoadingZone.UNKNOWN;
     } else {
-        let threshold = (lineFlowAlertThreshold * limit) / 100;
+        const threshold = (lineFlowAlertThreshold * limit) / 100;
         const absoluteIntensity = Math.abs(intensity);
         if (absoluteIntensity < threshold) {
             return LineLoadingZone.SAFE;
@@ -72,13 +89,13 @@ export function getLineLoadingZoneOfSide(limit, intensity, lineFlowAlertThreshol
     }
 }
 
-export function getLineLoadingZone(line, lineFlowAlertThreshold) {
+export function getLineLoadingZone(line: Line, lineFlowAlertThreshold: number) {
     const zone1 = getLineLoadingZoneOfSide(line.currentLimits1?.permanentLimit, line.i1, lineFlowAlertThreshold);
     const zone2 = getLineLoadingZoneOfSide(line.currentLimits2?.permanentLimit, line.i2, lineFlowAlertThreshold);
     return Math.max(zone1, zone2);
 }
 
-function getLineLoadingZoneColor(zone) {
+function getLineLoadingZoneColor(zone: LineLoadingZone): Color {
     if (zone === LineLoadingZone.UNKNOWN) {
         return [128, 128, 128]; // grey
     } else if (zone === LineLoadingZone.SAFE) {
@@ -92,7 +109,7 @@ function getLineLoadingZoneColor(zone) {
     }
 }
 
-function getLineColor(line, nominalVoltageColor, props, lineConnection) {
+function getLineColor(line: Line, nominalVoltageColor: Color, props: LineLayerProps, lineConnection: LineConnection) {
     if (props.lineFlowColorMode === LineFlowColorMode.NOMINAL_VOLTAGE) {
         if (!lineConnection.terminal1Connected && !lineConnection.terminal2Connected) {
             return props.disconnectedLineColor;
@@ -107,7 +124,7 @@ function getLineColor(line, nominalVoltageColor, props, lineConnection) {
     }
 }
 
-function getLineIcon(lineStatus) {
+function getLineIcon(lineStatus: LineStatus) {
     return {
         url: lineStatus === 'PLANNED_OUTAGE' ? PadlockIcon : lineStatus === 'FORCED_OUTAGE' ? BoltIcon : undefined,
         height: 24,
@@ -124,7 +141,7 @@ export const ArrowSpeed = {
     CRAZY: 4,
 };
 
-function getArrowSpeedOfSide(limit, intensity) {
+function getArrowSpeedOfSide(limit: number | undefined, intensity: number | undefined) {
     if (limit === undefined || intensity === undefined || intensity === 0) {
         return ArrowSpeed.STOPPED;
     } else {
@@ -141,13 +158,13 @@ function getArrowSpeedOfSide(limit, intensity) {
     }
 }
 
-function getArrowSpeed(line) {
+function getArrowSpeed(line: Line) {
     const speed1 = getArrowSpeedOfSide(line.currentLimits1?.permanentLimit, line.i1);
     const speed2 = getArrowSpeedOfSide(line.currentLimits2?.permanentLimit, line.i2);
     return Math.max(speed1, speed2);
 }
 
-function getArrowSpeedFactor(speed) {
+function getArrowSpeedFactor(speed: number) {
     switch (speed) {
         case ArrowSpeed.STOPPED:
             return 0;
@@ -164,9 +181,125 @@ function getArrowSpeedFactor(speed) {
     }
 }
 
-export class LineLayer extends CompositeLayer {
-    initializeState() {
-        super.initializeState();
+type LineConnection = {
+    terminal1Connected: boolean;
+    terminal2Connected: boolean;
+};
+
+export enum LineStatus {
+    PLANNED_OUTAGE = 'PLANNED_OUTAGE',
+    FORCED_OUTAGE = 'FORCED_OUTAGE',
+    IN_OPERATION = 'IN_OPERATION',
+}
+
+type LinesStatus = {
+    operatingStatus: LineStatus;
+};
+
+type CompositeDataLine = {
+    nominalV: number;
+    lines: Line[];
+    arrows: Arrow[];
+    positions: LonLat[];
+    cumulativeDistances: number[];
+};
+
+type ActivePower = {
+    p: number | undefined;
+    printPosition: Position;
+    offset: [number, number];
+    line: Line;
+};
+
+type OperatingStatus = {
+    status: LineStatus;
+    printPosition: Position;
+    offset: [number, number];
+};
+
+export type CompositeData = {
+    nominalV: number;
+    mapOriginDestination?: Map<string, Set<Line>>;
+    lines: Line[];
+    lineMap?: Map<string, CompositeDataLine>;
+    activePower: ActivePower[];
+    operatingStatus: OperatingStatus[];
+    arrows: Arrow[];
+};
+
+type MinProximityFactor = {
+    lines: Line[];
+    start: number;
+    end: number;
+};
+
+type _LineLayerProps = {
+    data: Line[];
+    network: MapEquipments;
+    geoData: GeoData;
+    getNominalVoltageColor: (voltage: number) => Color;
+    disconnectedLineColor: Color;
+    filteredNominalVoltages: number[] | null;
+    lineFlowMode: LineFlowMode;
+    lineFlowColorMode: LineFlowColorMode;
+    lineFlowAlertThreshold: number;
+    showLineFlow: boolean;
+    lineFullPath: boolean;
+    lineParallelPath: boolean;
+    labelSize: number;
+    iconSize: number;
+    distanceBetweenLines: number;
+    maxParallelOffset: number;
+    minParallelOffset: number;
+    substationRadius: number;
+    substationMaxPixel: number;
+    minSubstationRadiusPixel: number;
+    areFlowsValid: boolean;
+    updatedLines: Line[];
+    labelsVisible: boolean;
+    labelColor: Color;
+};
+
+export type LineLayerProps = _LineLayerProps & CompositeLayerProps;
+
+const defaultProps = {
+    network: null,
+    geoData: null,
+    getNominalVoltageColor: { type: 'accessor', value: getNominalVoltageColor },
+    disconnectedLineColor: { type: 'color', value: [255, 255, 255] },
+    filteredNominalVoltages: null,
+    lineFlowMode: LineFlowMode.FEEDERS,
+    lineFlowColorMode: LineFlowColorMode.NOMINAL_VOLTAGE,
+    lineFlowAlertThreshold: 100,
+    showLineFlow: true,
+    lineFullPath: true,
+    lineParallelPath: true,
+    labelSize: 12,
+    iconSize: 48,
+    distanceBetweenLines: 1000,
+    maxParallelOffset: 100,
+    minParallelOffset: 3,
+    substationRadius: { type: 'number', value: SUBSTATION_RADIUS },
+    substationMaxPixel: { type: 'number', value: SUBSTATION_RADIUS_MAX_PIXEL },
+    minSubstationRadiusPixel: {
+        type: 'number',
+        value: SUBSTATION_RADIUS_MIN_PIXEL,
+    },
+    labelColor: [255, 255, 255],
+};
+
+export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
+    static layerName = 'LineLayer';
+    static defaultProps = defaultProps;
+
+    declare state: {
+        compositeData: CompositeData[];
+        linesConnection: Map<string, LineConnection>;
+        linesStatus: Map<string, LinesStatus>;
+    };
+
+    initializeState(context: LayerContext) {
+        super.initializeState(context);
 
         this.state = {
             compositeData: [],
@@ -175,17 +308,23 @@ export class LineLayer extends CompositeLayer {
         };
     }
 
-    getVoltageLevelIndex(voltageLevelId) {
+    getVoltageLevelIndex(voltageLevelId: string) {
         const { network } = this.props;
         const vl = network.getVoltageLevel(voltageLevelId);
+        if (vl === undefined) {
+            return undefined;
+        }
         const substation = network.getSubstation(vl.substationId);
+        if (substation === undefined) {
+            return undefined;
+        }
         return (
             [
                 ...new Set(
-                    substation.voltageLevels.map((vl) => vl.nominalV) // only one voltage level
+                    substation.voltageLevels.map((vl: VoltageLevel) => vl.nominalV) // only one voltage level
                 ),
             ]
-                .sort((a, b) => {
+                .sort((a: number, b: number) => {
                     return a - b; // force numerical sort
                 })
                 .indexOf(vl.nominalV) + 1
@@ -193,16 +332,16 @@ export class LineLayer extends CompositeLayer {
     }
 
     //TODO this is a huge function, refactor
-    updateState({ props, oldProps, changeFlags }) {
-        let compositeData;
-        let linesConnection;
-        let linesStatus;
+    updateState({ props, oldProps, changeFlags }: UpdateParameters<this>) {
+        let compositeData: Partial<CompositeData>[];
+        let linesConnection: Map<string, LineConnection> | undefined;
+        let linesStatus: Map<string, LinesStatus> | undefined;
 
         if (changeFlags.dataChanged) {
             compositeData = [];
 
-            linesConnection = new Map();
-            linesStatus = new Map();
+            linesConnection = new Map<string, LineConnection>();
+            linesStatus = new Map<string, LinesStatus>();
 
             if (
                 props.network != null &&
@@ -211,10 +350,10 @@ export class LineLayer extends CompositeLayer {
                 props.geoData != null
             ) {
                 // group lines by nominal voltage
-                const lineNominalVoltageIndexer = (map, line) => {
+                const lineNominalVoltageIndexer = (map: Map<number, Line[]>, line: Line) => {
                     const network = props.network;
-                    const vl1 = network.getVoltageLevel(line.voltageLevelId1);
-                    const vl2 = network.getVoltageLevel(line.voltageLevelId2);
+                    const vl1 = network.getVoltageLevel(line.voltageLevelId1)!;
+                    const vl2 = network.getVoltageLevel(line.voltageLevelId2)!;
                     const vl = vl1 || vl2;
                     let list = map.get(vl.nominalV);
                     if (!list) {
@@ -226,30 +365,30 @@ export class LineLayer extends CompositeLayer {
                     }
                     return map;
                 };
-                const linesByNominalVoltage = props.data.reduce(lineNominalVoltageIndexer, new Map());
+                const linesByNominalVoltage = props.data.reduce(lineNominalVoltageIndexer, new Map<number, Line[]>());
 
                 compositeData = Array.from(linesByNominalVoltage.entries())
-                    .map((e) => {
-                        return { nominalV: e[0], lines: e[1] };
+                    .map(([nominalV, lines]) => {
+                        return { nominalV, lines };
                     })
                     .sort((a, b) => b.nominalV - a.nominalV);
 
-                compositeData.forEach((compositeData) => {
+                compositeData.forEach((c) => {
                     //find lines with same substations set
-                    let mapOriginDestination = new Map();
-                    compositeData.mapOriginDestination = mapOriginDestination;
-                    compositeData.lines.forEach((line) => {
-                        linesConnection.set(line.id, {
+                    const mapOriginDestination = new Map();
+                    c.mapOriginDestination = mapOriginDestination;
+                    c.lines?.forEach((line) => {
+                        linesConnection?.set(line.id, {
                             terminal1Connected: line.terminal1Connected,
                             terminal2Connected: line.terminal2Connected,
                         });
 
-                        linesStatus.set(line.id, {
-                            operatingStatus: line.operatingStatus,
+                        linesStatus?.set(line.id, {
+                            operatingStatus: line.operatingStatus!,
                         });
 
                         const key = this.genLineKey(line);
-                        let val = mapOriginDestination.get(key);
+                        const val = mapOriginDestination.get(key);
                         if (val == null) {
                             mapOriginDestination.set(key, new Set([line]));
                         } else {
@@ -265,12 +404,12 @@ export class LineLayer extends CompositeLayer {
 
             if (props.updatedLines !== oldProps.updatedLines) {
                 props.updatedLines.forEach((line1) => {
-                    linesConnection.set(line1.id, {
+                    linesConnection?.set(line1.id, {
                         terminal1Connected: line1.terminal1Connected,
                         terminal2Connected: line1.terminal2Connected,
                     });
-                    linesStatus.set(line1.id, {
-                        operatingStatus: line1.operatingStatus,
+                    linesStatus?.set(line1.id, {
+                        operatingStatus: line1.operatingStatus!,
                     });
                 });
             }
@@ -283,7 +422,7 @@ export class LineLayer extends CompositeLayer {
                     props.lineParallelPath !== oldProps.lineParallelPath ||
                     props.geoData !== oldProps.geoData))
         ) {
-            this.recomputeParallelLinesIndex(compositeData, props);
+            this.recomputeParallelLinesIndex(compositeData as CompositeData[], props);
         }
 
         if (
@@ -291,9 +430,9 @@ export class LineLayer extends CompositeLayer {
             (changeFlags.propsChanged &&
                 (oldProps.lineFullPath !== props.lineFullPath || oldProps.geoData !== props.geoData))
         ) {
-            compositeData.forEach((compositeData) => {
-                let lineMap = new Map();
-                compositeData.lines.forEach((line) => {
+            compositeData.forEach((c) => {
+                const lineMap = new Map();
+                c.lines?.forEach((line) => {
                     const positions = props.geoData.getLinePositions(props.network, line, props.lineFullPath);
                     const cumulativeDistances = props.geoData.getLineDistances(positions);
                     lineMap.set(line.id, {
@@ -302,7 +441,7 @@ export class LineLayer extends CompositeLayer {
                         line: line,
                     });
                 });
-                compositeData.lineMap = lineMap;
+                c.lineMap = lineMap;
             });
         }
 
@@ -313,7 +452,7 @@ export class LineLayer extends CompositeLayer {
                     props.lineParallelPath !== oldProps.lineParallelPath ||
                     props.geoData !== oldProps.geoData))
         ) {
-            this.recomputeForkLines(compositeData, props);
+            this.recomputeForkLines(compositeData as CompositeData[], props);
         }
 
         if (
@@ -324,41 +463,45 @@ export class LineLayer extends CompositeLayer {
                     props.geoData !== oldProps.geoData))
         ) {
             //add labels
-            compositeData.forEach((compositeData) => {
-                compositeData.activePower = [];
-                compositeData.lines.forEach((line) => {
-                    let lineData = compositeData.lineMap.get(line.id);
-                    let arrowDirection = getArrowDirection(line.p1);
-                    let coordinates1 = props.geoData.labelDisplayPosition(
-                        lineData.positions,
-                        lineData.cumulativeDistances,
-                        START_ARROW_POSITION,
-                        arrowDirection,
-                        line.parallelIndex,
-                        (line.angle * 180) / Math.PI,
-                        (line.angleStart * 180) / Math.PI,
-                        props.distanceBetweenLines,
-                        line.proximityFactorStart
-                    );
-                    let coordinates2 = props.geoData.labelDisplayPosition(
-                        lineData.positions,
-                        lineData.cumulativeDistances,
-                        END_ARROW_POSITION,
-                        arrowDirection,
-                        line.parallelIndex,
-                        (line.angle * 180) / Math.PI,
-                        (line.angleEnd * 180) / Math.PI,
-                        props.distanceBetweenLines,
-                        line.proximityFactorEnd
-                    );
+            compositeData.forEach((cData) => {
+                cData.activePower = [];
+                cData.lines?.forEach((line) => {
+                    const lineData = cData.lineMap?.get(line.id);
+                    const arrowDirection = getArrowDirection(line.p1);
+                    const coordinates1 = lineData
+                        ? props.geoData.labelDisplayPosition(
+                              lineData.positions,
+                              lineData.cumulativeDistances,
+                              START_ARROW_POSITION,
+                              arrowDirection,
+                              line.parallelIndex!,
+                              (line.angle! * 180) / Math.PI,
+                              (line.angleStart! * 180) / Math.PI,
+                              props.distanceBetweenLines,
+                              line.proximityFactorStart!
+                          )
+                        : null;
+                    const coordinates2 = lineData
+                        ? props.geoData.labelDisplayPosition(
+                              lineData.positions,
+                              lineData.cumulativeDistances,
+                              END_ARROW_POSITION,
+                              arrowDirection,
+                              line.parallelIndex!,
+                              (line.angle! * 180) / Math.PI,
+                              (line.angleEnd! * 180) / Math.PI,
+                              props.distanceBetweenLines,
+                              line.proximityFactorEnd!
+                          )
+                        : null;
                     if (coordinates1 !== null && coordinates2 !== null) {
-                        compositeData.activePower.push({
+                        cData.activePower?.push({
                             line: line,
                             p: line.p1,
                             printPosition: [coordinates1.position.longitude, coordinates1.position.latitude],
                             offset: coordinates1.offset,
                         });
-                        compositeData.activePower.push({
+                        cData.activePower?.push({
                             line: line,
                             p: line.p2,
                             printPosition: [coordinates2.position.longitude, coordinates2.position.latitude],
@@ -378,33 +521,40 @@ export class LineLayer extends CompositeLayer {
                     props.geoData !== oldProps.geoData))
         ) {
             //add icons
-            compositeData.forEach((compositeData) => {
-                compositeData.operatingStatus = [];
-                compositeData.lines.forEach((line) => {
-                    let lineStatus = linesStatus.get(line.id);
+            compositeData.forEach((cData) => {
+                cData.operatingStatus = [];
+                cData.lines?.forEach((line) => {
+                    const lineStatus = linesStatus?.get(line.id);
                     if (
                         lineStatus !== undefined &&
                         lineStatus.operatingStatus !== undefined &&
                         lineStatus.operatingStatus !== 'IN_OPERATION'
                     ) {
-                        let lineData = compositeData.lineMap.get(line.id);
-                        let coordinatesIcon = props.geoData.labelDisplayPosition(
-                            lineData.positions,
-                            lineData.cumulativeDistances,
-                            0.5,
-                            ArrowDirection.NONE,
-                            line.parallelIndex,
-                            (line.angle * 180) / Math.PI,
-                            (line.angleEnd * 180) / Math.PI,
-                            props.distanceBetweenLines,
-                            line.proximityFactorEnd
-                        );
-                        if (coordinatesIcon !== null) {
-                            compositeData.operatingStatus.push({
-                                status: lineStatus.operatingStatus,
-                                printPosition: [coordinatesIcon.position.longitude, coordinatesIcon.position.latitude],
-                                offset: coordinatesIcon.offset,
-                            });
+                        if (cData.lineMap) {
+                            const lineData = cData.lineMap.get(line.id);
+                            if (lineData) {
+                                const coordinatesIcon = props.geoData.labelDisplayPosition(
+                                    lineData.positions,
+                                    lineData.cumulativeDistances,
+                                    0.5,
+                                    ArrowDirection.NONE,
+                                    line.parallelIndex!,
+                                    (line.angle! * 180) / Math.PI,
+                                    (line.angleEnd! * 180) / Math.PI,
+                                    props.distanceBetweenLines,
+                                    line.proximityFactorEnd!
+                                );
+                                if (coordinatesIcon !== null) {
+                                    cData.operatingStatus?.push({
+                                        status: lineStatus.operatingStatus,
+                                        printPosition: [
+                                            coordinatesIcon.position.longitude,
+                                            coordinatesIcon.position.latitude,
+                                        ],
+                                        offset: coordinatesIcon.offset,
+                                    });
+                                }
+                            }
                         }
                     }
                 });
@@ -423,12 +573,12 @@ export class LineLayer extends CompositeLayer {
                             oldProps.lineFlowMode === LineFlowMode.FEEDERS))))
         ) {
             // add arrows
-            compositeData.forEach((compositeData) => {
-                const lineMap = compositeData.lineMap;
+            compositeData.forEach((cData) => {
+                const lineMap = cData.lineMap!;
 
                 // create one arrow each DISTANCE_BETWEEN_ARROWS
-                compositeData.arrows = compositeData.lines.flatMap((line) => {
-                    let lineData = lineMap.get(line.id);
+                cData.arrows = cData.lines?.flatMap((line) => {
+                    const lineData = lineMap.get(line.id)!;
                     line.cumulativeDistances = lineData.cumulativeDistances;
                     line.positions = lineData.positions;
 
@@ -470,22 +620,18 @@ export class LineLayer extends CompositeLayer {
                 });
             });
         }
-        this.setState({
-            compositeData: compositeData,
-            linesConnection: linesConnection,
-            linesStatus: linesStatus,
-        });
+        this.setState({ compositeData, linesConnection, linesStatus });
     }
 
-    genLineKey(line) {
+    genLineKey(line: Line) {
         return line.voltageLevelId1 > line.voltageLevelId2
             ? line.voltageLevelId1 + '##' + line.voltageLevelId2
             : line.voltageLevelId2 + '##' + line.voltageLevelId1;
     }
 
-    recomputeParallelLinesIndex(compositeData, props) {
-        compositeData.forEach((compositeData) => {
-            const mapOriginDestination = compositeData.mapOriginDestination;
+    recomputeParallelLinesIndex(compositeData: CompositeData[], props: this['props']) {
+        compositeData.forEach((cData) => {
+            const mapOriginDestination = cData.mapOriginDestination!;
             // calculate index for line with same substation set
             // The index is a real number in a normalized unit.
             // +1 => distanceBetweenLines on side
@@ -516,11 +662,14 @@ export class LineLayer extends CompositeLayer {
         });
     }
 
-    recomputeForkLines(compositeData, props) {
-        const mapMinProximityFactor = new Map();
-        compositeData.forEach((compositeData) => {
-            compositeData.lines.forEach((line) => {
-                const positions = compositeData.lineMap.get(line.id).positions;
+    recomputeForkLines(compositeData: CompositeData[], props: this['props']) {
+        const mapMinProximityFactor = new Map<string, MinProximityFactor>();
+        compositeData.forEach((cData) => {
+            cData.lines.forEach((line) => {
+                const positions = cData?.lineMap?.get(line.id)?.positions;
+                if (!positions) {
+                    return;
+                }
                 //the first and last in positions doesn't depend on lineFullPath
                 line.origin = positions[0];
                 line.end = positions[positions.length - 1];
@@ -541,8 +690,8 @@ export class LineLayer extends CompositeLayer {
                     positions[positions.length - 1]
                 );
 
-                let key = this.genLineKey(line);
-                let val = mapMinProximityFactor.get(key);
+                const key = this.genLineKey(line);
+                const val = mapMinProximityFactor.get(key);
                 if (val == null) {
                     mapMinProximityFactor.set(key, {
                         lines: [line],
@@ -565,7 +714,7 @@ export class LineLayer extends CompositeLayer {
         );
     }
 
-    getProximityFactor(firstPosition, secondPosition) {
+    getProximityFactor(firstPosition: LonLat, secondPosition: LonLat) {
         let factor = getDistance(firstPosition, secondPosition) / (3 * this.props.distanceBetweenLines);
         if (factor > 1) {
             factor = 1;
@@ -573,7 +722,7 @@ export class LineLayer extends CompositeLayer {
         return factor;
     }
 
-    computeAngle(props, position1, position2) {
+    computeAngle(props: this['props'], position1: LonLat, position2: LonLat) {
         let angle = props.geoData.getMapAngle(position1, position2);
         angle = (angle * Math.PI) / 180 + Math.PI;
         if (angle < 0) {
@@ -583,7 +732,7 @@ export class LineLayer extends CompositeLayer {
     }
 
     renderLayers() {
-        const layers = [];
+        const layers: Layer[] = [];
 
         const linePathUpdateTriggers = [
             this.props.lineFullPath,
@@ -592,36 +741,36 @@ export class LineLayer extends CompositeLayer {
         ];
 
         // lines : create one layer per nominal voltage, starting from higher to lower nominal voltage
-        this.state.compositeData.forEach((compositeData) => {
-            const nominalVoltageColor = this.props.getNominalVoltageColor(compositeData.nominalV);
+        this.state.compositeData.forEach((cData) => {
+            const nominalVoltageColor = this.props.getNominalVoltageColor(cData.nominalV);
             const lineLayer = new ParallelPathLayer(
                 this.getSubLayerProps({
-                    id: 'LineNominalVoltage' + compositeData.nominalV,
-                    data: compositeData.lines,
+                    id: 'LineNominalVoltage' + cData.nominalV,
+                    data: cData.lines,
                     widthScale: 20,
                     widthMinPixels: 1,
                     widthMaxPixels: 2,
-                    getPath: (line) =>
+                    getPath: (line: Line) =>
                         this.props.geoData.getLinePositions(this.props.network, line, this.props.lineFullPath),
-                    getColor: (line) =>
-                        getLineColor(line, nominalVoltageColor, this.props, this.state.linesConnection.get(line.id)),
+                    getColor: (line: Line) =>
+                        getLineColor(line, nominalVoltageColor, this.props, this.state.linesConnection.get(line.id)!),
                     getWidth: 2,
-                    getLineParallelIndex: (line) => line.parallelIndex,
-                    getExtraAttributes: (line) => [
+                    getLineParallelIndex: (line: Line) => line.parallelIndex,
+                    getExtraAttributes: (line: Line) => [
                         line.angleStart,
                         line.angle,
                         line.angleEnd,
-                        line.parallelIndex * 2 +
+                        line.parallelIndex! * 2 +
                             31 +
-                            64 * (Math.ceil(line.proximityFactorStart * 512) - 1) +
-                            64 * 512 * (Math.ceil(line.proximityFactorEnd * 512) - 1),
+                            64 * (Math.ceil(line.proximityFactorStart! * 512) - 1) +
+                            64 * 512 * (Math.ceil(line.proximityFactorEnd! * 512) - 1),
                     ],
                     distanceBetweenLines: this.props.distanceBetweenLines,
                     maxParallelOffset: this.props.maxParallelOffset,
                     minParallelOffset: this.props.minParallelOffset,
                     visible:
                         !this.props.filteredNominalVoltages ||
-                        this.props.filteredNominalVoltages.includes(compositeData.nominalV),
+                        this.props.filteredNominalVoltages.includes(cData.nominalV),
                     updateTriggers: {
                         getPath: linePathUpdateTriggers,
                         getExtraAttributes: [this.props.lineParallelPath, linePathUpdateTriggers],
@@ -633,7 +782,8 @@ export class LineLayer extends CompositeLayer {
                         ],
                         getDashArray: [this.props.updatedLines],
                     },
-                    getDashArray: (line) => (doDash(this.state.linesConnection.get(line.id)) ? dashArray : noDashArray),
+                    getDashArray: (line: Line) =>
+                        doDash(this.state.linesConnection!.get(line.id)!) ? dashArray : noDashArray,
                     extensions: [new PathStyleExtension({ dash: true })],
                 })
             );
@@ -641,37 +791,40 @@ export class LineLayer extends CompositeLayer {
 
             const arrowLayer = new ArrowLayer(
                 this.getSubLayerProps({
-                    id: 'ArrowNominalVoltage' + compositeData.nominalV,
-                    data: compositeData.arrows,
+                    id: 'ArrowNominalVoltage' + cData.nominalV,
+                    data: cData.arrows,
                     sizeMinPixels: 3,
                     sizeMaxPixels: 7,
-                    getDistance: (arrow) => arrow.distance,
-                    getLine: (arrow) => arrow.line,
-                    getLinePositions: (line) =>
+                    getDistance: (arrow: Arrow) => arrow.distance,
+                    getLine: (arrow: Arrow) => arrow.line,
+                    getLinePositions: (line: Line) =>
                         this.props.geoData.getLinePositions(this.props.network, line, this.props.lineFullPath),
-                    getColor: (arrow) =>
+                    getColor: (arrow: Arrow) =>
                         getLineColor(
                             arrow.line,
                             nominalVoltageColor,
                             this.props,
-                            this.state.linesConnection.get(arrow.line.id)
+                            this.state.linesConnection.get(arrow.line.id)!
                         ),
                     getSize: 700,
-                    getSpeedFactor: (arrow) => getArrowSpeedFactor(getArrowSpeed(arrow.line)),
-                    getLineParallelIndex: (arrow) => arrow.line.parallelIndex,
-                    getLineAngles: (arrow) => [arrow.line.angleStart, arrow.line.angle, arrow.line.angleEnd],
-                    getProximityFactors: (arrow) => [arrow.line.proximityFactorStart, arrow.line.proximityFactorEnd],
+                    getSpeedFactor: (arrow: Arrow) => getArrowSpeedFactor(getArrowSpeed(arrow.line)),
+                    getLineParallelIndex: (arrow: Arrow) => arrow.line.parallelIndex,
+                    getLineAngles: (arrow: Arrow) => [arrow.line.angleStart, arrow.line.angle, arrow.line.angleEnd],
+                    getProximityFactors: (arrow: Arrow) => [
+                        arrow.line.proximityFactorStart,
+                        arrow.line.proximityFactorEnd,
+                    ],
                     getDistanceBetweenLines: this.props.distanceBetweenLines,
                     maxParallelOffset: this.props.maxParallelOffset,
                     minParallelOffset: this.props.minParallelOffset,
-                    getDirection: (arrow) => {
+                    getDirection: (arrow: Arrow) => {
                         return getArrowDirection(arrow.line.p1);
                     },
                     animated: this.props.showLineFlow && this.props.lineFlowMode === LineFlowMode.ANIMATED_ARROWS,
                     visible:
                         this.props.showLineFlow &&
                         (!this.props.filteredNominalVoltages ||
-                            this.props.filteredNominalVoltages.includes(compositeData.nominalV)),
+                            this.props.filteredNominalVoltages.includes(cData.nominalV)),
                     opacity: this.props.areFlowsValid ? 1 : INVALID_FLOW_OPACITY,
                     updateTriggers: {
                         getLinePositions: linePathUpdateTriggers,
@@ -691,20 +844,20 @@ export class LineLayer extends CompositeLayer {
 
             const startFork = new ForkLineLayer(
                 this.getSubLayerProps({
-                    id: 'LineForkStart' + compositeData.nominalV,
-                    getSourcePosition: (line) => line.origin,
-                    getTargetPosition: (line) => line.end,
-                    getSubstationOffset: (line) => line.substationIndexStart,
-                    data: compositeData.lines,
+                    id: 'LineForkStart' + cData.nominalV,
+                    getSourcePosition: (line: Line) => line.origin,
+                    getTargetPosition: (line: Line) => line.end,
+                    getSubstationOffset: (line: Line) => line.substationIndexStart,
+                    data: cData.lines,
                     widthScale: 20,
                     widthMinPixels: 1,
                     widthMaxPixels: 2,
-                    getColor: (line) =>
-                        getLineColor(line, nominalVoltageColor, this.props, this.state.linesConnection.get(line.id)),
+                    getColor: (line: Line) =>
+                        getLineColor(line, nominalVoltageColor, this.props, this.state.linesConnection.get(line.id)!),
                     getWidth: 2,
-                    getProximityFactor: (line) => line.proximityFactorStart,
-                    getLineParallelIndex: (line) => line.parallelIndex,
-                    getLineAngle: (line) => line.angleStart,
+                    getProximityFactor: (line: Line) => line.proximityFactorStart,
+                    getLineParallelIndex: (line: Line) => line.parallelIndex,
+                    getLineAngle: (line: Line) => line.angleStart,
                     getDistanceBetweenLines: this.props.distanceBetweenLines,
                     getMaxParallelOffset: this.props.maxParallelOffset,
                     getMinParallelOffset: this.props.minParallelOffset,
@@ -713,7 +866,7 @@ export class LineLayer extends CompositeLayer {
                     getMinSubstationRadiusPixel: this.props.minSubstationRadiusPixel,
                     visible:
                         !this.props.filteredNominalVoltages ||
-                        this.props.filteredNominalVoltages.includes(compositeData.nominalV),
+                        this.props.filteredNominalVoltages.includes(cData.nominalV),
                     updateTriggers: {
                         getLineParallelIndex: linePathUpdateTriggers,
                         getSourcePosition: linePathUpdateTriggers,
@@ -733,20 +886,20 @@ export class LineLayer extends CompositeLayer {
 
             const endFork = new ForkLineLayer(
                 this.getSubLayerProps({
-                    id: 'LineForkEnd' + compositeData.nominalV,
-                    getSourcePosition: (line) => line.end,
-                    getTargetPosition: (line) => line.origin,
-                    getSubstationOffset: (line) => line.substationIndexEnd,
-                    data: compositeData.lines,
+                    id: 'LineForkEnd' + cData.nominalV,
+                    getSourcePosition: (line: Line) => line.end,
+                    getTargetPosition: (line: Line) => line.origin,
+                    getSubstationOffset: (line: Line) => line.substationIndexEnd,
+                    data: cData.lines,
                     widthScale: 20,
                     widthMinPixels: 1,
                     widthMaxPixels: 2,
-                    getColor: (line) =>
-                        getLineColor(line, nominalVoltageColor, this.props, this.state.linesConnection.get(line.id)),
+                    getColor: (line: Line) =>
+                        getLineColor(line, nominalVoltageColor, this.props, this.state.linesConnection.get(line.id)!),
                     getWidth: 2,
-                    getProximityFactor: (line) => line.proximityFactorEnd,
-                    getLineParallelIndex: (line) => -line.parallelIndex,
-                    getLineAngle: (line) => line.angleEnd + Math.PI,
+                    getProximityFactor: (line: Line) => line.proximityFactorEnd,
+                    getLineParallelIndex: (line: Line) => -line.parallelIndex!,
+                    getLineAngle: (line: Line) => line.angleEnd! + Math.PI,
                     getDistanceBetweenLines: this.props.distanceBetweenLines,
                     getMaxParallelOffset: this.props.maxParallelOffset,
                     getMinParallelOffset: this.props.minParallelOffset,
@@ -755,7 +908,7 @@ export class LineLayer extends CompositeLayer {
                     getMinSubstationRadiusPixel: this.props.minSubstationRadiusPixel,
                     visible:
                         !this.props.filteredNominalVoltages ||
-                        this.props.filteredNominalVoltages.includes(compositeData.nominalV),
+                        this.props.filteredNominalVoltages.includes(cData.nominalV),
                     updateTriggers: {
                         getLineParallelIndex: [this.props.lineParallelPath],
                         getSourcePosition: linePathUpdateTriggers,
@@ -776,23 +929,24 @@ export class LineLayer extends CompositeLayer {
             // lines active power
             const lineActivePowerLabelsLayer = new TextLayer(
                 this.getSubLayerProps({
-                    id: 'ActivePower' + compositeData.nominalV,
-                    data: compositeData.activePower,
-                    getText: (activePower) => (activePower.p !== undefined ? Math.round(activePower.p).toString() : ''),
+                    id: 'ActivePower' + cData.nominalV,
+                    data: cData.activePower,
+                    getText: (activePower: ActivePower) =>
+                        activePower.p !== undefined ? Math.round(activePower.p).toString() : '',
                     // The position passed to this layer causes a bug when zooming and maxParallelOffset is reached:
                     // the label is not correctly positioned on the lines, they are slightly off.
                     // In the custom layers, we clamp the distanceBetweenLines. This is not done in the deck.gl TextLayer
                     // and IconLayer or in the position calculated here.
-                    getPosition: (activePower) => activePower.printPosition,
+                    getPosition: (activePower: ActivePower) => activePower.printPosition,
                     getColor: this.props.labelColor,
                     fontFamily: 'Roboto',
                     getSize: this.props.labelSize,
                     getAngle: 0,
-                    getPixelOffset: (activePower) => activePower.offset.map((x) => x),
+                    getPixelOffset: (activePower: ActivePower) => activePower.offset.map((x) => x),
                     getTextAnchor: 'middle',
                     visible:
                         (!this.props.filteredNominalVoltages ||
-                            this.props.filteredNominalVoltages.includes(compositeData.nominalV)) &&
+                            this.props.filteredNominalVoltages.includes(cData.nominalV)) &&
                         this.props.labelsVisible,
                     opacity: this.props.areFlowsValid ? 1 : INVALID_FLOW_OPACITY,
                     updateTriggers: {
@@ -807,20 +961,20 @@ export class LineLayer extends CompositeLayer {
             // line status
             const lineStatusIconLayer = new IconLayer(
                 this.getSubLayerProps({
-                    id: 'OperatingStatus' + compositeData.nominalV,
-                    data: compositeData.operatingStatus,
+                    id: 'OperatingStatus' + cData.nominalV,
+                    data: cData.operatingStatus,
                     // The position passed to this layer causes a bug when zooming and maxParallelOffset is reached:
                     // the icon is not correctly positioned on the lines, they are slightly off.
                     // In the custom layers, we clamp the distanceBetweenLines. This is not done in the deck.gl TextLayer
                     // and IconLayer or in the position calculated here.
-                    getPosition: (operatingStatus) => operatingStatus.printPosition,
-                    getIcon: (operatingStatus) => getLineIcon(operatingStatus.status),
+                    getPosition: (operatingStatus: OperatingStatus) => operatingStatus.printPosition,
+                    getIcon: (operatingStatus: OperatingStatus) => getLineIcon(operatingStatus.status),
                     getSize: this.props.iconSize,
                     getColor: () => this.props.labelColor,
-                    getPixelOffset: (operatingStatus) => operatingStatus.offset,
+                    getPixelOffset: (operatingStatus: OperatingStatus) => operatingStatus.offset,
                     visible:
                         (!this.props.filteredNominalVoltages ||
-                            this.props.filteredNominalVoltages.includes(compositeData.nominalV)) &&
+                            this.props.filteredNominalVoltages.includes(cData.nominalV)) &&
                         this.props.labelsVisible,
                     updateTriggers: {
                         getPosition: [this.props.lineParallelPath, linePathUpdateTriggers],
@@ -836,30 +990,3 @@ export class LineLayer extends CompositeLayer {
         return layers;
     }
 }
-
-LineLayer.layerName = 'LineLayer';
-
-LineLayer.defaultProps = {
-    network: null,
-    geoData: null,
-    getNominalVoltageColor: { type: 'accessor', value: [255, 255, 255] },
-    disconnectedLineColor: { type: 'color', value: [255, 255, 255] },
-    filteredNominalVoltages: null,
-    lineFlowMode: LineFlowMode.FEEDERS,
-    lineFlowColorMode: LineFlowColorMode.NOMINAL_VOLTAGE,
-    lineFlowAlertThreshold: 100,
-    showLineFlow: true,
-    lineFullPath: true,
-    lineParallelPath: true,
-    labelSize: 12,
-    iconSize: 48,
-    distanceBetweenLines: 1000,
-    maxParallelOffset: 100,
-    minParallelOffset: 3,
-    substationRadius: { type: 'number', value: SUBSTATION_RADIUS },
-    substationMaxPixel: { type: 'number', value: SUBSTATION_RADIUS_MAX_PIXEL },
-    minSubstationRadiusPixel: {
-        type: 'number',
-        value: SUBSTATION_RADIUS_MIN_PIXEL,
-    },
-};
