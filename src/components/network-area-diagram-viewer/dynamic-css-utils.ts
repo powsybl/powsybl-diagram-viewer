@@ -17,7 +17,7 @@ export enum CSS_RULE_TYPE {
 
 export type CSS_DECLARATION = Record<string, string>;
 export type CSS_DECLARATION_CALLBACK = (value: number) => string;
-export type DYNAMIC_CSS_DECLARATION = Record<string, CSS_DECLARATION_CALLBACK | string>;
+export type DYNAMIC_CSS_DECLARATION = Record<string, CSS_DECLARATION_CALLBACK>;
 
 type CSS_RULE_BASE = {
     cssSelector: string;
