@@ -13,7 +13,7 @@ export type {
     OnToggleNadHoverCallbackType,
 } from './components/network-area-diagram-viewer/network-area-diagram-viewer';
 export type { DiagramMetadata } from './components/network-area-diagram-viewer/diagram-metadata';
-export { THRESHOLD_STATUS, CSS_RULE_TYPE } from './components/network-area-diagram-viewer/dynamic-css-utils';
+export { THRESHOLD_STATUS } from './components/network-area-diagram-viewer/dynamic-css-utils';
 export type {
     CSS_DECLARATION,
     DYNAMIC_CSS_DECLARATION,

@@ -10,11 +10,6 @@ export enum THRESHOLD_STATUS {
     ABOVE = 'ABOVE',
 }
 
-export enum CSS_RULE_TYPE {
-    THRESHOLD_DRIVEN = 'THRESHOLD_DRIVEN',
-    FUNCTION_DRIVEN = 'FUNCTION_DRIVEN ',
-}
-
 export type CSS_DECLARATION = Record<string, string>;
 export type CSS_DECLARATION_CALLBACK = (value: number) => string;
 export type DYNAMIC_CSS_DECLARATION = Record<string, CSS_DECLARATION_CALLBACK>;
