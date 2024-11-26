@@ -12,7 +12,7 @@ type EquipmentInfos = {
     name: string | null;
 };
 
-export const useNameOrId = (useName: boolean) => {
+export function useNameOrId(useName: boolean) {
     const getNameOrId = useCallback(
         (infos: EquipmentInfos | null) => {
             if (infos != null) {
@@ -25,4 +25,4 @@ export const useNameOrId = (useName: boolean) => {
     );
 
     return { getNameOrId };
-};
+}

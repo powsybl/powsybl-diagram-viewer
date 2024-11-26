@@ -5,8 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 import { Accessor, ScatterplotLayer, ScatterplotLayerProps } from 'deck.gl';
-import { DefaultProps } from '@deck.gl/core';
-
+import { type DefaultProps } from '@deck.gl/core';
 import GL from '@luma.gl/constants';
 
 type _ScatterplotLayerExtProps<DataT = unknown> = {
@@ -24,19 +23,22 @@ const defaultProps: DefaultProps<ScatterplotLayerExtProps> = {
 export default class ScatterplotLayerExt<DataT = unknown> extends ScatterplotLayer<
     Required<_ScatterplotLayerExtProps<DataT>>
 > {
-    static layerName = 'ScatterplotLayerExt';
-    static defaultProps = defaultProps;
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
+    static readonly layerName = 'ScatterplotLayerExt';
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
+    static readonly defaultProps = defaultProps;
 
     getShaders() {
         const shaders = super.getShaders();
-        return Object.assign({}, shaders, {
+        return {
+            ...shaders,
             vs: shaders.vs.replace(', radiusMaxPixels', ', instanceRadiusMaxPixels'), // hack to replace the uniform variable to corresponding attribute
             inject: {
                 'vs:#decl': `\
 attribute float instanceRadiusMaxPixels;
 `,
             },
-        });
+        };
     }
 
     initializeState() {

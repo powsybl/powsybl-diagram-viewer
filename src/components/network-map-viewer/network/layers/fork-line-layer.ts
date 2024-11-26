@@ -6,9 +6,9 @@
  */
 
 import { Accessor, LineLayer, LineLayerProps } from 'deck.gl';
-import { DefaultProps } from '@deck.gl/core';
+import { type DefaultProps } from '@deck.gl/core';
 import GL from '@luma.gl/constants';
-import { UniformValues } from 'maplibre-gl';
+import { type UniformValues } from 'maplibre-gl';
 
 export type ForkLineLayerProps<DataT = unknown> = _ForkLineLayerProps<DataT> & LineLayerProps;
 
@@ -49,8 +49,10 @@ const defaultProps: DefaultProps<ForkLineLayerProps> = {
  *         minSubstationRadiusPixel : min pixel for a substation
  */
 export default class ForkLineLayer<DataT = unknown> extends LineLayer<DataT, Required<_ForkLineLayerProps<DataT>>> {
-    static layerName = 'ForkLineLayer';
-    static defaultProps = defaultProps;
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
+    static readonly layerName = 'ForkLineLayer';
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
+    static readonly defaultProps = defaultProps;
 
     getShaders() {
         const shaders = super.getShaders();

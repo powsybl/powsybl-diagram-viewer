@@ -11,6 +11,7 @@ import { useControl } from 'react-map-gl';
 import type { ControlPosition } from 'react-map-gl';
 import { EventedListener } from 'mapbox-gl';
 
+// TODO to move inside a useState or something like that
 let mapDrawerController: MapboxDraw | undefined = undefined;
 
 export function getMapDrawer() {
@@ -26,25 +27,25 @@ export enum DRAW_MODES {
 
 export type DrawControlProps = ConstructorParameters<typeof MapboxDraw>[0] & {
     position?: ControlPosition;
-    readyToDisplay: boolean;
+    readyToDisplay: boolean; //TODO never used, to delete
     onDrawPolygonModeActive: (polygoneDrawing: DRAW_MODES) => void;
     onCreate: EventedListener;
     onUpdate: EventedListener;
     onDelete: EventedListener;
 };
 
+// TODO: it's a hook, not a component => to rename to useDrawControl and modify call in NetworkMap
 export default function DrawControl(props: DrawControlProps) {
     const { onDrawPolygonModeActive } = props;
     const onModeChange = useCallback(
-        (e: { mode: DRAW_MODES }) => {
-            onDrawPolygonModeActive(e.mode);
-        },
+        (e: { mode: DRAW_MODES }) => onDrawPolygonModeActive(e.mode),
         [onDrawPolygonModeActive]
     );
 
     useControl<MapboxDraw>(
         //onCreate
         () => {
+            //TODO there is nothing common between props and MapboxDrawOptions
             mapDrawerController = new MapboxDraw({ ...props });
             return mapDrawerController;
         },
@@ -62,9 +63,7 @@ export default function DrawControl(props: DrawControlProps) {
             map.off('draw.delete', props.onDelete);
             map.off('draw.modechange', onModeChange);
         },
-        {
-            position: props.position,
-        }
+        { position: props.position }
     );
 
     return null;

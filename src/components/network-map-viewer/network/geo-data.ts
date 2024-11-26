@@ -26,16 +26,6 @@ export type LinePosition = {
     coordinates: Coordinate[];
 };
 
-const substationPositionByIdIndexer = (map: Map<string, Coordinate>, substation: SubstationPosition) => {
-    map.set(substation.id, substation.coordinate);
-    return map;
-};
-
-const linePositionByIdIndexer = (map: Map<string, Coordinate[]>, line: LinePosition) => {
-    map.set(line.id, line.coordinates);
-    return map;
-};
-
 export class GeoData {
     substationPositionsById = new Map<string, Coordinate>();
     linePositionsById = new Map<string, Coordinate[]>();
@@ -47,7 +37,10 @@ export class GeoData {
 
     setSubstationPositions(positions: SubstationPosition[]) {
         // index positions by substation id
-        this.substationPositionsById = positions.reduce(substationPositionByIdIndexer, new Map());
+        this.substationPositionsById = positions.reduce(
+            (acc, substation) => acc.set(substation.id, substation.coordinate),
+            new Map()
+        );
     }
 
     updateSubstationPositions(substationIdsToUpdate: string[], fetchedPositions: SubstationPosition[]) {
@@ -70,13 +63,11 @@ export class GeoData {
 
     setLinePositions(positions: LinePosition[]) {
         // index positions by line id
-        this.linePositionsById = positions.reduce(linePositionByIdIndexer, new Map());
+        this.linePositionsById = positions.reduce((map, line) => map.set(line.id, line.coordinates), new Map());
     }
 
     updateLinePositions(lineIdsToUpdate: string[], fetchedPositions: LinePosition[]) {
-        fetchedPositions.forEach((pos) => {
-            this.linePositionsById.set(pos.id, pos.coordinates);
-        });
+        fetchedPositions.forEach((pos) => this.linePositionsById.set(pos.id, pos.coordinates));
         // If a line position is requested but not present in the fetched results, we delete its position.
         // For lines, this code is not really necessary as we draw lines in [(0, 0), (0, 0)] when it is connected to a (0, 0) point (see getLinePositions())
         // But it's cleaner to avoid keeping old ignored data in geo data.
@@ -117,13 +108,7 @@ export class GeoData {
             const linePositions = this.linePositionsById.get(line.id);
             // Is there any position for this line ?
             if (linePositions) {
-                const positions = new Array<LonLat>(linePositions.length);
-
-                for (const [index, position] of linePositions.entries()) {
-                    positions[index] = [position.lon, position.lat];
-                }
-
-                return positions;
+                return linePositions.map((position) => [position.lon, position.lat]);
             }
         }
 
@@ -132,13 +117,13 @@ export class GeoData {
 
     getLineDistances(positions: LonLat[]) {
         if (positions !== null && positions.length > 1) {
-            const cumulativeDistanceArray = [0];
+            const cumulativeDistanceArray = new Array<number>(positions.length);
+            cumulativeDistanceArray[0] = 0;
             let cumulativeDistance = 0;
-            let segmentDistance;
-            let ruler;
             for (let i = 0; i < positions.length - 1; i++) {
-                ruler = new cheapRuler(positions[i][1], 'meters');
-                segmentDistance = ruler.lineDistance(positions.slice(i, i + 2));
+                const segmentDistance = new cheapRuler(positions[i][1], 'meters').lineDistance(
+                    positions.slice(i, i + 2)
+                );
                 cumulativeDistance = cumulativeDistance + segmentDistance;
                 cumulativeDistanceArray[i + 1] = cumulativeDistance;
             }
@@ -155,9 +140,8 @@ export class GeoData {
     findSegment(positions: LonLat[], cumulativeDistances: number[], wantedDistance: number) {
         let lowerBound = 0;
         let upperBound = cumulativeDistances.length - 1;
-        let middlePoint;
         while (lowerBound + 1 !== upperBound) {
-            middlePoint = Math.floor((lowerBound + upperBound) / 2);
+            const middlePoint = Math.floor((lowerBound + upperBound) / 2);
             const middlePointDistance = cumulativeDistances[middlePoint];
             if (middlePointDistance <= wantedDistance) {
                 lowerBound = middlePoint;
@@ -240,7 +224,7 @@ export class GeoData {
         );
         if (cumulativeDistances.length === 2) {
             // For line with only one segment, we can just apply a translation by lineAngle because both segment ends
-            // connect to fork lines. This accounts for the fact that the forkline part of the line doesn't count
+            // connect to fork lines. This accounts for the fact that the fork line part of the line doesn't count
             position.position = computeDestinationPoint(
                 position.position,
                 -distanceBetweenLines * proximityFactor,
@@ -248,7 +232,7 @@ export class GeoData {
             );
         } else if (goodSegment.idx === 0 || goodSegment.idx === cumulativeDistances.length - 2) {
             // When the label is on the first or last segment and there is an intermediate point,
-            // when must shift by the percentange of position of the label on this segment
+            // when must shift by the percentage of position of the label on this segment
             const segmentDistance = cumulativeDistances[goodSegment.idx + 1] - cumulativeDistances[goodSegment.idx];
             const alreadyDoneDistance = segmentDistance - remainingDistance;
             let labelDistanceInSegment;
@@ -294,11 +278,8 @@ export class GeoData {
     //returns the angle between point1 and point2 in degrees [0-360)
     getMapAngle(point1: LonLat, point2: LonLat) {
         // We don't have the exact same angle calculation as in the arrow shader, and this
-        // seems to give more approaching results
-        let angle = getRhumbLineBearing(point1, point2);
-        const angle2 = getGreatCircleBearing(point1, point2);
+        // seems to give more approaching results: coeff * angle + (1 - coeff) * angle2
         const coeff = 0.1;
-        angle = coeff * angle + (1 - coeff) * angle2;
-        return angle;
+        return coeff * getRhumbLineBearing(point1, point2) + (1 - coeff) * getGreatCircleBearing(point1, point2);
     }
 }

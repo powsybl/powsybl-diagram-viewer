@@ -144,17 +144,15 @@ export const ArrowSpeed = {
 function getArrowSpeedOfSide(limit: number | undefined, intensity: number | undefined) {
     if (limit === undefined || intensity === undefined || intensity === 0) {
         return ArrowSpeed.STOPPED;
+    } else if (intensity > 0 && intensity < limit / 3) {
+        return ArrowSpeed.SLOW;
+    } else if (intensity >= limit / 3 && intensity < (limit * 2) / 3) {
+        return ArrowSpeed.MEDIUM;
+    } else if (intensity >= (limit * 2) / 3 && intensity < limit) {
+        return ArrowSpeed.FAST;
     } else {
-        if (intensity > 0 && intensity < limit / 3) {
-            return ArrowSpeed.SLOW;
-        } else if (intensity >= limit / 3 && intensity < (limit * 2) / 3) {
-            return ArrowSpeed.MEDIUM;
-        } else if (intensity >= (limit * 2) / 3 && intensity < limit) {
-            return ArrowSpeed.FAST;
-        } else {
-            // > limit
-            return ArrowSpeed.CRAZY;
-        }
+        // > limit
+        return ArrowSpeed.CRAZY;
     }
 }
 
@@ -289,8 +287,10 @@ const defaultProps = {
 };
 
 export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
-    static layerName = 'LineLayer';
-    static defaultProps = defaultProps;
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
+    static readonly layerName = 'LineLayer';
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
+    static readonly defaultProps = defaultProps;
 
     declare state: {
         compositeData: CompositeData[];
@@ -324,9 +324,7 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                     substation.voltageLevels.map((vl: VoltageLevel) => vl.nominalV) // only one voltage level
                 ),
             ]
-                .sort((a: number, b: number) => {
-                    return a - b; // force numerical sort
-                })
+                .sort((a, b) => a - b) // force numerical sort
                 .indexOf(vl.nominalV) + 1
         );
     }
@@ -343,12 +341,7 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
             linesConnection = new Map<string, LineConnection>();
             linesStatus = new Map<string, LinesStatus>();
 
-            if (
-                props.network != null &&
-                props.network.substations &&
-                props.data.length !== 0 &&
-                props.geoData != null
-            ) {
+            if (props.network?.substations && props.data.length !== 0 && props.geoData != null) {
                 // group lines by nominal voltage
                 const lineNominalVoltageIndexer = (map: Map<number, Line[]>, line: Line) => {
                     const network = props.network;
@@ -368,9 +361,7 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                 const linesByNominalVoltage = props.data.reduce(lineNominalVoltageIndexer, new Map<number, Line[]>());
 
                 compositeData = Array.from(linesByNominalVoltage.entries())
-                    .map(([nominalV, lines]) => {
-                        return { nominalV, lines };
-                    })
+                    .map(([nominalV, lines]) => ({ nominalV, lines }))
                     .sort((a, b) => b.nominalV - a.nominalV);
 
                 compositeData.forEach((c) => {
@@ -383,9 +374,7 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                             terminal2Connected: line.terminal2Connected,
                         });
 
-                        linesStatus?.set(line.id, {
-                            operatingStatus: line.operatingStatus!,
-                        });
+                        linesStatus?.set(line.id, { operatingStatus: line.operatingStatus! });
 
                         const key = this.genLineKey(line);
                         const val = mapOriginDestination.get(key);
@@ -408,9 +397,7 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                         terminal1Connected: line1.terminal1Connected,
                         terminal2Connected: line1.terminal2Connected,
                     });
-                    linesStatus?.set(line1.id, {
-                        operatingStatus: line1.operatingStatus!,
-                    });
+                    linesStatus?.set(line1.id, { operatingStatus: line1.operatingStatus! });
                 });
             }
         }
@@ -525,11 +512,7 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                 cData.operatingStatus = [];
                 cData.lines?.forEach((line) => {
                     const lineStatus = linesStatus?.get(line.id);
-                    if (
-                        lineStatus !== undefined &&
-                        lineStatus.operatingStatus !== undefined &&
-                        lineStatus.operatingStatus !== 'IN_OPERATION'
-                    ) {
+                    if (lineStatus?.operatingStatus !== undefined && lineStatus?.operatingStatus !== 'IN_OPERATION') {
                         if (cData.lineMap) {
                             const lineData = cData.lineMap.get(line.id);
                             if (lineData) {
@@ -585,14 +568,8 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                     if (props.lineFlowMode === LineFlowMode.FEEDERS) {
                         //If we use Feeders Mode, we build only two arrows
                         return [
-                            {
-                                distance: START_ARROW_POSITION,
-                                line: line,
-                            },
-                            {
-                                distance: END_ARROW_POSITION,
-                                line: line,
-                            },
+                            { distance: START_ARROW_POSITION, line: line },
+                            { distance: END_ARROW_POSITION, line: line },
                         ];
                     }
 
@@ -611,12 +588,10 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                     );
                     const arrowCount = Math.ceil(directLineDistance / DISTANCE_BETWEEN_ARROWS);
 
-                    return [...new Array(arrowCount).keys()].map((index) => {
-                        return {
-                            distance: index / arrowCount,
-                            line: line,
-                        };
-                    });
+                    return [...new Array(arrowCount).keys()].map((index) => ({
+                        distance: index / arrowCount,
+                        line: line,
+                    }));
                 });
             });
         }
@@ -645,9 +620,7 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                 let truncatedSize = samePathLine.size;
                 if (truncatedSize > 32) {
                     console.warn(
-                        'Warning, more than 32 parallel lines between vls ' +
-                            key +
-                            '. The map will only show 32 parallel lines.'
+                        `Warning, more than 32 parallel lines between vls ${key}. The map will only show 32 parallel lines.`
                     );
                     truncatedSize = 32;
                 }
@@ -783,7 +756,7 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                         getDashArray: [this.props.updatedLines],
                     },
                     getDashArray: (line: Line) =>
-                        doDash(this.state.linesConnection!.get(line.id)!) ? dashArray : noDashArray,
+                        doDash(this.state.linesConnection.get(line.id)!) ? dashArray : noDashArray,
                     extensions: [new PathStyleExtension({ dash: true })],
                 })
             );
@@ -817,9 +790,7 @@ export class LineLayer extends CompositeLayer<Required<_LineLayerProps>> {
                     getDistanceBetweenLines: this.props.distanceBetweenLines,
                     maxParallelOffset: this.props.maxParallelOffset,
                     minParallelOffset: this.props.minParallelOffset,
-                    getDirection: (arrow: Arrow) => {
-                        return getArrowDirection(arrow.line.p1);
-                    },
+                    getDirection: (arrow: Arrow) => getArrowDirection(arrow.line.p1),
                     animated: this.props.showLineFlow && this.props.lineFlowMode === LineFlowMode.ANIMATED_ARROWS,
                     visible:
                         this.props.showLineFlow &&

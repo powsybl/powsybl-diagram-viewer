@@ -7,13 +7,12 @@
 
 import { Color, CompositeLayer, LayerContext, TextLayer, UpdateParameters } from 'deck.gl';
 import ScatterplotLayerExt from './layers/scatterplot-layer-ext';
-
 import { SUBSTATION_RADIUS, SUBSTATION_RADIUS_MAX_PIXEL, SUBSTATION_RADIUS_MIN_PIXEL } from './constants';
-import { Substation, VoltageLevel } from '../utils/equipment-types';
+import { type Substation, type VoltageLevel } from '../utils/equipment-types';
 import { MapEquipments } from './map-equipments';
 import { GeoData } from './geo-data';
 
-const voltageLevelNominalVoltageIndexer = (map: Map<number, VoltageLevel[]>, voltageLevel: VoltageLevel) => {
+function voltageLevelNominalVoltageIndexer(map: Map<number, VoltageLevel[]>, voltageLevel: VoltageLevel) {
     let list = map.get(voltageLevel.nominalV);
     if (!list) {
         list = [];
@@ -21,7 +20,7 @@ const voltageLevelNominalVoltageIndexer = (map: Map<number, VoltageLevel[]>, vol
     }
     list.push(voltageLevel);
     return map;
-};
+}
 
 type MetaVoltageLevel = {
     nominalVoltageIndex: number;
@@ -105,9 +104,7 @@ export class SubstationLayer extends CompositeLayer<SubstationLayerProps> {
 
             // sort the map by descending nominal voltages
             const metaVoltageLevelsByNominalVoltageArray = Array.from(metaVoltageLevelsByNominalVoltage)
-                .map((e) => {
-                    return { nominalV: e[0], metaVoltageLevels: e[1] };
-                })
+                .map((e) => ({ nominalV: e[0], metaVoltageLevels: e[1] }))
                 .sort((a, b) => b.nominalV - a.nominalV);
 
             this.setState({

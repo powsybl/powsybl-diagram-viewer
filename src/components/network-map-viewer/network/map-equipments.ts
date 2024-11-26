@@ -5,12 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Equipment, EQUIPMENT_TYPES, Line, Substation, VoltageLevel } from '../utils/equipment-types';
+import {
+    type Equipment,
+    EQUIPMENT_TYPES,
+    type Line,
+    type Substation,
+    type VoltageLevel,
+} from '../utils/equipment-types';
 
-const elementIdIndexer = <T extends Equipment>(map: Map<string, T>, element: T) => {
-    map.set(element.id, element);
-    return map;
-};
+const elementIdIndexer = <T extends Equipment>(map: Map<string, T>, element: T) => map.set(element.id, element);
 
 export class MapEquipments {
     substations: Substation[] = [];
@@ -25,32 +28,26 @@ export class MapEquipments {
     voltageLevelsById = new Map<string, VoltageLevel>();
     nominalVoltages: number[] = [];
 
-    intlRef = undefined;
-
-    constructor() {
-        // dummy constructor, to make children classes constructors happy
-    }
-
     newMapEquipmentForUpdate(): MapEquipments {
         /* shallow clone of the map-equipment https://stackoverflow.com/a/44782052 */
         return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     }
 
-    checkAndGetValues(equipments: Equipment[]) {
-        return equipments ? equipments : [];
+    checkAndGetValues(equipments: Equipment[] | null | undefined) {
+        return equipments ?? [];
     }
 
-    completeSubstationsInfos(equipementsToIndex: Substation[]) {
+    completeSubstationsInfos(equipmentsToIndex: Substation[]) {
         const nominalVoltagesSet = new Set(this.nominalVoltages);
-        if (equipementsToIndex?.length === 0) {
+        if (equipmentsToIndex?.length === 0) {
             this.substationsById = new Map();
             this.voltageLevelsById = new Map();
         }
-        const substations: Substation[] = equipementsToIndex?.length > 0 ? equipementsToIndex : this.substations;
+        const substations: Substation[] = equipmentsToIndex?.length > 0 ? equipmentsToIndex : this.substations;
 
         substations.forEach((substation) => {
             // sort voltage levels inside substations by nominal voltage
-            substation.voltageLevels = substation.voltageLevels.sort(
+            substation.voltageLevels.sort(
                 (voltageLevel1, voltageLevel2) => voltageLevel1.nominalV - voltageLevel2.nominalV
             );
 
@@ -68,15 +65,15 @@ export class MapEquipments {
         this.nominalVoltages = Array.from(nominalVoltagesSet).sort((a, b) => b - a);
     }
 
-    updateEquipments<T extends Equipment>(currentEquipments: T[], newEquipements: T[]) {
+    updateEquipments<T extends Equipment>(currentEquipments: T[], newEquipments: T[]) {
         // replace current modified equipments
         currentEquipments.forEach((equipment1, index) => {
-            const found = newEquipements.filter((equipment2) => equipment2.id === equipment1.id);
+            const found = newEquipments.filter((equipment2) => equipment2.id === equipment1.id);
             currentEquipments[index] = found.length > 0 ? found[0] : equipment1;
         });
 
         // add newly created equipments
-        const eqptsToAdd = newEquipements.filter(
+        const eqptsToAdd = newEquipments.filter(
             (eqpt) => !currentEquipments.some((otherEqpt) => otherEqpt.id === eqpt.id)
         );
         if (eqptsToAdd.length === 0) {
@@ -120,21 +117,17 @@ export class MapEquipments {
         this.completeSubstationsInfos(fullReload ? [] : substations);
     }
 
-    completeLinesInfos(equipementsToIndex: Line[]) {
-        if (equipementsToIndex?.length > 0) {
-            equipementsToIndex.forEach((line) => {
-                this.linesById?.set(line.id, line);
-            });
+    completeLinesInfos(equipmentsToIndex: Line[]) {
+        if (equipmentsToIndex?.length > 0) {
+            equipmentsToIndex.forEach((line) => this.linesById?.set(line.id, line));
         } else {
             this.linesById = this.lines.reduce(elementIdIndexer, new Map());
         }
     }
 
-    completeTieLinesInfos(equipementsToIndex: Line[]) {
-        if (equipementsToIndex?.length > 0) {
-            equipementsToIndex.forEach((tieLine) => {
-                this.tieLinesById?.set(tieLine.id, tieLine);
-            });
+    completeTieLinesInfos(equipmentsToIndex: Line[]) {
+        if (equipmentsToIndex?.length > 0) {
+            equipmentsToIndex.forEach((tieLine) => this.tieLinesById?.set(tieLine.id, tieLine));
         } else {
             this.tieLinesById = this.tieLines.reduce(elementIdIndexer, new Map());
         }
@@ -164,11 +157,9 @@ export class MapEquipments {
         this.completeHvdcLinesInfos(fullReload ? [] : hvdcLines);
     }
 
-    completeHvdcLinesInfos(equipementsToIndex: Line[]) {
-        if (equipementsToIndex?.length > 0) {
-            equipementsToIndex.forEach((hvdcLine) => {
-                this.hvdcLinesById?.set(hvdcLine.id, hvdcLine);
-            });
+    completeHvdcLinesInfos(equipmentsToIndex: Line[]) {
+        if (equipmentsToIndex?.length > 0) {
+            equipmentsToIndex.forEach((hvdcLine) => this.hvdcLinesById?.set(hvdcLine.id, hvdcLine));
         } else {
             this.hvdcLinesById = this.hvdcLines.reduce(elementIdIndexer, new Map());
         }

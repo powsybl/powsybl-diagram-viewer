@@ -8,7 +8,7 @@
 import {
     forwardRef,
     memo,
-    ReactNode,
+    type ReactNode,
     useCallback,
     useEffect,
     useImperativeHandle,
@@ -19,14 +19,22 @@ import {
 import { Box, decomposeColor } from '@mui/system';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import { Replay } from '@mui/icons-material';
-import { Button, ButtonProps, useTheme } from '@mui/material';
+import { Button, type ButtonProps, useTheme } from '@mui/material';
 import { FormattedMessage } from 'react-intl';
-import { Map, MapLib, MapRef, NavigationControl, useControl, ViewState, ViewStateChangeEvent } from 'react-map-gl';
+import {
+    Map,
+    type MapLib,
+    type MapRef,
+    NavigationControl,
+    useControl,
+    type ViewState,
+    type ViewStateChangeEvent,
+} from 'react-map-gl';
 import { getNominalVoltageColor } from '../../../utils/colors';
 import { useNameOrId } from '../utils/equipmentInfosHandler';
 import { GeoData } from './geo-data';
-import DrawControl, { DRAW_MODES, DrawControlProps, getMapDrawer } from './draw-control';
-import { LineFlowColorMode, LineFlowMode, LineLayer, LineLayerProps } from './line-layer';
+import DrawControl, { type DrawControlProps, getMapDrawer } from './draw-control';
+import { LineFlowColorMode, LineFlowMode, LineLayer, type LineLayerProps } from './line-layer';
 import { MapEquipments } from './map-equipments';
 import { SubstationLayer } from './substation-layer';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
@@ -36,20 +44,20 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
-import { Feature, Polygon } from 'geojson';
+import { type Feature, type Polygon } from 'geojson';
 import {
-    EquimentLine,
-    Equipment,
+    type EquimentLine,
+    type Equipment,
     EQUIPMENT_TYPES,
-    HvdcLineEquimentLine,
+    type HvdcLineEquimentLine,
     isLine,
     isSubstation,
     isVoltageLevel,
-    Line,
-    LineEquimentLine,
-    Substation,
-    TieLineEquimentLine,
-    VoltageLevel,
+    type Line,
+    type LineEquimentLine,
+    type Substation,
+    type TieLineEquimentLine,
+    type VoltageLevel,
 } from '../utils/equipment-types';
 import { PickingInfo } from 'deck.gl';
 
@@ -157,7 +165,6 @@ type NetworkMapProps = {
     labelsZoomThreshold?: number;
     lineFlowAlertThreshold?: number;
     lineFlowColorMode?: LineFlowColorMode;
-    lineFlowHidden?: boolean;
     lineFlowMode?: LineFlowMode;
     lineFullPath?: boolean;
     lineParallelPath?: boolean;
@@ -211,7 +218,6 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
             labelsZoomThreshold = 9,
             lineFlowAlertThreshold = 100,
             lineFlowColorMode = LineFlowColorMode.NOMINAL_VOLTAGE,
-            // lineFlowHidden = true,
             lineFlowMode = LineFlowMode.FEEDERS,
             lineFullPath = true,
             lineParallelPath = true,
@@ -234,12 +240,9 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
             onTieLineMenuClick = () => {},
             onHvdcLineMenuClick = () => {},
             onManualRefreshClick = () => {},
-            renderPopover = (eId) => {
-                return eId;
-            },
-            onDrawPolygonModeActive = (active: DRAW_MODES) => {
-                console.log('polygon drawing mode active: ', active ? 'active' : 'inactive');
-            },
+            renderPopover = (eId) => eId,
+            onDrawPolygonModeActive = (active) =>
+                console.log('polygon drawing mode active: ', active ? 'active' : 'inactive'),
             onPolygonChanged = () => {},
             onDrawEvent = () => {},
         },
@@ -275,8 +278,8 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
             mapEquipments.voltageLevels &&
             geoData.substationPositionsById.size > 0;
 
-        const mapEquipmentsLines = useMemo(() => {
-            return [
+        const mapEquipmentsLines: EquimentLine[] = useMemo(
+            () => [
                 ...(mapEquipments?.lines.map(
                     (line) =>
                         ({
@@ -298,8 +301,9 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
                             equipmentType: EQUIPMENT_TYPES.HVDC_LINE,
                         } as HvdcLineEquimentLine)
                 ) ?? []),
-            ];
-        }, [mapEquipments?.hvdcLines, mapEquipments?.tieLines, mapEquipments?.lines]) as EquimentLine[];
+            ],
+            [mapEquipments?.hvdcLines, mapEquipments?.tieLines, mapEquipments?.lines]
+        );
 
         const divRef = useRef<HTMLDivElement>(null);
 
@@ -394,7 +398,7 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
                 // @ts-expect-error: TODO fix interactionState
                 !info.interactionState || // first event of before an animation (e.g. clicking the +/- buttons of the navigation controls, gives the target
                 // @ts-expect-error: TODO fix interactionState
-                (info.interactionState && !info.interactionState.inTransition) // Any event not part of a animation (mouse panning or zooming)
+                (info.interactionState && !info.interactionState.inTransition) // Any event not part of an animation (mouse panning or zooming)
             ) {
                 if (info.viewState.zoom >= labelsZoomThreshold && !labelsVisible) {
                     setLabelsVisible(true);
@@ -511,13 +515,11 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
         }
 
         function onMapContextMenu(event: mapboxgl.MapLayerMouseEvent | maplibregl.MapLayerMouseEvent) {
-            const info =
-                deckRef.current &&
-                deckRef.current.pickObject({
-                    x: event.point.x,
-                    y: event.point.y,
-                    radius: PICKING_RADIUS,
-                });
+            const info = deckRef.current?.pickObject({
+                x: event.point.x,
+                y: event.point.y,
+                radius: PICKING_RADIUS,
+            });
             info && mapEquipments && onClickHandler(info, event, mapEquipments);
         }
 
@@ -540,9 +542,7 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
                     labelColor: foregroundNeutralColor,
                     labelSize: LABEL_SIZE,
                     pickable: true,
-                    onHover: ({ object }) => {
-                        setCursorType(object ? 'pointer' : 'grab');
-                    },
+                    onHover: ({ object }) => setCursorType(object ? 'pointer' : 'grab'),
                     getNameOrId: getNameOrId,
                 })
             );
@@ -641,16 +641,12 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
                       mapLib: mapboxgl,
                       mapboxAccessToken: mToken,
                   }
-                : {
-                      mapLib: maplibregl,
-                  };
+                : { mapLib: maplibregl };
 
         // because the mapLib prop of react-map-gl is not reactive, we need to
         // unmount/mount the Map with 'key', so we need also to reset all state
         // associated with uncontrolled state of the map
-        useEffect(() => {
-            setCentered(INITIAL_CENTERED);
-        }, [key]);
+        useEffect(() => setCentered(INITIAL_CENTERED), [key]);
 
         const onUpdate = useCallback(() => {
             onPolygonChanged(getPolygonFeatures());
@@ -676,16 +672,15 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
                 mapEquipments,
                 mapEquipmentsLines,
                 geoData,
-                polygonCoordinates as Polygon
+                polygonCoordinates
             );
-            return selectedLines.filter((line: Line) => {
-                return filteredNominalVoltages!.some((nv) => {
-                    return (
+            return selectedLines.filter((line: Line) =>
+                filteredNominalVoltages!.some(
+                    (nv) =>
                         nv === mapEquipments!.getVoltageLevel(line.voltageLevelId1)!.nominalV ||
                         nv === mapEquipments!.getVoltageLevel(line.voltageLevelId2)!.nominalV
-                    );
-                });
-            });
+                )
+            );
         }, [mapEquipments, mapEquipmentsLines, geoData, filteredNominalVoltages]);
 
         const getSelectedSubstations = useCallback(() => {
@@ -694,9 +689,9 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
                 return substations;
             }
             return (
-                substations.filter((substation) => {
-                    return substation.voltageLevels.some((vl) => filteredNominalVoltages.includes(vl.nominalV));
-                }) ?? []
+                substations.filter((substation) =>
+                    substation.voltageLevels.some((vl) => filteredNominalVoltages.includes(vl.nominalV))
+                ) ?? []
             );
         }, [mapEquipments, geoData, filteredNominalVoltages]);
 
@@ -706,7 +701,7 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
                 getSelectedSubstations,
                 getSelectedLines,
                 cleanDraw() {
-                    //because deleteAll does not trigger a update of the polygonFeature callback
+                    //because deleteAll does not trigger an update of the polygonFeature callback
                     getMapDrawer()?.deleteAll();
                     onPolygonChanged(getPolygonFeatures());
                     onDrawEvent(DRAW_EVENT.DELETE);
@@ -731,7 +726,7 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
                     mapStyle={mapStyle}
                     styleDiffing={true}
                     initialViewState={initialViewState}
-                    cursor={cursorHandler()} //TODO needed for pointer on our polygonFeatures, but forces us to reeimplement grabbing/grab for panning. Can we avoid reimplementing?
+                    cursor={cursorHandler()} //TODO needed for pointer on our polygonFeatures, but forces us to reimplement grabbing/grab for panning. Can we avoid reimplementing?
                     onDrag={() => setDragging(true)}
                     onDragEnd={() => setDragging(false)}
                     onContextMenu={onMapContextMenu}
@@ -749,13 +744,13 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
                     <DeckGLOverlay
                         ref={deckRef}
                         //@ts-expect-error: TODO fix event
-                        onClick={(info: PickingInfo, event) => {
+                        onClick={(info: PickingInfo, event) =>
                             onClickHandler(
                                 info,
                                 event.srcEvent as mapboxgl.MapLayerMouseEvent | maplibregl.MapLayerMouseEvent,
                                 mapEquipments!
-                            );
-                        }}
+                            )
+                        }
                         onAfterRender={onAfterRender} // TODO simplify this
                         layers={layers}
                         pickingRadius={PICKING_RADIUS}
@@ -770,13 +765,10 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
                             polygon: true,
                             trash: true,
                         }}
-                        //
                         // defaultMode="simple_select | draw_polygon | ...
                         defaultMode="simple_select"
                         readyToDisplay={readyToDisplay}
-                        onDrawPolygonModeActive={(polygon_draw: DRAW_MODES) => {
-                            onDrawPolygonModeActive(polygon_draw);
-                        }}
+                        onDrawPolygonModeActive={onDrawPolygonModeActive}
                         onCreate={onCreate}
                         onUpdate={onUpdate}
                         onDelete={onDelete}
@@ -806,7 +798,7 @@ function getSubstationsInPolygon(
     //get the list of substation
     const substationsList = mapEquipments?.substations ?? [];
     //for each substation, check if it is in the polygon
-    return substationsList // keep only the sybstation in the polygon
+    return substationsList // keep only the substation in the polygon
         .filter((substation) => {
             const pos = geoData.getSubstationPosition(substation.id);
             return booleanPointInPolygon(pos, polygonCoordinates);

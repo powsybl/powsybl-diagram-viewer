@@ -7,14 +7,6 @@
 
 import { LineStatus } from '../network/line-layer';
 
-export const EQUIPMENT_INFOS_TYPES = {
-    LIST: { type: 'LIST' },
-    MAP: { type: 'MAP' },
-    FORM: { type: 'FORM' },
-    TAB: { type: 'TAB' },
-    TOOLTIP: { type: 'TOOLTIP' },
-};
-
 export enum EQUIPMENT_TYPES {
     SUBSTATION = 'SUBSTATION',
     VOLTAGE_LEVEL = 'VOLTAGE_LEVEL',
@@ -72,7 +64,7 @@ export type Line = {
     currentLimits2?: {
         permanentLimit: number;
     } | null;
-    // additionnal from line-layer
+    // additional from line-layer
     origin?: LonLat;
     end?: LonLat;
     substationIndexStart?: number;

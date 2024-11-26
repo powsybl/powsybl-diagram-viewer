@@ -5,9 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { CircularProgress, CircularProgressProps, SxProps } from '@mui/material';
+import { CircularProgress, type CircularProgressProps, type SxProps } from '@mui/material';
 import { FormattedMessage } from 'react-intl';
-import { Box, Theme } from '@mui/system';
+import { Box, type Theme } from '@mui/system';
 
 export type LoaderWithOverlayProps = {
     color: CircularProgressProps['color'];

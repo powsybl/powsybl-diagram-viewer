@@ -5,9 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 import { Accessor, PathLayer, PathLayerProps } from 'deck.gl';
-import { DefaultProps } from '@deck.gl/core';
+import { type DefaultProps } from '@deck.gl/core';
 import GL from '@luma.gl/constants';
-import { UniformValues } from 'maplibre-gl';
+import { type UniformValues } from 'maplibre-gl';
 
 /**
  * A layer based on PathLayer allowing to shift path by an offset + angle
@@ -42,8 +42,10 @@ export default class ParallelPathLayer<DataT = unknown> extends PathLayer<
     DataT,
     Required<ParallelPathLayerProps<DataT>>
 > {
-    static layerName = 'ParallelPathLayer';
-    static defaultProps = defaultProps;
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
+    static readonly layerName = 'ParallelPathLayer';
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
+    static readonly defaultProps = defaultProps;
 
     getShaders() {
         const shaders = super.getShaders();

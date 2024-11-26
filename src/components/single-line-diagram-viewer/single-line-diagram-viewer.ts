@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Point, SVG, Svg, ViewBoxLike } from '@svgdotjs/svg.js';
+import { Point, SVG, type Svg, type ViewBoxLike } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
@@ -347,9 +347,7 @@ export class SingleLineDiagramViewer {
             vlList = vlList?.filter((element, index) => element !== '' && vlList?.indexOf(element) === index);
 
             //remove arrows if the arrow points to the current svg
-            navigable = navigable?.filter((element) => {
-                return vlList?.indexOf(element.nextVId) === -1;
-            });
+            navigable = navigable?.filter((element) => vlList?.indexOf(element.nextVId) === -1);
 
             const highestY = new Map();
             const lowestY = new Map();
@@ -396,7 +394,7 @@ export class SingleLineDiagramViewer {
         }
     }
 
-    private setArrowsStyle = (target: SVGElement, color1: string, color2: string) => {
+    private setArrowsStyle(target: SVGElement, color1: string, color2: string) {
         const pe1 = target.querySelector('.arrow') as SVGPathElement;
         const pe2 = target.querySelector('.arrow-hover') as SVGPathElement;
         if (pe1 !== null) {
@@ -405,7 +403,7 @@ export class SingleLineDiagramViewer {
         if (pe2 !== null) {
             pe2.style.fill = color2;
         }
-    };
+    }
 
     private createSvgArrow(element: HTMLElement, position: string, x: number, highestY: number, lowestY: number) {
         const svgInsert: HTMLElement | null = element?.parentElement;
@@ -452,13 +450,13 @@ export class SingleLineDiagramViewer {
             });
 
             //handling the color changes when hovering
-            group.addEventListener('mouseenter', (e: Event) => {
-                this.setArrowsStyle(e.target as SVGElement, this.selectionBackColor, 'currentColor');
-            });
+            group.addEventListener('mouseenter', (e) =>
+                this.setArrowsStyle(e.target as SVGElement, this.selectionBackColor, 'currentColor')
+            );
 
-            group.addEventListener('mouseleave', (e: Event) => {
-                this.setArrowsStyle(e.target as SVGElement, 'currentColor', this.selectionBackColor);
-            });
+            group.addEventListener('mouseleave', (e) =>
+                this.setArrowsStyle(e.target as SVGElement, 'currentColor', this.selectionBackColor)
+            );
         }
     }
 
@@ -547,21 +545,17 @@ export class SingleLineDiagramViewer {
                 }
             };
 
-            const feeders = this.svgMetadata?.nodes.filter((element) => {
-                return element.vid !== '' && FEEDER_COMPONENT_TYPES.has(element.componentType);
-            });
+            const feeders = this.svgMetadata?.nodes.filter(
+                (element) => element.vid !== '' && FEEDER_COMPONENT_TYPES.has(element.componentType)
+            );
             feeders?.forEach((feeder) => {
                 const svgText: SVGTextElement | null | undefined = this.container
                     ?.querySelector('#' + feeder.id)
                     ?.querySelector('text[class="sld-label"]');
                 if (svgText !== undefined && svgText !== null) {
                     svgText.style.cursor = 'pointer';
-                    svgText.addEventListener('mouseenter', () => {
-                        showFeederSelection(svgText, this.selectionBackColor);
-                    });
-                    svgText.addEventListener('mouseleave', () => {
-                        hideFeederSelection(svgText);
-                    });
+                    svgText.addEventListener('mouseenter', () => showFeederSelection(svgText, this.selectionBackColor));
+                    svgText.addEventListener('mouseleave', () => hideFeederSelection(svgText));
                     svgText.addEventListener('contextmenu', (event) => {
                         event.preventDefault();
                         event.stopPropagation();

@@ -10,7 +10,7 @@ import { FEATURES, Geometry, hasFeatures, isWebGL2, Model, Texture2D } from '@lu
 import vs from './arrow-layer-vertex.vert?raw';
 import fs from './arrow-layer-fragment.frag?raw';
 import { Accessor, Color, Layer, LayerContext, LayerProps, Position, Texture, UpdateParameters } from 'deck.gl';
-import { Line } from '../../utils/equipment-types';
+import { type Line } from '../../utils/equipment-types';
 import { type UniformValues } from 'maplibre-gl';
 
 const DEFAULT_COLOR = [0, 0, 0, 255] satisfies Color;
@@ -28,8 +28,6 @@ export type Arrow = {
     line: Line;
     distance: number;
 };
-
-export type LayerDataSource<DataType> = DataType[];
 
 type _ArrowLayerProps = {
     data: Arrow[];
@@ -90,8 +88,10 @@ type LineAttributes = {
  *         minParallelOffset: min pixel distance
  */
 export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
-    static layerName = 'ArrowLayer';
-    static defaultProps = defaultProps;
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
+    static readonly layerName = 'ArrowLayer';
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
+    static readonly defaultProps = defaultProps;
 
     declare state: {
         linePositionsTexture: Texture;
@@ -127,11 +127,11 @@ export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
             throw new Error('Arrow layer not supported on this browser');
         }
 
-        const maxTextureSize = gl.getParameter(GL.MAX_TEXTURE_SIZE);
+        // @ts-expect-error TODO missing required properties: linePositionsTexture, lineDistancesTexture, lineAttributes, timestamp, stop
         this.state = {
-            maxTextureSize,
+            maxTextureSize: gl.getParameter(GL.MAX_TEXTURE_SIZE) as number,
             webgl2: isWebGL2(gl),
-        } as this['state'];
+        };
 
         this.getAttributeManager()?.addInstanced({
             instanceSize: {
@@ -300,8 +300,7 @@ export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
             if (positions.length > 0) {
                 positions.forEach((position: Position) => {
                     // fill line positions texture
-                    linePositionsTextureData.push(position[0]);
-                    linePositionsTextureData.push(position[1]);
+                    linePositionsTextureData.push(position[0], position[1]);
                     linePointCount++;
                 });
                 if (line.cumulativeDistances) {

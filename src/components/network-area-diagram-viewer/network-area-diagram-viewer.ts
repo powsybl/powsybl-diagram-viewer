@@ -5,12 +5,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Point, SVG, ViewBoxLike, Svg } from '@svgdotjs/svg.js';
+import { Point, SVG, type ViewBoxLike, type Svg } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
 import * as DiagramUtils from './diagram-utils';
 import { SvgParameters } from './svg-parameters';
 import { LayoutParameters } from './layout-parameters';
-import { DiagramMetadata, EdgeMetadata, BusNodeMetadata, NodeMetadata, TextNodeMetadata } from './diagram-metadata';
+import type {
+    DiagramMetadata,
+    EdgeMetadata,
+    BusNodeMetadata,
+    NodeMetadata,
+    TextNodeMetadata,
+} from './diagram-metadata';
 import { CSS_DECLARATION, CSS_RULE, THRESHOLD_STATUS, DEFAULT_DYNAMIC_CSS_RULES } from './dynamic-css-utils';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
@@ -230,24 +236,20 @@ export class NetworkAreaDiagramViewer {
 
         // add events
         if (enableNodeInteraction && hasMetadata) {
-            this.svgDraw.on('mousedown', (e: Event) => {
+            this.svgDraw.on('mousedown', (e) => {
                 if ((e as MouseEvent).button == 0) {
                     this.onMouseLeftDown(e as MouseEvent);
                 }
             });
-            this.svgDraw.on('mousemove', (e: Event) => {
-                this.onMouseMove(e as MouseEvent);
-            });
-            this.svgDraw.on('mouseup mouseleave', (e: Event) => {
+            this.svgDraw.on('mousemove', (e) => this.onMouseMove(e as MouseEvent));
+            this.svgDraw.on('mouseup mouseleave', (e) => {
                 if ((e as MouseEvent).button == 0) {
                     this.onMouseLeftUpOrLeave(e as MouseEvent);
                 }
             });
         }
         if (hasMetadata) {
-            this.svgDraw.on('mouseover', (e: Event) => {
-                this.onHover(e as MouseEvent);
-            });
+            this.svgDraw.on('mouseover', (e) => this.onHover(e as MouseEvent));
         }
         this.svgDraw.on('panStart', function () {
             if (drawnSvg.parentElement != undefined) {
