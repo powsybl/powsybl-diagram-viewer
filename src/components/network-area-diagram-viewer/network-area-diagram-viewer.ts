@@ -12,9 +12,10 @@ import { SvgParameters } from './svg-parameters';
 import {
     CSS_DECLARATION,
     CSS_RULE,
-    CSS_RULE_TYPE,
     DEFAULT_DYNAMIC_CSS_RULES,
-    THRESHOLD_STATUS
+    isFunctionDrivenRule,
+    isThresholdDrivenRule,
+    THRESHOLD_STATUS,
 } from './dynamic-css-utils';
 import { LayoutParameters } from './layout-parameters';
 import { DiagramMetadata, EdgeMetadata, BusNodeMetadata, NodeMetadata, TextNodeMetadata } from './diagram-metadata';
@@ -1331,29 +1332,26 @@ export class NetworkAreaDiagramViewer {
 
     public initializeDynamicCssRules(maxDisplayedSize: number) {
         this.getDynamicCssRules().forEach((rule) => {
-            switch (rule.type) {
-                case CSS_RULE_TYPE.THRESHOLD_DRIVEN: {
-                    rule.thresholdStatus =
-                        maxDisplayedSize < rule.threshold ? THRESHOLD_STATUS.BELOW : THRESHOLD_STATUS.ABOVE;
-                    break;
-                }
-                case CSS_RULE_TYPE.FUNCTION_DRIVEN: {
-                    for (const [property, callbackFunction] of Object.entries(rule.cssDeclaration)) {
-                        rule.currentValue[property] = callbackFunction(property);
-                    }
+            if (isThresholdDrivenRule(rule)) {
+                rule.thresholdStatus =
+                    maxDisplayedSize < rule.threshold ? THRESHOLD_STATUS.BELOW : THRESHOLD_STATUS.ABOVE;
+            }
+            if (isFunctionDrivenRule(rule)) {
+                for (const [property, callbackFunction] of Object.entries(rule.cssDeclaration)) {
+                    rule.currentValue[property] = callbackFunction(maxDisplayedSize);
                 }
             }
         });
     }
 
     private getRuleToInject(rule: CSS_RULE) {
-        if (rule.type === CSS_RULE_TYPE.FUNCTION_DRIVEN) {
+        if (isFunctionDrivenRule(rule)) {
             return rule.currentValue;
         }
         return rule.thresholdStatus === THRESHOLD_STATUS.BELOW
             ? rule.belowThresholdCssDeclaration
             : rule.aboveThresholdCssDeclaration;
-    };
+    }
 
     public injectDynamicCssRules(htmlElementSvg: HTMLElement) {
         const rules = this.getDynamicCssRules()
@@ -1387,26 +1385,22 @@ export class NetworkAreaDiagramViewer {
         // We will check each dynamic css rule to see if we crossed a zoom threshold. If this is the case, we
         // update the rule's threshold status and trigger the CSS change in the SVG.
         this.getDynamicCssRules().forEach((rule) => {
-            switch (rule.type) {
-                case CSS_RULE_TYPE.THRESHOLD_DRIVEN: {
-                    if (rule.thresholdStatus === THRESHOLD_STATUS.ABOVE && maxDisplayedSize < rule.threshold) {
-                        rule.thresholdStatus = THRESHOLD_STATUS.BELOW;
-                        this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.belowThresholdCssDeclaration);
-                    } else if (rule.thresholdStatus === THRESHOLD_STATUS.BELOW && maxDisplayedSize >= rule.threshold) {
-                        rule.thresholdStatus = THRESHOLD_STATUS.ABOVE;
-                        this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.aboveThresholdCssDeclaration);
-                    }
-                    break;
+            if (isThresholdDrivenRule(rule)) {
+                if (rule.thresholdStatus === THRESHOLD_STATUS.ABOVE && maxDisplayedSize < rule.threshold) {
+                    rule.thresholdStatus = THRESHOLD_STATUS.BELOW;
+                    this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.belowThresholdCssDeclaration);
+                } else if (rule.thresholdStatus === THRESHOLD_STATUS.BELOW && maxDisplayedSize >= rule.threshold) {
+                    rule.thresholdStatus = THRESHOLD_STATUS.ABOVE;
+                    this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.aboveThresholdCssDeclaration);
                 }
-                case CSS_RULE_TYPE.FUNCTION_DRIVEN: {
-                    for (const [property, callbackFunction] of Object.entries(rule.cssDeclaration)) {
-                        const valueToUpdate = callbackFunction(property);
-                        if (valueToUpdate !== rule.currentValue[property]) {
-                            rule.currentValue[property] = valueToUpdate;
-                            this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.currentValue);
-                        }
+            }
+            if (isFunctionDrivenRule(rule)) {
+                for (const [property, callbackFunction] of Object.entries(rule.cssDeclaration)) {
+                    const valueToUpdate = callbackFunction(maxDisplayedSize);
+                    if (valueToUpdate !== rule.currentValue[property]) {
+                        rule.currentValue[property] = valueToUpdate;
+                        this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.currentValue);
                     }
-                    break;
                 }
             }
         });
