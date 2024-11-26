@@ -5,24 +5,35 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Equipment, EQUIPMENT_TYPES, Line, Substation, VoltageLevel } from '../utils/equipment-types';
+import {
+    Equipment as EquipmentEq,
+    EQUIPMENT_TYPES,
+    Line as LineEq,
+    Substation as SubstationEq,
+    VoltageLevel as VoltageLevelEq,
+} from '../utils/equipment-types';
 
-const elementIdIndexer = <T extends Equipment>(map: Map<string, T>, element: T) => {
+export type Equipment = unknown;
+export type Line = Equipment & unknown;
+export type Substation = Equipment & unknown;
+export type VoltageLevel = unknown;
+
+const elementIdIndexer = <T extends EquipmentEq>(map: Map<string, T>, element: T) => {
     map.set(element.id, element);
     return map;
 };
 
 export class MapEquipments {
-    substations: Substation[] = [];
-    substationsById = new Map<string, Substation>();
-    lines: Line[] = [];
-    linesById = new Map<string, Line>();
-    tieLines: Line[] = [];
-    tieLinesById = new Map<string, Line>();
-    hvdcLines: Line[] = [];
-    hvdcLinesById = new Map<string, Line>();
-    voltageLevels: VoltageLevel[] = [];
-    voltageLevelsById = new Map<string, VoltageLevel>();
+    substations: SubstationEq[] = [];
+    substationsById = new Map<string, SubstationEq>();
+    lines: LineEq[] = [];
+    linesById = new Map<string, LineEq>();
+    tieLines: LineEq[] = [];
+    tieLinesById = new Map<string, LineEq>();
+    hvdcLines: LineEq[] = [];
+    hvdcLinesById = new Map<string, LineEq>();
+    voltageLevels: VoltageLevelEq[] = [];
+    voltageLevelsById = new Map<string, VoltageLevelEq>();
     nominalVoltages: number[] = [];
 
     intlRef = undefined;
@@ -36,17 +47,17 @@ export class MapEquipments {
         return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     }
 
-    checkAndGetValues(equipments: Equipment[]) {
+    checkAndGetValues(equipments: EquipmentEq[]) {
         return equipments ? equipments : [];
     }
 
-    completeSubstationsInfos(equipementsToIndex: Substation[]) {
+    completeSubstationsInfos(equipementsToIndex: SubstationEq[]) {
         const nominalVoltagesSet = new Set(this.nominalVoltages);
         if (equipementsToIndex?.length === 0) {
             this.substationsById = new Map();
             this.voltageLevelsById = new Map();
         }
-        const substations: Substation[] = equipementsToIndex?.length > 0 ? equipementsToIndex : this.substations;
+        const substations: SubstationEq[] = equipementsToIndex?.length > 0 ? equipementsToIndex : this.substations;
 
         substations.forEach((substation) => {
             // sort voltage levels inside substations by nominal voltage
@@ -68,7 +79,7 @@ export class MapEquipments {
         this.nominalVoltages = Array.from(nominalVoltagesSet).sort((a, b) => b - a);
     }
 
-    updateEquipments<T extends Equipment>(currentEquipments: T[], newEquipements: T[]) {
+    updateEquipments<T extends EquipmentEq>(currentEquipments: T[], newEquipements: T[]) {
         // replace current modified equipments
         currentEquipments.forEach((equipment1, index) => {
             const found = newEquipements.filter((equipment2) => equipment2.id === equipment1.id);
@@ -85,7 +96,7 @@ export class MapEquipments {
         return [...currentEquipments, ...eqptsToAdd];
     }
 
-    updateSubstations(substations: Substation[], fullReload: boolean) {
+    updateSubstations(substations: SubstationEq[], fullReload: boolean) {
         if (fullReload) {
             this.substations = [];
         }
@@ -120,7 +131,7 @@ export class MapEquipments {
         this.completeSubstationsInfos(fullReload ? [] : substations);
     }
 
-    completeLinesInfos(equipementsToIndex: Line[]) {
+    completeLinesInfos(equipementsToIndex: LineEq[]) {
         if (equipementsToIndex?.length > 0) {
             equipementsToIndex.forEach((line) => {
                 this.linesById?.set(line.id, line);
@@ -130,7 +141,7 @@ export class MapEquipments {
         }
     }
 
-    completeTieLinesInfos(equipementsToIndex: Line[]) {
+    completeTieLinesInfos(equipementsToIndex: LineEq[]) {
         if (equipementsToIndex?.length > 0) {
             equipementsToIndex.forEach((tieLine) => {
                 this.tieLinesById?.set(tieLine.id, tieLine);
@@ -140,7 +151,7 @@ export class MapEquipments {
         }
     }
 
-    updateLines(lines: Line[], fullReload: boolean) {
+    updateLines(lines: LineEq[], fullReload: boolean) {
         if (fullReload) {
             this.lines = [];
         }
@@ -148,7 +159,7 @@ export class MapEquipments {
         this.completeLinesInfos(fullReload ? [] : lines);
     }
 
-    updateTieLines(tieLines: Line[], fullReload: boolean) {
+    updateTieLines(tieLines: LineEq[], fullReload: boolean) {
         if (fullReload) {
             this.tieLines = [];
         }
@@ -156,7 +167,7 @@ export class MapEquipments {
         this.completeTieLinesInfos(fullReload ? [] : tieLines);
     }
 
-    updateHvdcLines(hvdcLines: Line[], fullReload: boolean) {
+    updateHvdcLines(hvdcLines: LineEq[], fullReload: boolean) {
         if (fullReload) {
             this.hvdcLines = [];
         }
@@ -164,7 +175,7 @@ export class MapEquipments {
         this.completeHvdcLinesInfos(fullReload ? [] : hvdcLines);
     }
 
-    completeHvdcLinesInfos(equipementsToIndex: Line[]) {
+    completeHvdcLinesInfos(equipementsToIndex: LineEq[]) {
         if (equipementsToIndex?.length > 0) {
             equipementsToIndex.forEach((hvdcLine) => {
                 this.hvdcLinesById?.set(hvdcLine.id, hvdcLine);
@@ -174,7 +185,7 @@ export class MapEquipments {
         }
     }
 
-    removeBranchesOfVoltageLevel(branchesList: Line[], voltageLevelId: string) {
+    removeBranchesOfVoltageLevel(branchesList: LineEq[], voltageLevelId: string) {
         const remainingLines = branchesList.filter(
             (l) => l.voltageLevelId1 !== voltageLevelId && l.voltageLevelId2 !== voltageLevelId
         );
