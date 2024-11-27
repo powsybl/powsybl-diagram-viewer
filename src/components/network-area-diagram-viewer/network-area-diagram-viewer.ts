@@ -452,7 +452,7 @@ export class NetworkAreaDiagramViewer {
     private onDragEnd(newPosition: Point, callMoveNodeCallback: boolean, callMoveTextNodeCallback: boolean) {
         if (this.textNodeSelected) {
             this.dragVoltageLevelText(newPosition);
-            this.updateTextNodeMetadataCallCallback(newPosition, callMoveTextNodeCallback);
+            this.updateTextNodeMetadataCallback(newPosition, callMoveTextNodeCallback);
         } else {
             this.dragVoltageLevelNode(newPosition);
             this.updateNodeMetadataCallCallback(newPosition, callMoveNodeCallback);
@@ -1240,7 +1240,7 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private updateTextNodeMetadataCallCallback(mousePosition: Point, callMoveTextNodeCallback: boolean) {
+    private updateTextNodeMetadataCallback(mousePosition: Point, callMoveTextNodeCallback: boolean) {
         if (this.onMoveTextNodeCallback != null) {
             // get from metadata node connected to moved text node
             const node: NodeMetadata | undefined = this.diagramMetadata?.nodes.find(
