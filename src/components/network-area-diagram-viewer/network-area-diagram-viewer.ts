@@ -412,6 +412,7 @@ export class NetworkAreaDiagramViewer {
         );
 
         if (edge) {
+            this.ctm = null;
             const mousePosition = this.getMousePosition(mouseEvent);
             const equipmentId = edge?.equipmentId ?? '';
             const edgeType = DiagramUtils.getStringEdgeType(edge) ?? '';
