@@ -7,6 +7,7 @@
 
 import { Point, SVG, type Svg, type ViewBoxLike } from '@svgdotjs/svg.js';
 import '@svgdotjs/svg.panzoom.js';
+import { EQUIPMENT_TYPES } from '../network-map-viewer/utils/equipment-types';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
@@ -88,7 +89,7 @@ export type OnBreakerCallbackType = (breakerId: string, open: boolean, switchEle
 
 export type OnFeederCallbackType = (
     equipmentId: string,
-    equipmentType: string | null,
+    equipmentType: EQUIPMENT_TYPES | null,
     svgId: string,
     x: number,
     y: number
@@ -96,12 +97,10 @@ export type OnFeederCallbackType = (
 
 export type OnBusCallbackType = (busId: string, svgId: string, x: number, y: number) => void;
 
-export type OnToggleSldHoverCallbackType = (
-    hovered: boolean,
-    anchorEl: EventTarget | null,
-    equipmentId: string,
-    equipmentType: string
-) => void;
+export type OnToggleSldHoverCallbackType = {
+    (hovered: true, anchorEl: EventTarget | null, equipmentId: string, equipmentType: EQUIPMENT_TYPES): void;
+    (hovered: false, anchorEl: null, equipmentId: null, equipmentType: null): void;
+};
 
 export class SingleLineDiagramViewer {
     container: HTMLElement;
@@ -559,7 +558,13 @@ export class SingleLineDiagramViewer {
                     svgText.addEventListener('contextmenu', (event) => {
                         event.preventDefault();
                         event.stopPropagation();
-                        this.onFeederCallback?.(feeder.equipmentId, feeder.componentType, feeder.id, event.x, event.y);
+                        this.onFeederCallback?.(
+                            feeder.equipmentId,
+                            feeder.componentType as EQUIPMENT_TYPES,
+                            feeder.id,
+                            event.x,
+                            event.y
+                        );
                     });
                 }
             });
@@ -578,13 +583,11 @@ export class SingleLineDiagramViewer {
             svgEquipment?.addEventListener('mouseover', (event) => {
                 const equipmentType =
                     equipment.componentType === 'PHASE_SHIFT_TRANSFORMER'
-                        ? 'TWO_WINDINGS_TRANSFORMER'
-                        : equipment.componentType;
+                        ? EQUIPMENT_TYPES.TWO_WINDINGS_TRANSFORMER
+                        : (equipment.componentType as EQUIPMENT_TYPES);
                 this.onToggleHoverCallback?.(true, event.currentTarget, equipment.equipmentId, equipmentType);
             });
-            svgEquipment?.addEventListener('mouseout', () => {
-                this.onToggleHoverCallback?.(false, null, '', '');
-            });
+            svgEquipment?.addEventListener('mouseout', () => this.onToggleHoverCallback?.(false, null, null, null));
         });
     }
 
