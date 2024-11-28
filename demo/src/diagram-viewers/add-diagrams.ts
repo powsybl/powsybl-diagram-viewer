@@ -24,16 +24,16 @@ import SldSvgSubExampleMeta from './data/sld-sub-example-meta.json';
 
 import {
     NetworkAreaDiagramViewer,
-    SingleLineDiagramViewer,
-    OnToggleSldHoverCallbackType,
     OnBreakerCallbackType,
     OnBusCallbackType,
     OnFeederCallbackType,
-    OnNextVoltageCallbackType,
     OnMoveNodeCallbackType,
     OnMoveTextNodeCallbackType,
+    OnNextVoltageCallbackType,
     OnSelectNodeCallbackType,
     OnToggleNadHoverCallbackType,
+    OnToggleSldHoverCallbackType,
+    SingleLineDiagramViewer,
 } from '../../../src';
 
 export const addNadToDemo = () => {
@@ -303,57 +303,35 @@ export const addSldToDemo = () => {
         });
 };
 
-const handleNextVL: OnNextVoltageCallbackType = (id: string) => {
-    const msg = 'Clicked on navigation arrow, dest VL is ' + id;
-    console.log(msg);
+const handleNextVL: OnNextVoltageCallbackType = (id) => {
+    console.log(`Clicked on navigation arrow, dest VL is ${id}`);
 };
 
 const handleSwitch: OnBreakerCallbackType = (id, switch_status, element) => {
-    const msg =
-        'Clicked on switch: ' +
-        id +
-        ', switch_status: ' +
-        (switch_status ? 'close' : 'open') +
-        '. elementId: ' +
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO no "id" prop existing
-        (element as any).id;
-    console.log(msg);
+    console.log(
+        `Clicked on switch: ${id}, switch_status: ${switch_status ? 'close' : 'open'}. elementId: ${
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO no "id" prop existing
+            (element as any).id
+        }`
+    );
 };
 
 const handleFeeder: OnFeederCallbackType = (id, feederType, svgId, x, y) => {
-    const msg =
-        'Clicked on feeder: ' + id + ', feeder type: ' + feederType + ', svgId: ' + svgId + 'x: ' + x + ', y: ' + y;
-    console.log(msg);
+    console.log(`Clicked on feeder: ${id}, feeder type: ${feederType}, svgId: ${svgId}x: ${x}, y: ${y}`);
 };
 
 const handleBus: OnBusCallbackType = (id, svgId, x, y) => {
-    const msg = 'Clicked on bus: ' + id + ', svgId: ' + svgId + 'x: ' + x + ', y: ' + y;
-    console.log(msg);
+    console.log(`Clicked on bus: ${id}, svgId: ${svgId}x: ${x}, y: ${y}`);
 };
 
 const handleToggleSldHover: OnToggleSldHoverCallbackType = (hovered, anchorEl, equipmentId, equipmentType) => {
     if (hovered) {
-        const msg = 'Hovers on equipment: ' + equipmentId + ', equipmentType: ' + equipmentType;
-        console.log(msg);
+        console.log(`Hovers on equipment: ${equipmentId}, equipmentType: ${equipmentType}`);
     }
 };
 
 const handleNodeMove: OnMoveNodeCallbackType = (equipmentId, nodeId, x, y, xOrig, yOrig) => {
-    const msg =
-        'Node ' +
-        nodeId +
-        ' equipment ' +
-        equipmentId +
-        ' moved from [' +
-        xOrig +
-        ', ' +
-        yOrig +
-        '] to [' +
-        x +
-        ', ' +
-        y +
-        ']';
-    console.log(msg);
+    console.log(`Node ${nodeId} equipment ${equipmentId} moved from [${xOrig}, ${yOrig}] to [${x}, ${y}]`);
 };
 
 const handleTextNodeMove: OnMoveTextNodeCallbackType = (
@@ -369,49 +347,19 @@ const handleTextNodeMove: OnMoveTextNodeCallbackType = (
     connectionShiftXOrig,
     connectionShiftYOrig
 ) => {
-    const msg =
-        'TextNode ' +
-        textNodeId +
-        ' Node ' +
-        nodeId +
-        ' equipment ' +
-        equipmentId +
-        ' position shift changed from [' +
-        shiftXOrig +
-        ', ' +
-        shiftYOrig +
-        '] to [' +
-        shiftX +
-        ', ' +
-        shiftY +
-        '] connection shift changed from [' +
-        connectionShiftXOrig +
-        ', ' +
-        connectionShiftYOrig +
-        '] to [' +
-        connectionShiftX +
-        ', ' +
-        connectionShiftY +
-        ']';
-    console.log(msg);
+    console.log(
+        `TextNode ${textNodeId} Node ${nodeId} equipment ${equipmentId} position shift changed from [${shiftXOrig}, ${shiftYOrig}] to [${shiftX}, ${shiftY}] connection shift changed from [${connectionShiftXOrig}, ${connectionShiftYOrig}] to [${connectionShiftX}, ${connectionShiftY}]`
+    );
 };
 
 const handleNodeSelect: OnSelectNodeCallbackType = (equipmentId, nodeId) => {
-    const msg = 'Node ' + nodeId + ' equipment ' + equipmentId + ' selected';
-    console.log(msg);
+    console.log(`Node ${nodeId} equipment ${equipmentId} selected`);
 };
 
 const handleToggleNadHover: OnToggleNadHoverCallbackType = (hovered, mousePosition, equipmentId, equipmentType) => {
     if (hovered) {
-        const msg =
-            'Hovers on equipment: ' +
-            equipmentId +
-            ', equipmentType: ' +
-            equipmentType +
-            ', mousePosition : x =' +
-            mousePosition?.x +
-            ', y=' +
-            mousePosition?.y;
-        console.log(msg);
+        console.log(
+            `Hovers on equipment: ${equipmentId}, equipmentType: ${equipmentType}, mousePosition : x =${mousePosition?.x}, y=${mousePosition?.y}`
+        );
     }
 };

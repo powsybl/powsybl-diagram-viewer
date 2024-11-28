@@ -61,13 +61,9 @@ export default function App() {
     const mapEquipments = new DemoMapEquipments(smapdata, lmapdata);
 
     useEffect(() => {
-        const handleContextmenu = (e: MouseEvent) => {
-            e.preventDefault();
-        };
+        const handleContextmenu = (e: MouseEvent) => e.preventDefault();
         document.addEventListener('contextmenu', handleContextmenu);
-        return () => {
-            document.removeEventListener('contextmenu', handleContextmenu);
-        };
+        return () => document.removeEventListener('contextmenu', handleContextmenu);
     }, []);
 
     const networkMapRef = useRef<NetworkMapRef>(null);
@@ -93,9 +89,7 @@ export default function App() {
                             arrowsZoomThreshold={ARROWS_ZOOM_THRESHOLD}
                             initialZoom={INITIAL_ZOOM}
                             useName={useName}
-                            onSubstationClick={(vlId) => {
-                                console.log('# OpenVoltageLevel: ' + vlId);
-                            }}
+                            onSubstationClick={(vlId) => console.log('# OpenVoltageLevel: ' + vlId)}
                             onSubstationClickChooseVoltageLevel={(idSubstation, x, y) =>
                                 console.log(
                                     `# Choose Voltage Level for substation: ${idSubstation}  at coordinates (${x}, ${y})`
@@ -105,19 +99,19 @@ export default function App() {
                                 showEquipmentMenu(equipment, x, y, 'substation')
                             }
                             onLineMenuClick={(equipment, x, y) => showEquipmentMenu(equipment, x, y, 'line')}
-                            onVoltageLevelMenuClick={(equipment, x, y) => {
+                            onVoltageLevelMenuClick={(equipment, x, y) =>
                                 console.log(
                                     `# VoltageLevel menu click: ${JSON.stringify(
                                         equipment
                                     )} at coordinates (${x}, ${y})`
-                                );
-                            }}
+                                )
+                            }
                             mapLibrary={'cartonolabel'}
                             mapTheme={'dark'}
                             filteredNominalVoltages={filteredNominalVoltages}
-                            onDrawPolygonModeActive={(active) => {
-                                console.log('polygon drawing mode active: ', active ? 'active' : 'inactive');
-                            }}
+                            onDrawPolygonModeActive={(active) =>
+                                console.log('polygon drawing mode active: ', active ? 'active' : 'inactive')
+                            }
                             onPolygonChanged={() => {
                                 console.log(
                                     'Selected Substations: ',
