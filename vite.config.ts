@@ -62,7 +62,6 @@ export default defineConfig((config) => ({
                     '@emotion/react': 'EmotionReact',
                     '@mui/icons-material': 'MuiIconsMaterial',
                     '@mui/material': 'MuiMaterial',
-                    '@mui/system': 'MuiSystem',
                     '@luma.gl/constants': 'LumaGlConstants',
                     '@luma.gl/core': 'LumaGlCore',
                     '@svgdotjs/svg.js': 'SvgJs',
