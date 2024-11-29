@@ -422,6 +422,8 @@ export class NetworkAreaDiagramViewer {
     }
 
     private onMouseLeftUpOrLeave(event: MouseEvent) {
+        // We call on hover to update hoverable element
+        this.onHover(event);
         // check if I moved or selected an element
         if (this.draggedElement) {
             // moving node
