@@ -422,9 +422,7 @@ export class NetworkAreaDiagramViewer {
     }
 
     private onMouseLeftUpOrLeave(event: MouseEvent) {
-        if (this.onToggleHoverCallback != null) {
-            this.onToggleHoverCallback(false, null, '', '');
-        }
+        this.onToggleHoverCallback?.(false, null, '', '');
         // check if I moved or selected an element
         if (this.draggedElement) {
             // moving node
