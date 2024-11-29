@@ -7,7 +7,6 @@
  */
 
 import * as DiagramUtils from './diagram-utils';
-//import * as TestUtils from './test-utils.test';
 import { EdgeMetadata, BusNodeMetadata, NodeMetadata, TextNodeMetadata } from './diagram-metadata';
 import { SVG, Point } from '@svgdotjs/svg.js';
 
