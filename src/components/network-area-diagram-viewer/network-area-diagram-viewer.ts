@@ -238,7 +238,6 @@ export class NetworkAreaDiagramViewer {
             this.svgDraw.on('mousemove', (e: Event) => {
                 this.onMouseMove(e as MouseEvent);
             });
-
             this.svgDraw.on('mouseup mouseleave', (e: Event) => {
                 if ((e as MouseEvent).button == 0) {
                     this.onMouseLeftUpOrLeave(e as MouseEvent);
