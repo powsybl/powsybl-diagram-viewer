@@ -5,12 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { CompositeLayer, TextLayer } from 'deck.gl';
+import { Color, CompositeLayer, LayerContext, TextLayer, UpdateParameters } from 'deck.gl';
 import ScatterplotLayerExt from './layers/scatterplot-layer-ext';
 
 import { SUBSTATION_RADIUS, SUBSTATION_RADIUS_MAX_PIXEL, SUBSTATION_RADIUS_MIN_PIXEL } from './constants';
+import { Substation, VoltageLevel } from '../utils/equipment-types';
+import { MapEquipments } from './map-equipments';
+import { GeoData } from './geo-data';
 
-const voltageLevelNominalVoltageIndexer = (map, voltageLevel) => {
+const voltageLevelNominalVoltageIndexer = (map: Map<number, VoltageLevel[]>, voltageLevel: VoltageLevel) => {
     let list = map.get(voltageLevel.nominalV);
     if (!list) {
         list = [];
@@ -20,9 +23,31 @@ const voltageLevelNominalVoltageIndexer = (map, voltageLevel) => {
     return map;
 };
 
-export class SubstationLayer extends CompositeLayer {
-    initializeState() {
-        super.initializeState();
+type MetaVoltageLevel = {
+    nominalVoltageIndex: number;
+    voltageLevels: VoltageLevel[];
+};
+
+type MetaVoltageLevelsByNominalVoltage = {
+    nominalV: number;
+    metaVoltageLevels: MetaVoltageLevel[];
+};
+
+export type SubstationLayerProps = {
+    data: Substation[];
+    network: MapEquipments;
+    geoData: GeoData;
+    getNominalVoltageColor: (nominalV: number) => Color;
+    filteredNominalVoltages: number[] | null;
+    labelsVisible: boolean;
+    labelColor: Color;
+    labelSize: number;
+    getNameOrId: (infos: Substation) => string | null;
+};
+
+export class SubstationLayer extends CompositeLayer<SubstationLayerProps> {
+    initializeState(context: LayerContext) {
+        super.initializeState(context);
 
         this.state = {
             compositeData: [],
@@ -30,16 +55,20 @@ export class SubstationLayer extends CompositeLayer {
         };
     }
 
-    updateState({ props, oldProps, changeFlags }) {
+    updateState({
+        props: { data, filteredNominalVoltages, geoData, getNameOrId, network },
+        oldProps,
+        changeFlags,
+    }: UpdateParameters<this>) {
         if (changeFlags.dataChanged) {
-            let metaVoltageLevelsByNominalVoltage = new Map();
+            const metaVoltageLevelsByNominalVoltage = new Map();
 
-            if (props.network != null && props.geoData != null) {
+            if (network != null && geoData != null) {
                 // create meta voltage levels
                 // a meta voltage level is made of:
                 //   - a list of voltage level that belong to same substation and with same nominal voltage
                 //   - index of the voltage levels nominal voltage in the substation nominal voltage list
-                props.data.forEach((substation) => {
+                data.forEach((substation) => {
                     // index voltage levels of this substation by its nominal voltage (this is because we might
                     // have several voltage levels with the same nominal voltage in the same substation)
                     const voltageLevelsByNominalVoltage = substation.voltageLevels.reduce(
@@ -88,18 +117,17 @@ export class SubstationLayer extends CompositeLayer {
 
         if (
             changeFlags.dataChanged ||
-            props.getNameOrId !== oldProps.getNameOrId ||
-            props.filteredNominalVoltages !== oldProps.filteredNominalVoltages
+            getNameOrId !== oldProps.getNameOrId ||
+            filteredNominalVoltages !== oldProps.filteredNominalVoltages
         ) {
-            let substationsLabels = props.data;
+            let substationsLabels = data;
 
-            if (props.network != null && props.geoData != null && props.filteredNominalVoltages != null) {
+            if (network != null && geoData != null && filteredNominalVoltages != null) {
                 // we construct the substations where there is at least one voltage level with a nominal voltage
                 // present in the filteredVoltageLevels property, in order to handle correctly the substations labels visibility
                 substationsLabels = substationsLabels.filter(
                     (substation) =>
-                        substation.voltageLevels.find((v) => props.filteredNominalVoltages.includes(v.nominalV)) !==
-                        undefined
+                        substation.voltageLevels.find((v) => filteredNominalVoltages.includes(v.nominalV)) !== undefined
                 );
             }
 
@@ -111,18 +139,19 @@ export class SubstationLayer extends CompositeLayer {
         const layers = [];
 
         // substations : create one layer per nominal voltage, starting from higher to lower nominal voltage
-        this.state.metaVoltageLevelsByNominalVoltage.forEach((e) => {
+        this.state.metaVoltageLevelsByNominalVoltage.forEach((e: MetaVoltageLevelsByNominalVoltage) => {
             const substationsLayer = new ScatterplotLayerExt(
                 this.getSubLayerProps({
                     id: 'NominalVoltage' + e.nominalV,
                     data: e.metaVoltageLevels,
                     radiusMinPixels: SUBSTATION_RADIUS_MIN_PIXEL,
-                    getRadiusMaxPixels: (metaVoltageLevel) =>
+                    getRadiusMaxPixels: (metaVoltageLevel: MetaVoltageLevel) =>
                         SUBSTATION_RADIUS_MAX_PIXEL * (metaVoltageLevel.nominalVoltageIndex + 1),
-                    getPosition: (metaVoltageLevel) =>
+                    getPosition: (metaVoltageLevel: MetaVoltageLevel) =>
                         this.props.geoData.getSubstationPosition(metaVoltageLevel.voltageLevels[0].substationId),
                     getFillColor: this.props.getNominalVoltageColor(e.nominalV),
-                    getRadius: (voltageLevel) => SUBSTATION_RADIUS * (voltageLevel.nominalVoltageIndex + 1),
+                    getRadius: (voltageLevel: MetaVoltageLevel) =>
+                        SUBSTATION_RADIUS * (voltageLevel.nominalVoltageIndex + 1),
                     visible:
                         !this.props.filteredNominalVoltages || this.props.filteredNominalVoltages.includes(e.nominalV),
                     updateTriggers: {
@@ -138,8 +167,8 @@ export class SubstationLayer extends CompositeLayer {
             this.getSubLayerProps({
                 id: 'Label',
                 data: this.state.substationsLabels,
-                getPosition: (substation) => this.props.geoData.getSubstationPosition(substation.id),
-                getText: (substation) => this.props.getNameOrId(substation),
+                getPosition: (substation: Substation) => this.props.geoData.getSubstationPosition(substation.id),
+                getText: (substation: Substation) => this.props.getNameOrId(substation),
                 getColor: this.props.labelColor,
                 fontFamily: 'Roboto',
                 getSize: this.props.labelSize,
