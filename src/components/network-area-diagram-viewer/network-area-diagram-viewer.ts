@@ -238,6 +238,7 @@ export class NetworkAreaDiagramViewer {
             this.svgDraw.on('mousemove', (e: Event) => {
                 this.onMouseMove(e as MouseEvent);
             });
+
             this.svgDraw.on('mouseup mouseleave', (e: Event) => {
                 if ((e as MouseEvent).button == 0) {
                     this.onMouseLeftUpOrLeave(e as MouseEvent);
@@ -247,6 +248,10 @@ export class NetworkAreaDiagramViewer {
         if (hasMetadata) {
             this.svgDraw.on('mouseover', (e: Event) => {
                 this.onHover(e as MouseEvent);
+            });
+
+            this.svgDraw.on('mouseout', () => {
+                this.onToggleHoverCallback?.(false, null, '', '');
             });
         }
         this.svgDraw.on('panStart', function () {
@@ -422,7 +427,6 @@ export class NetworkAreaDiagramViewer {
     }
 
     private onMouseLeftUpOrLeave(event: MouseEvent) {
-        this.onToggleHoverCallback?.(false, null, '', '');
         // check if I moved or selected an element
         if (this.draggedElement) {
             // moving node
