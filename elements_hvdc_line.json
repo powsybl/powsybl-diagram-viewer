@@ -1,0 +1,55 @@
+[
+  {
+    "id": "BAIXA9.STLL1",
+    "voltageLevelId1": "BAIXAP7",
+    "voltageLevelId2": ".S.LL 7",
+    "terminal1Connected": true,
+    "terminal2Connected": true,
+    "p1": 318.2552185058594,
+    "p2": -311.1725769042969,
+    "hvdcType": "VSC"
+  },
+  {
+    "id": "BAIXA9.STLL2",
+    "voltageLevelId1": "BAIXAP7",
+    "voltageLevelId2": ".S.LL 7",
+    "terminal1Connected": true,
+    "terminal2Connected": true,
+    "p1": 322.7771911621094,
+    "p2": -315.59222412109375,
+    "hvdcType": "VSC"
+  },
+  {
+    "id": "PEUP59.CHER1",
+    "voltageLevelId1": "PEUP5P7",
+    "voltageLevelId2": ".CHER 7",
+    "terminal1Connected": false,
+    "terminal2Connected": true,
+    "hvdcType": "VSC"
+  },
+  {
+    "id": "G.ILE9.PIO51",
+    "voltageLevelId1": "G.ILEP7",
+    "voltageLevelId2": ".PIO5 7",
+    "terminal1Connected": false,
+    "terminal2Connected": true,
+    "hvdcType": "VSC"
+  },
+  {
+    "id": "TOURB9.DAED1",
+    "voltageLevelId1": "TOURBP7",
+    "voltageLevelId2": ".CHIL 7",
+    "terminal1Connected": true,
+    "terminal2Connected": true,
+    "p1": -775.1390991210938,
+    "hvdcType": "VSC"
+  },
+  {
+    "id": "G.ILE9.PIO52",
+    "voltageLevelId1": "G.ILEP7",
+    "voltageLevelId2": ".PIO5 7",
+    "terminal1Connected": false,
+    "terminal2Connected": true,
+    "hvdcType": "VSC"
+  }
+]

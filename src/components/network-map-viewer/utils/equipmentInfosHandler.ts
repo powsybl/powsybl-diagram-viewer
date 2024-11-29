@@ -9,7 +9,7 @@ import { useCallback } from 'react';
 
 type EquipmentInfos = {
     id: string;
-    name: string | null;
+    name?: string;
 };
 
 export function useNameOrId(useName: boolean) {

@@ -8,21 +8,24 @@
 import { computeDestinationPoint, getGreatCircleBearing, getRhumbLineBearing } from 'geolib';
 import cheapRuler from 'cheap-ruler';
 import { ArrowDirection } from './layers/arrow-layer';
-import { Line, LonLat } from '../utils/equipment-types';
+import { type LonLat, type MapAnyLine } from '../utils/equipment-types';
 import { MapEquipments } from './map-equipments';
+import { type Coordinate, Country } from '../../../powsybl';
 
-export type Coordinate = {
-    lon: number;
-    lat: number;
-};
+export type GeoDataEquipment = { id: string };
 
-export type SubstationPosition = {
-    id: string;
+// https://github.com/gridsuite/geo-data-server/blob/main/src/main/java/org/gridsuite/geodata/server/dto/SubstationGeoData.java
+export type GeoDataSubstation = GeoDataEquipment & {
+    country?: Country;
     coordinate: Coordinate;
 };
 
-export type LinePosition = {
-    id: string;
+// https://github.com/gridsuite/geo-data-server/blob/main/src/main/java/org/gridsuite/geodata/server/dto/LineGeoData.java
+export type GeoDataLine = GeoDataEquipment & {
+    country1?: Country;
+    country2?: Country;
+    substationStart?: string; // substationId
+    substationEnd?: string; // substationId
     coordinates: Coordinate[];
 };
 
@@ -35,7 +38,7 @@ export class GeoData {
         this.linePositionsById = linePositionsById;
     }
 
-    setSubstationPositions(positions: SubstationPosition[]) {
+    setSubstationPositions(positions: GeoDataSubstation[]) {
         // index positions by substation id
         this.substationPositionsById = positions.reduce(
             (acc, substation) => acc.set(substation.id, substation.coordinate),
@@ -43,7 +46,7 @@ export class GeoData {
         );
     }
 
-    updateSubstationPositions(substationIdsToUpdate: string[], fetchedPositions: SubstationPosition[]) {
+    updateSubstationPositions(substationIdsToUpdate: string[], fetchedPositions: GeoDataSubstation[]) {
         fetchedPositions.forEach((pos) => this.substationPositionsById.set(pos.id, pos.coordinate));
         // If a substation position is requested but not present in the fetched results, we delete its position.
         // It allows to cancel the position of a substation when the server can't situate it anymore after a network modification (for example a line deletion).
@@ -61,12 +64,12 @@ export class GeoData {
         return [position.lon, position.lat];
     }
 
-    setLinePositions(positions: LinePosition[]) {
+    setLinePositions(positions: GeoDataLine[]) {
         // index positions by line id
         this.linePositionsById = positions.reduce((map, line) => map.set(line.id, line.coordinates), new Map());
     }
 
-    updateLinePositions(lineIdsToUpdate: string[], fetchedPositions: LinePosition[]) {
+    updateLinePositions(lineIdsToUpdate: string[], fetchedPositions: GeoDataLine[]) {
         fetchedPositions.forEach((pos) => this.linePositionsById.set(pos.id, pos.coordinates));
         // If a line position is requested but not present in the fetched results, we delete its position.
         // For lines, this code is not really necessary as we draw lines in [(0, 0), (0, 0)] when it is connected to a (0, 0) point (see getLinePositions())
@@ -79,7 +82,7 @@ export class GeoData {
     /**
      * Get line positions always ordered from side 1 to side 2.
      */
-    getLinePositions(network: MapEquipments, line: Line, detailed = true): LonLat[] {
+    getLinePositions(network: MapEquipments, line: MapAnyLine, detailed = true): LonLat[] {
         const voltageLevel1 = network.getVoltageLevel(line.voltageLevelId1);
         if (!voltageLevel1) {
             throw new Error(`Voltage level side 1 '${line.voltageLevelId1}' not found`);

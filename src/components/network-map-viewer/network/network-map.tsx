@@ -6,7 +6,9 @@
  */
 
 import {
+    type ForwardedRef,
     forwardRef,
+    LegacyRef,
     memo,
     type ReactNode,
     useCallback,
@@ -17,7 +19,7 @@ import {
     useState,
 } from 'react';
 import { Box, Button, type ButtonProps, decomposeColor, useTheme } from '@mui/material';
-import { MapboxOverlay } from '@deck.gl/mapbox';
+import { MapboxOverlay, type MapboxOverlayProps } from '@deck.gl/mapbox';
 import { Replay } from '@mui/icons-material';
 import { FormattedMessage } from 'react-intl';
 import {
@@ -38,27 +40,31 @@ import { MapEquipments } from './map-equipments';
 import { SubstationLayer } from './substation-layer';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import LoaderWithOverlay from '../utils/loader-with-overlay';
-import mapboxgl from 'mapbox-gl';
+import mapboxgl, { type MapLayerMouseEvent as MapBoxLayerMouseEvent } from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import maplibregl from 'maplibre-gl';
+import maplibregl, { type MapLayerMouseEvent as MapLibreLayerMouseEvent } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import { type Feature, type Polygon } from 'geojson';
 import {
-    type EquimentLine,
-    type Equipment,
     EQUIPMENT_TYPES,
-    type HvdcLineEquimentLine,
-    isLine,
-    isSubstation,
-    isVoltageLevel,
-    type Line,
-    type LineEquimentLine,
-    type Substation,
-    type TieLineEquimentLine,
-    type VoltageLevel,
+    isMapLine,
+    isMapSubstation,
+    isMapVoltageLevel,
+    MapAnyLine,
+    type MapAnyLineWithType,
+    type MapEquipment,
+    type MapHvdcLine,
+    type MapHvdcLineWithType,
+    type MapLine,
+    type MapLineWithType,
+    type MapSubstation,
+    type MapTieLine,
+    type MapTieLineWithType,
+    type MapVoltageLevel,
 } from '../utils/equipment-types';
-import { PickingInfo } from 'deck.gl';
+import type { PickingInfo } from 'deck.gl';
+import type MapboxDraw from '@mapbox/mapbox-gl-draw';
 
 // MouseEvent.button https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
 const MOUSE_EVENT_BUTTON_LEFT = 0;
@@ -75,11 +81,11 @@ export enum DRAW_EVENT {
     DELETE = 0,
 }
 
-export type MenuClickFunction<T extends Equipment> = (equipment: T, eventX: number, eventY: number) => void;
+export type MenuClickFunction<T extends MapEquipment> = (equipment: T, eventX: number, eventY: number) => void;
 
 // Small boilerplate recommended by deckgl, to bridge to a react-map-gl control declaratively
 // see https://deck.gl/docs/api-reference/mapbox/mapbox-overlay#using-with-react-map-gl
-const DeckGLOverlay = forwardRef((props, ref) => {
+const DeckGLOverlay = forwardRef((props: MapboxOverlayProps, ref: ForwardedRef<MapboxOverlay>) => {
     const overlay = useControl(() => new MapboxOverlay(props));
     overlay.setProps(props);
     useImperativeHandle(ref, () => overlay, [overlay]);
@@ -88,7 +94,7 @@ const DeckGLOverlay = forwardRef((props, ref) => {
 
 type TooltipType = {
     equipmentId: string;
-    equipmentType: string;
+    equipmentType: EQUIPMENT_TYPES;
     pointerX: number;
     pointerY: number;
     visible: boolean;
@@ -146,7 +152,7 @@ function getPolygonFeatures(): Feature | Record<string, never> {
     return getMapDrawer()?.getAll()?.features[0] ?? {};
 }
 
-type NetworkMapProps = {
+export type NetworkMapProps = {
     disabled?: boolean;
     geoData?: GeoData | null;
     mapBoxToken?: string | null;
@@ -181,22 +187,22 @@ type NetworkMapProps = {
     visible?: boolean;
     shouldDisableToolTip?: boolean;
     locateSubStationZoomLevel?: number;
-    onHvdcLineMenuClick?: MenuClickFunction<Line>;
-    onLineMenuClick?: MenuClickFunction<Line>;
-    onTieLineMenuClick?: MenuClickFunction<Line>;
+    onHvdcLineMenuClick?: MenuClickFunction<MapHvdcLine>;
+    onLineMenuClick?: MenuClickFunction<MapLine>;
+    onTieLineMenuClick?: MenuClickFunction<MapTieLine>;
     onManualRefreshClick?: ButtonProps['onClick'];
     onSubstationClick?: (idVoltageLevel: string) => void;
     onSubstationClickChooseVoltageLevel?: (idSubstation: string, eventX: number, eventY: number) => void;
-    onSubstationMenuClick?: MenuClickFunction<Substation>;
-    onVoltageLevelMenuClick?: MenuClickFunction<VoltageLevel>;
+    onSubstationMenuClick?: MenuClickFunction<MapSubstation>;
+    onVoltageLevelMenuClick?: MenuClickFunction<MapVoltageLevel>;
     onDrawPolygonModeActive?: DrawControlProps['onDrawPolygonModeActive'];
     onPolygonChanged?: (polygoneFeature: Feature | Record<string, never>) => void;
     onDrawEvent?: (drawEvent: DRAW_EVENT) => void;
 };
 
 export type NetworkMapRef = {
-    getSelectedSubstations: () => Substation[];
-    getSelectedLines: () => Line[];
+    getSelectedSubstations: () => MapSubstation[];
+    getSelectedLines: () => MapAnyLine[];
     cleanDraw: () => void;
     getMapDrawer: () => MapboxDraw | undefined;
 };
@@ -251,10 +257,10 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
         const [showLineFlow, setShowLineFlow] = useState(true);
         const [showTooltip, setShowTooltip] = useState(true);
         const mapRef = useRef<MapRef>(null);
-        const deckRef = useRef<MapboxOverlay | null>();
+        const deckRef = useRef<MapboxOverlay>();
         const [centered, setCentered] = useState<Centered>(INITIAL_CENTERED);
         const lastViewStateRef = useRef<ViewState>();
-        const [tooltip, setTooltip] = useState<TooltipType | Record<string, never> | null>({});
+        const [tooltip, setTooltip] = useState<TooltipType | null>(null);
         const theme = useTheme();
         const foregroundNeutralColor = useMemo(() => {
             const labelColor = decomposeColor(theme.palette.text.primary).values as [number, number, number, number];
@@ -277,28 +283,29 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
             mapEquipments.voltageLevels &&
             geoData.substationPositionsById.size > 0;
 
-        const mapEquipmentsLines: EquimentLine[] = useMemo(
+        // TODO: this type is lost inside LineLayer... seems to be of use for gridstudy side
+        const mapEquipmentsLines: MapAnyLineWithType[] = useMemo(
             () => [
                 ...(mapEquipments?.lines.map(
                     (line) =>
                         ({
                             ...line,
                             equipmentType: EQUIPMENT_TYPES.LINE,
-                        } as LineEquimentLine)
+                        } as MapLineWithType)
                 ) ?? []),
                 ...(mapEquipments?.tieLines.map(
                     (tieLine) =>
                         ({
                             ...tieLine,
                             equipmentType: EQUIPMENT_TYPES.TIE_LINE,
-                        } as TieLineEquimentLine)
+                        } as MapTieLineWithType)
                 ) ?? []),
                 ...(mapEquipments?.hvdcLines.map(
                     (hvdcLine) =>
                         ({
                             ...hvdcLine,
                             equipmentType: EQUIPMENT_TYPES.HVDC_LINE,
-                        } as HvdcLineEquimentLine)
+                        } as MapHvdcLineWithType)
                 ) ?? []),
             ],
             [mapEquipments?.hvdcLines, mapEquipments?.tieLines, mapEquipments?.lines]
@@ -433,93 +440,95 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
             );
         }
 
-        function onClickHandler(
-            info: PickingInfo,
-            event: mapboxgl.MapLayerMouseEvent | maplibregl.MapLayerMouseEvent,
-            network: MapEquipments
-        ) {
-            const leftButton = event.originalEvent.button === MOUSE_EVENT_BUTTON_LEFT;
-            const rightButton = event.originalEvent.button === MOUSE_EVENT_BUTTON_RIGHT;
-            if (
-                info.layer &&
-                info.layer.id.startsWith(SUBSTATION_LAYER_PREFIX) &&
-                info.object &&
-                (isSubstation(info.object) || isVoltageLevel(info.object)) // is a voltage level marker, or a substation text
-            ) {
-                let idVl;
-                let idSubstation;
-                if (isVoltageLevel(info.object)) {
-                    idVl = info.object.id;
-                } else if (isSubstation(info.object)) {
-                    if (info.object.voltageLevels.length === 1) {
-                        const idS = info.object.voltageLevels[0].substationId;
-                        const substation = network.getSubstation(idS);
-                        if (substation && substation.voltageLevels.length > 1) {
-                            idSubstation = idS;
+        const onClickHandler = useCallback(
+            (info: PickingInfo, originalEvent: MouseEvent, network: MapEquipments) => {
+                const leftButton = originalEvent.button === MOUSE_EVENT_BUTTON_LEFT;
+                const rightButton = originalEvent.button === MOUSE_EVENT_BUTTON_RIGHT;
+                if (
+                    info.layer &&
+                    info.layer.id.startsWith(SUBSTATION_LAYER_PREFIX) &&
+                    info.object &&
+                    (isMapSubstation(info.object) || isMapVoltageLevel(info.object)) // is a voltage level marker, or a substation text
+                ) {
+                    let idVl;
+                    let idSubstation;
+                    if (isMapVoltageLevel(info.object)) {
+                        idVl = info.object.id;
+                    } else if (isMapSubstation(info.object)) {
+                        if (info.object.voltageLevels.length === 1) {
+                            const idS = info.object.voltageLevels[0].substationId;
+                            const substation = network.getSubstation(idS);
+                            if (substation && substation.voltageLevels.length > 1) {
+                                idSubstation = idS;
+                            } else {
+                                idVl = info.object.voltageLevels[0].id;
+                            }
                         } else {
-                            idVl = info.object.voltageLevels[0].id;
+                            idSubstation = info.object.voltageLevels[0].substationId;
                         }
+                    }
+                    if (idVl !== undefined) {
+                        if (onSubstationClick && leftButton) {
+                            onSubstationClick(idVl);
+                        } else if (onVoltageLevelMenuClick && rightButton) {
+                            onVoltageLevelMenuClick(network.getVoltageLevel(idVl)!, originalEvent.x, originalEvent.y);
+                        }
+                    }
+                    if (idSubstation !== undefined) {
+                        if (onSubstationClickChooseVoltageLevel && leftButton) {
+                            onSubstationClickChooseVoltageLevel(idSubstation, originalEvent.x, originalEvent.y);
+                        } else if (onSubstationMenuClick && rightButton) {
+                            onSubstationMenuClick(
+                                network.getSubstation(idSubstation)!,
+                                originalEvent.x,
+                                originalEvent.y
+                            );
+                        }
+                    }
+                }
+                if (
+                    rightButton &&
+                    info.layer &&
+                    info.layer.id.startsWith(LINE_LAYER_PREFIX) &&
+                    info.object &&
+                    isMapLine(info.object)
+                ) {
+                    // picked line properties are retrieved from network data and not from pickable object infos,
+                    // because pickable object infos might not be up to date
+                    const line = network.getLine(info.object.id);
+                    if (line) {
+                        onLineMenuClick(line, originalEvent.x, originalEvent.y);
                     } else {
-                        idSubstation = info.object.voltageLevels[0].substationId;
+                        const tieLine = network.getTieLine(info.object.id);
+                        if (tieLine) {
+                            onTieLineMenuClick(tieLine, originalEvent.x, originalEvent.y);
+                        } else {
+                            const hvdcLine = network.getHvdcLine(info.object.id);
+                            if (hvdcLine) {
+                                onHvdcLineMenuClick(hvdcLine, originalEvent.x, originalEvent.y);
+                            }
+                        }
                     }
                 }
-                if (idVl !== undefined) {
-                    if (onSubstationClick && leftButton) {
-                        onSubstationClick(idVl);
-                    } else if (onVoltageLevelMenuClick && rightButton) {
-                        onVoltageLevelMenuClick(
-                            network.getVoltageLevel(idVl)!,
-                            event.originalEvent.x,
-                            event.originalEvent.y
-                        );
-                    }
-                }
-                if (idSubstation !== undefined) {
-                    if (onSubstationClickChooseVoltageLevel && leftButton) {
-                        onSubstationClickChooseVoltageLevel(idSubstation, event.originalEvent.x, event.originalEvent.y);
-                    } else if (onSubstationMenuClick && rightButton) {
-                        onSubstationMenuClick(
-                            network.getSubstation(idSubstation)!,
-                            event.originalEvent.x,
-                            event.originalEvent.y
-                        );
-                    }
-                }
-            }
-            if (
-                rightButton &&
-                info.layer &&
-                info.layer.id.startsWith(LINE_LAYER_PREFIX) &&
-                info.object &&
-                isLine(info.object)
-            ) {
-                // picked line properties are retrieved from network data and not from pickable object infos,
-                // because pickable object infos might not be up to date
-                const line = network.getLine(info.object.id);
-                const tieLine = network.getTieLine(info.object.id);
-                const hvdcLine = network.getHvdcLine(info.object.id);
+            },
+            [
+                onHvdcLineMenuClick,
+                onLineMenuClick,
+                onSubstationClick,
+                onSubstationClickChooseVoltageLevel,
+                onSubstationMenuClick,
+                onTieLineMenuClick,
+                onVoltageLevelMenuClick,
+            ]
+        );
 
-                const equipment = line || tieLine || hvdcLine;
-                if (equipment) {
-                    const menuClickFunction =
-                        equipment === line
-                            ? onLineMenuClick
-                            : equipment === tieLine
-                            ? onTieLineMenuClick
-                            : onHvdcLineMenuClick;
-
-                    menuClickFunction(equipment, event.originalEvent.x, event.originalEvent.y);
-                }
-            }
-        }
-
-        function onMapContextMenu(event: mapboxgl.MapLayerMouseEvent | maplibregl.MapLayerMouseEvent) {
+        function onMapContextMenu(event: MapBoxLayerMouseEvent | MapLibreLayerMouseEvent) {
             const info = deckRef.current?.pickObject({
                 x: event.point.x,
                 y: event.point.y,
                 radius: PICKING_RADIUS,
             });
-            info && mapEquipments && onClickHandler(info, event, mapEquipments);
+            info && mapEquipments && onClickHandler(info, event.originalEvent, mapEquipments);
         }
 
         function cursorHandler() {
@@ -569,12 +578,12 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
                     labelColor: foregroundNeutralColor,
                     labelSize: LABEL_SIZE,
                     pickable: true,
-                    onHover: ({ object: lineObject, x, y }: PickingInfo) => {
+                    onHover: ({ object: lineObject, x, y }) => {
                         if (lineObject) {
                             setCursorType('pointer');
                             setTooltip({
                                 equipmentId: lineObject?.id,
-                                equipmentType: (lineObject as EquimentLine)?.equipmentType,
+                                equipmentType: lineObject?.equipmentType,
                                 pointerX: x,
                                 pointerY: y,
                                 visible: showTooltip,
@@ -673,11 +682,11 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
                 geoData,
                 polygonCoordinates
             );
-            return selectedLines.filter((line: Line) =>
-                filteredNominalVoltages!.some(
+            return selectedLines.filter((line) =>
+                filteredNominalVoltages?.some(
                     (nv) =>
-                        nv === mapEquipments!.getVoltageLevel(line.voltageLevelId1)!.nominalV ||
-                        nv === mapEquipments!.getVoltageLevel(line.voltageLevelId2)!.nominalV
+                        nv === mapEquipments?.getVoltageLevel(line.voltageLevelId1)?.nominalV ||
+                        nv === mapEquipments?.getVoltageLevel(line.voltageLevelId2)?.nominalV
                 )
             );
         }, [mapEquipments, mapEquipmentsLines, geoData, filteredNominalVoltages]);
@@ -715,6 +724,11 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
             onDrawEvent(DRAW_EVENT.DELETE);
         }, [onPolygonChanged, onDrawEvent]);
 
+        const handleOverlayClick = useCallback<NonNullable<MapboxOverlayProps['onClick']>>(
+            (info, event) => onClickHandler(info, event.srcEvent as MouseEvent, mapEquipments!),
+            [mapEquipments, onClickHandler]
+        );
+
         return (
             mapLib && (
                 <Map
@@ -741,15 +755,8 @@ const NetworkMap = forwardRef<NetworkMapRef, NetworkMapProps>(
                         </Box>
                     )}
                     <DeckGLOverlay
-                        ref={deckRef}
-                        //@ts-expect-error: TODO fix event
-                        onClick={(info: PickingInfo, event) =>
-                            onClickHandler(
-                                info,
-                                event.srcEvent as mapboxgl.MapLayerMouseEvent | maplibregl.MapLayerMouseEvent,
-                                mapEquipments!
-                            )
-                        }
+                        ref={deckRef as LegacyRef<MapboxOverlay>}
+                        onClick={handleOverlayClick}
                         onAfterRender={onAfterRender} // TODO simplify this
                         layers={layers}
                         pickingRadius={PICKING_RADIUS}
@@ -806,7 +813,7 @@ function getSubstationsInPolygon(
 
 function getSelectedLinesInPolygon(
     network: MapEquipments | null,
-    lines: Line[],
+    lines: MapAnyLineWithType[],
     geoData: GeoData | null,
     polygonCoordinates: Polygon
 ) {

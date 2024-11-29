@@ -10,7 +10,7 @@ import { FEATURES, Geometry, hasFeatures, isWebGL2, Model, Texture2D } from '@lu
 import vs from './arrow-layer-vertex.vert?raw';
 import fs from './arrow-layer-fragment.frag?raw';
 import { Accessor, Color, Layer, LayerContext, LayerProps, Position, Texture, UpdateParameters } from 'deck.gl';
-import { type Line } from '../../utils/equipment-types';
+import { type MapAnyLineWithType } from '../../utils/equipment-types';
 import { type UniformValues } from 'maplibre-gl';
 
 const DEFAULT_COLOR = [0, 0, 0, 255] satisfies Color;
@@ -25,7 +25,7 @@ export enum ArrowDirection {
 }
 
 export type Arrow = {
-    line: Line;
+    line: MapAnyLineWithType;
     distance: number;
 };
 
@@ -34,8 +34,8 @@ type _ArrowLayerProps = {
     sizeMinPixels?: number;
     sizeMaxPixels?: number;
     getDistance: Accessor<Arrow, number>;
-    getLine: (arrow: Arrow) => Line;
-    getLinePositions: (line: Line) => Position[];
+    getLine: (arrow: Arrow) => MapAnyLineWithType;
+    getLinePositions: (line: MapAnyLineWithType) => Position[];
     getSize?: Accessor<Arrow, number>;
     getColor?: Accessor<Arrow, Color>;
     getSpeedFactor?: Accessor<Arrow, number>;
@@ -49,14 +49,14 @@ type _ArrowLayerProps = {
     opacity?: number;
 } & LayerProps;
 
-type ArrowLayerProps = _ArrowLayerProps & LayerProps;
+export type ArrowLayerProps = _ArrowLayerProps & LayerProps;
 
 const defaultProps = {
     sizeMinPixels: { type: 'number', min: 0, value: 0 }, //  min size in pixels
     sizeMaxPixels: { type: 'number', min: 0, value: Number.MAX_SAFE_INTEGER }, // max size in pixels
     getDistance: { type: 'accessor', value: (arrow: Arrow) => arrow.distance },
     getLine: { type: 'accessor', value: (arrow: Arrow) => arrow.line },
-    getLinePositions: { type: 'accessor', value: (line: Line) => line.positions },
+    getLinePositions: { type: 'accessor', value: (line: MapAnyLineWithType) => line.positions },
     getSize: { type: 'accessor', value: 1 },
     getColor: { type: 'accessor', value: DEFAULT_COLOR },
     getSpeedFactor: { type: 'accessor', value: 1.0 },
@@ -96,7 +96,7 @@ export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
     declare state: {
         linePositionsTexture: Texture;
         lineDistancesTexture: Texture;
-        lineAttributes: Map<Line, LineAttributes>;
+        lineAttributes: Map<MapAnyLineWithType, LineAttributes>;
         model?: Model;
         timestamp: number;
         stop: boolean;

@@ -8,11 +8,11 @@
 import { Color, CompositeLayer, LayerContext, TextLayer, UpdateParameters } from 'deck.gl';
 import ScatterplotLayerExt from './layers/scatterplot-layer-ext';
 import { SUBSTATION_RADIUS, SUBSTATION_RADIUS_MAX_PIXEL, SUBSTATION_RADIUS_MIN_PIXEL } from './constants';
-import { type Substation, type VoltageLevel } from '../utils/equipment-types';
+import { type MapSubstation, type MapVoltageLevel } from '../utils/equipment-types';
 import { MapEquipments } from './map-equipments';
 import { GeoData } from './geo-data';
 
-function voltageLevelNominalVoltageIndexer(map: Map<number, VoltageLevel[]>, voltageLevel: VoltageLevel) {
+function voltageLevelNominalVoltageIndexer(map: Map<number, MapVoltageLevel[]>, voltageLevel: MapVoltageLevel) {
     let list = map.get(voltageLevel.nominalV);
     if (!list) {
         list = [];
@@ -24,7 +24,7 @@ function voltageLevelNominalVoltageIndexer(map: Map<number, VoltageLevel[]>, vol
 
 type MetaVoltageLevel = {
     nominalVoltageIndex: number;
-    voltageLevels: VoltageLevel[];
+    voltageLevels: MapVoltageLevel[];
 };
 
 type MetaVoltageLevelsByNominalVoltage = {
@@ -33,7 +33,7 @@ type MetaVoltageLevelsByNominalVoltage = {
 };
 
 export type SubstationLayerProps = {
-    data: Substation[];
+    data: MapSubstation[];
     network: MapEquipments;
     geoData: GeoData;
     getNominalVoltageColor: (nominalV: number) => Color;
@@ -41,7 +41,7 @@ export type SubstationLayerProps = {
     labelsVisible: boolean;
     labelColor: Color;
     labelSize: number;
-    getNameOrId: (infos: Substation) => string | null;
+    getNameOrId: (infos: MapSubstation) => string | null;
 };
 
 export class SubstationLayer extends CompositeLayer<SubstationLayerProps> {
@@ -164,8 +164,8 @@ export class SubstationLayer extends CompositeLayer<SubstationLayerProps> {
             this.getSubLayerProps({
                 id: 'Label',
                 data: this.state.substationsLabels,
-                getPosition: (substation: Substation) => this.props.geoData.getSubstationPosition(substation.id),
-                getText: (substation: Substation) => this.props.getNameOrId(substation),
+                getPosition: (substation: MapSubstation) => this.props.geoData.getSubstationPosition(substation.id),
+                getText: (substation: MapSubstation) => this.props.getNameOrId(substation),
                 getColor: this.props.labelColor,
                 fontFamily: 'Roboto',
                 getSize: this.props.labelSize,

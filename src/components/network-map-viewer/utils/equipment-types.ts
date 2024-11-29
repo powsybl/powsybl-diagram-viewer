@@ -7,6 +7,15 @@
 
 import { LineStatus } from '../network/line-layer';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type MergeObject<T1, T2> = {
+    [K in keyof T1 & keyof T2]: T1[K] | T2[K]; // Keys that are in both objects
+} & {
+    [K in Exclude<keyof T1, keyof T2>]?: T1[K]; // Keys that are only in T1
+} & {
+    [K in Exclude<keyof T2, keyof T1>]?: T2[K]; // Keys that are only in T2
+};
+
 export enum EQUIPMENT_TYPES {
     SUBSTATION = 'SUBSTATION',
     VOLTAGE_LEVEL = 'VOLTAGE_LEVEL',
@@ -29,28 +38,41 @@ export enum EQUIPMENT_TYPES {
 
 export type LonLat = [number, number];
 
-export type VoltageLevel = {
+// deduce from data of .../gridstudy/api/gateway/study/v1/studies/{uuid}/nodes/{uuid}}/network/elements?inUpstreamBuiltParentNode=false&infoType=MAP&elementType=SUBSTATION
+export type MapVoltageLevel = {
     id: string;
     nominalV: number;
     substationId: string;
-    substationName?: string;
+    substationName?: string; // injected internally?
 };
 
-export type Substation = {
+export const isMapVoltageLevel = (object: Record<string, unknown>): object is MapVoltageLevel =>
+    'substationId' in object;
+
+// deduce from data of .../gridstudy/api/gateway/study/v1/studies/{uuid}/nodes/{uuid}}/network/elements?inUpstreamBuiltParentNode=false&infoType=MAP&elementType=SUBSTATION
+export type MapSubstation = {
     id: string;
-    name: string;
-    voltageLevels: VoltageLevel[];
+    name?: string;
+    voltageLevels: MapVoltageLevel[];
 };
 
-export const isVoltageLevel = (object: Record<string, unknown>): object is VoltageLevel => 'substationId' in object;
+export const isMapSubstation = (object: Record<string, unknown>): object is MapSubstation => 'voltageLevels' in object;
 
-export const isSubstation = (object: Record<string, unknown>): object is Substation => 'voltageLevels' in object;
+export type TemporaryLimits = {
+    name: string;
+    value: number;
+};
+export type CurrentLimits = {
+    permanentLimit: number;
+    temporaryLimits?: TemporaryLimits[];
+};
 
-export type Line = {
+// deduce from data of .../gridstudy/api/gateway/study/v1/studies/{uuid}/nodes/{uuid}}/network/elements?inUpstreamBuiltParentNode=false&infoType=MAP&elementType=LINE
+export type MapLine = {
     id: string;
     voltageLevelId1: string;
     voltageLevelId2: string;
-    name: string;
+    name?: string;
     terminal1Connected: boolean;
     terminal2Connected: boolean;
     p1: number;
@@ -58,13 +80,59 @@ export type Line = {
     i1?: number;
     i2?: number;
     operatingStatus?: LineStatus;
-    currentLimits1?: {
-        permanentLimit: number;
-    } | null;
-    currentLimits2?: {
-        permanentLimit: number;
-    } | null;
-    // additional from line-layer
+    currentLimits1?: CurrentLimits;
+    currentLimits2?: CurrentLimits;
+};
+
+export const isMapLine = (object: Record<string, unknown>): object is MapLine =>
+    'id' in object && 'voltageLevelId1' in object && 'voltageLevelId2' in object;
+
+// deduce from data of .../gridstudy/api/gateway/study/v1/studies/{uuid}/nodes/{uuid}}/network/elements?inUpstreamBuiltParentNode=false&infoType=MAP&elementType=TIE_LINE
+export type MapTieLine = {
+    id: string;
+    voltageLevelId1: string;
+    voltageLevelId2: string;
+    terminal1Connected: boolean;
+    terminal2Connected: boolean;
+    currentLimits1: CurrentLimits;
+    currentLimits2: CurrentLimits;
+    // not used but is provided by gridstudy
+    p1?: number;
+    p2?: number;
+    i1?: number;
+    i2?: number;
+    operatingStatus?: LineStatus;
+};
+
+// deduce from data of .../gridstudy/api/gateway/study/v1/studies/{uuid}/nodes/{uuid}}/network/elements?inUpstreamBuiltParentNode=false&infoType=MAP&elementType=HVDC_LINE
+export type MapHvdcLine = {
+    id: string;
+    voltageLevelId1: string;
+    voltageLevelId2: string;
+    terminal1Connected: boolean;
+    terminal2Connected: boolean;
+    p1: number;
+    p2: number;
+    hvdcType: string;
+
+    // add those entries for facilitate union usage
+    currentLimits1?: CurrentLimits;
+    currentLimits2?: CurrentLimits;
+    i1?: number;
+    i2?: number;
+    operatingStatus?: LineStatus;
+};
+
+export type MapAnyLine = MapLine | MapTieLine | MapHvdcLine;
+//export type MapAnyLine = MergeObject<MergeObject<MapLine, MapTieLine>, MapHvdcLine>;
+export type MapEquipment = MapVoltageLevel | MapSubstation | MapAnyLine;
+
+export type MapLineWithType = MapLine & { equipmentType: EQUIPMENT_TYPES.LINE };
+export type MapTieLineWithType = MapTieLine & { equipmentType: EQUIPMENT_TYPES.TIE_LINE };
+export type MapHvdcLineWithType = MapHvdcLine & { equipmentType: EQUIPMENT_TYPES.HVDC_LINE };
+//export type MapAnyLineWithType = MergeObject<MergeObject<MapLineWithType, MapTieLineWithType>, MapHvdcLineWithType> & {
+export type MapAnyLineWithType = (MapLineWithType | MapTieLineWithType | MapHvdcLineWithType) & {
+    // additional properties from line-layer
     origin?: LonLat;
     end?: LonLat;
     substationIndexStart?: number;
@@ -78,36 +146,3 @@ export type Line = {
     cumulativeDistances?: number[];
     positions?: LonLat[];
 };
-
-export const isLine = (object: Record<string, unknown>): object is Line =>
-    'id' in object && 'voltageLevelId1' in object && 'voltageLevelId2' in object;
-
-export type TieLine = {
-    id: string;
-};
-
-export enum ConvertersMode {
-    SIDE_1_RECTIFIER_SIDE_2_INVERTER,
-    SIDE_1_INVERTER_SIDE_2_RECTIFIER,
-}
-
-export type HvdcLine = {
-    id: string;
-    convertersMode: ConvertersMode;
-    r: number;
-    nominalV: number;
-    activePowerSetpoint: number;
-    maxP: number;
-};
-
-export type Equipment = Line | Substation | TieLine | HvdcLine;
-
-// type EquimentLineTypes = EQUIPMENT_TYPES.LINE | EQUIPMENT_TYPES.TIE_LINE | EQUIPMENT_TYPES.HVDC_LINE;
-export type LineEquimentLine = Line & { equipmentType: EQUIPMENT_TYPES.LINE };
-export type TieLineEquimentLine = Line & {
-    equipmentType: EQUIPMENT_TYPES.TIE_LINE;
-};
-export type HvdcLineEquimentLine = Line & {
-    equipmentType: EQUIPMENT_TYPES.HVDC_LINE;
-};
-export type EquimentLine = LineEquimentLine | TieLineEquimentLine | HvdcLineEquimentLine;

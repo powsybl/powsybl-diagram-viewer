@@ -6,44 +6,46 @@
  */
 
 import {
-    type Equipment,
     EQUIPMENT_TYPES,
-    type Line,
-    type Substation,
-    type VoltageLevel,
+    type MapEquipment,
+    type MapHvdcLine,
+    type MapLine,
+    type MapSubstation,
+    type MapTieLine,
+    type MapVoltageLevel,
 } from '../utils/equipment-types';
 
-const elementIdIndexer = <T extends Equipment>(map: Map<string, T>, element: T) => map.set(element.id, element);
+const elementIdIndexer = <T extends MapEquipment>(map: Map<string, T>, element: T) => map.set(element.id, element);
 
 export class MapEquipments {
-    substations: Substation[] = [];
-    substationsById = new Map<string, Substation>();
-    lines: Line[] = [];
-    linesById = new Map<string, Line>();
-    tieLines: Line[] = [];
-    tieLinesById = new Map<string, Line>();
-    hvdcLines: Line[] = [];
-    hvdcLinesById = new Map<string, Line>();
-    voltageLevels: VoltageLevel[] = [];
-    voltageLevelsById = new Map<string, VoltageLevel>();
+    substations: MapSubstation[] = [];
+    substationsById = new Map<string, MapSubstation>();
+    lines: MapLine[] = [];
+    linesById = new Map<string, MapLine>();
+    tieLines: MapTieLine[] = [];
+    tieLinesById = new Map<string, MapTieLine>();
+    hvdcLines: MapHvdcLine[] = [];
+    hvdcLinesById = new Map<string, MapHvdcLine>();
+    voltageLevels: MapVoltageLevel[] = [];
+    voltageLevelsById = new Map<string, MapVoltageLevel>();
     nominalVoltages: number[] = [];
 
-    newMapEquipmentForUpdate(): MapEquipments {
+    newMapEquipmentForUpdate(): typeof this {
         /* shallow clone of the map-equipment https://stackoverflow.com/a/44782052 */
         return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     }
 
-    checkAndGetValues(equipments: Equipment[] | null | undefined) {
+    checkAndGetValues<T extends MapEquipment>(equipments: T[] | null | undefined) {
         return equipments ?? [];
     }
 
-    completeSubstationsInfos(equipmentsToIndex: Substation[]) {
+    completeSubstationsInfos(equipmentsToIndex: MapSubstation[]) {
         const nominalVoltagesSet = new Set(this.nominalVoltages);
         if (equipmentsToIndex?.length === 0) {
             this.substationsById = new Map();
             this.voltageLevelsById = new Map();
         }
-        const substations: Substation[] = equipmentsToIndex?.length > 0 ? equipmentsToIndex : this.substations;
+        const substations: MapSubstation[] = equipmentsToIndex?.length > 0 ? equipmentsToIndex : this.substations;
 
         substations.forEach((substation) => {
             // sort voltage levels inside substations by nominal voltage
@@ -65,7 +67,7 @@ export class MapEquipments {
         this.nominalVoltages = Array.from(nominalVoltagesSet).sort((a, b) => b - a);
     }
 
-    updateEquipments<T extends Equipment>(currentEquipments: T[], newEquipments: T[]) {
+    updateEquipments<T extends MapEquipment>(currentEquipments: T[], newEquipments: T[]) {
         // replace current modified equipments
         currentEquipments.forEach((equipment1, index) => {
             const found = newEquipments.filter((equipment2) => equipment2.id === equipment1.id);
@@ -82,7 +84,7 @@ export class MapEquipments {
         return [...currentEquipments, ...eqptsToAdd];
     }
 
-    updateSubstations(substations: Substation[], fullReload: boolean) {
+    updateSubstations(substations: MapSubstation[], fullReload: boolean) {
         if (fullReload) {
             this.substations = [];
         }
@@ -117,7 +119,7 @@ export class MapEquipments {
         this.completeSubstationsInfos(fullReload ? [] : substations);
     }
 
-    completeLinesInfos(equipmentsToIndex: Line[]) {
+    completeLinesInfos(equipmentsToIndex: MapLine[]) {
         if (equipmentsToIndex?.length > 0) {
             equipmentsToIndex.forEach((line) => this.linesById?.set(line.id, line));
         } else {
@@ -125,7 +127,7 @@ export class MapEquipments {
         }
     }
 
-    completeTieLinesInfos(equipmentsToIndex: Line[]) {
+    completeTieLinesInfos(equipmentsToIndex: MapTieLine[]) {
         if (equipmentsToIndex?.length > 0) {
             equipmentsToIndex.forEach((tieLine) => this.tieLinesById?.set(tieLine.id, tieLine));
         } else {
@@ -133,7 +135,7 @@ export class MapEquipments {
         }
     }
 
-    updateLines(lines: Line[], fullReload: boolean) {
+    updateLines(lines: MapLine[], fullReload: boolean) {
         if (fullReload) {
             this.lines = [];
         }
@@ -141,7 +143,7 @@ export class MapEquipments {
         this.completeLinesInfos(fullReload ? [] : lines);
     }
 
-    updateTieLines(tieLines: Line[], fullReload: boolean) {
+    updateTieLines(tieLines: MapTieLine[], fullReload: boolean) {
         if (fullReload) {
             this.tieLines = [];
         }
@@ -149,7 +151,7 @@ export class MapEquipments {
         this.completeTieLinesInfos(fullReload ? [] : tieLines);
     }
 
-    updateHvdcLines(hvdcLines: Line[], fullReload: boolean) {
+    updateHvdcLines(hvdcLines: MapHvdcLine[], fullReload: boolean) {
         if (fullReload) {
             this.hvdcLines = [];
         }
@@ -157,7 +159,7 @@ export class MapEquipments {
         this.completeHvdcLinesInfos(fullReload ? [] : hvdcLines);
     }
 
-    completeHvdcLinesInfos(equipmentsToIndex: Line[]) {
+    completeHvdcLinesInfos(equipmentsToIndex: MapHvdcLine[]) {
         if (equipmentsToIndex?.length > 0) {
             equipmentsToIndex.forEach((hvdcLine) => this.hvdcLinesById?.set(hvdcLine.id, hvdcLine));
         } else {
@@ -165,7 +167,7 @@ export class MapEquipments {
         }
     }
 
-    removeBranchesOfVoltageLevel(branchesList: Line[], voltageLevelId: string) {
+    removeBranchesOfVoltageLevel(branchesList: MapLine[], voltageLevelId: string) {
         const remainingLines = branchesList.filter(
             (l) => l.voltageLevelId1 !== voltageLevelId && l.voltageLevelId2 !== voltageLevelId
         );

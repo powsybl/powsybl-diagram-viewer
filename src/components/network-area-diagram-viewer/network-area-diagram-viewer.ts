@@ -18,6 +18,7 @@ import type {
     TextNodeMetadata,
 } from './diagram-metadata';
 import { CSS_DECLARATION, CSS_RULE, THRESHOLD_STATUS, DEFAULT_DYNAMIC_CSS_RULES } from './dynamic-css-utils';
+import { EQUIPMENT_TYPES } from '../network-map-viewer/utils/equipment-types';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
@@ -46,12 +47,10 @@ export type OnMoveTextNodeCallbackType = (
 ) => void;
 
 export type OnSelectNodeCallbackType = (equipmentId: string, nodeId: string) => void;
-export type OnToggleNadHoverCallbackType = (
-    hovered: boolean,
-    mousePosition: Point | null,
-    equipmentId: string,
-    equipmentType: string
-) => void;
+export type OnToggleNadHoverCallbackType = {
+    (hovered: true, mousePosition: Point | null, equipmentId: string, equipmentType: EQUIPMENT_TYPES): void;
+    (hovered: false, mousePosition: null, equipmentId: null, equipmentType: null): void;
+};
 
 export class NetworkAreaDiagramViewer {
     container: HTMLElement;
@@ -404,7 +403,7 @@ export class NetworkAreaDiagramViewer {
 
         const hoverableElem = DiagramUtils.getHoverableFrom(mouseEvent.target as SVGElement);
         if (!hoverableElem) {
-            this.onToggleHoverCallback(false, null, '', '');
+            this.onToggleHoverCallback(false, null, null, null);
             return;
         }
 
@@ -417,9 +416,10 @@ export class NetworkAreaDiagramViewer {
             const mousePosition = this.getMousePosition(mouseEvent);
             const equipmentId = edge?.equipmentId ?? '';
             const edgeType = DiagramUtils.getStringEdgeType(edge) ?? '';
+            // @ts-expect-error TODO: EQUIPMENT_TYPES != EdgeType
             this.onToggleHoverCallback(true, mousePosition, equipmentId, edgeType);
         } else {
-            this.onToggleHoverCallback(false, null, '', '');
+            this.onToggleHoverCallback(false, null, null, null);
         }
     }
 

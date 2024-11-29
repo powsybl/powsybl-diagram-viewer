@@ -24,6 +24,7 @@
     ],
     "scripts": {
         "watch": "vite watch",
+        "prebuild": "tsc",
         "build": "vite build",
         "prepublishOnly": "$npm_execpath run build",
         "test": "jest",
@@ -83,6 +84,7 @@
         "prettier": "^2.8.8",
         "ts-jest": "^29.1.2",
         "ts-node": "^10.9.2",
+        "type-fest": "^4.29.0",
         "typescript": "5.1.6",
         "vite": "^5.2.7",
         "vite-plugin-dts": "^3.8.1",
