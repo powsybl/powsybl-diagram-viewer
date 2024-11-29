@@ -349,7 +349,7 @@ function getSvgNode(): SVGGraphicsElement {
     const nodeSvg =
         '<g class="nad-vl-nodes"><g transform="translate(-452.59,-274.01)" id="0">' +
         '<circle r="27.50" id="1" class="nad-vl0to30-0 nad-busnode"/></g></g>';
-    return (<SVGGraphicsElement>SVG().svg(nodeSvg).node.firstElementChild?.firstElementChild) as SVGGraphicsElement;
+    return <SVGGraphicsElement>SVG().svg(nodeSvg).node.firstElementChild?.firstElementChild;
 }
 
 function getSvgTextNode(): SVGGraphicsElement {
@@ -359,7 +359,7 @@ function getSvgTextNode(): SVGGraphicsElement {
         '<div xmlns="http://www.w3.org/1999/xhtml" class="nad-label-box"><div>VLGEN</div>' +
         '<table><tr><td><div class="nad-vl0to30-0 nad-legend-square"/></td>' +
         '<td>24.5 kV / 2.3°</td></tr></table></div></foreignObject></g>';
-    return (<SVGGraphicsElement>SVG().svg(textNodeSvg).node.firstElementChild?.firstElementChild) as SVGGraphicsElement;
+    return <SVGGraphicsElement>SVG().svg(textNodeSvg).node.firstElementChild?.firstElementChild;
 }
 
 function getSvgLoopEdge(): SVGGraphicsElement {
@@ -378,7 +378,7 @@ function getSvgLoopEdge(): SVGGraphicsElement {
         '<path class="nad-arrow-out" transform="scale(10.00)" d="M-1 1 H1 L0 -1z"/></g><text transform="rotate(9.46)" x="19.00"></text></g></g></g>' +
         '<g class="nad-glued-center"><circle class="nad-vl70to120-line nad-winding" cx="422.65" cy="-174.55" r="20.00"/>' +
         '<circle class="nad-vl70to120-line nad-winding" cx="429.67" cy="-155.82" r="20.00"/></g></g></g>';
-    return (<SVGGraphicsElement>SVG().svg(edgeSvg).node.firstElementChild?.firstElementChild) as SVGGraphicsElement;
+    return <SVGGraphicsElement>SVG().svg(edgeSvg).node.firstElementChild?.firstElementChild;
 }
 
 function getSvgPolyline(): HTMLElement {
@@ -390,7 +390,7 @@ function getSvgPolyline(): HTMLElement {
         '<path class="nad-arrow-in" transform="scale(10.00)" d="M-1 -1 H1 L0 1z"/>' +
         '<path class="nad-arrow-out" transform="scale(10.00)" d="M-1 1 H1 L0 -1z"/></g>' +
         '<text transform="rotate(-300.29)" x="-19.00" style="text-anchor:end"></text></g></g></g>';
-    return (<HTMLElement>SVG().svg(edgeSvg).node.firstElementChild?.firstElementChild) as HTMLElement;
+    return <HTMLElement>SVG().svg(edgeSvg).node.firstElementChild?.firstElementChild;
 }
 
 function getSvgPath(): HTMLElement {
@@ -401,5 +401,5 @@ function getSvgPath(): HTMLElement {
         '<g transform="rotate(39.46)"><path class="nad-arrow-in" transform="scale(10.00)" d="M-1 -1 H1 L0 1z"/>' +
         '<path class="nad-arrow-out" transform="scale(10.00)" d="M-1 1 H1 L0 -1z"/></g>' +
         '<text transform="rotate(-50.54)" x="19.00"></text></g></g></g>';
-    return (<HTMLElement>SVG().svg(edgeSvg).node.firstElementChild?.firstElementChild) as HTMLElement;
+    return <HTMLElement>SVG().svg(edgeSvg).node.firstElementChild?.firstElementChild;
 }
