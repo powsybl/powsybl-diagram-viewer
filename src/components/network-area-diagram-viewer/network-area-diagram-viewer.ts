@@ -412,7 +412,6 @@ export class NetworkAreaDiagramViewer {
         );
 
         if (edge) {
-            this.ctm = null;
             const mousePosition = this.getMousePosition(mouseEvent);
             const equipmentId = edge?.equipmentId ?? '';
             const edgeType = DiagramUtils.getStringEdgeType(edge) ?? '';
@@ -443,6 +442,7 @@ export class NetworkAreaDiagramViewer {
         }
         // reset data
         this.draggedElement = null;
+        this.ctm = null;
         this.enablePanzoom();
 
         // change cursor style back to normal
