@@ -446,6 +446,7 @@ export class NetworkAreaDiagramViewer {
         }
         // reset data
         this.draggedElement = null;
+        this.ctm = null;
         this.enablePanzoom();
 
         // change cursor style back to normal
