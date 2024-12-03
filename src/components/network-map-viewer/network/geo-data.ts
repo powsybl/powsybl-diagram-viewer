@@ -7,7 +7,6 @@
 
 import { computeDestinationPoint, getGreatCircleBearing, getRhumbLineBearing } from 'geolib';
 import CheapRuler from 'cheap-ruler';
-// @ts-expect-error TODO tmp migration TS
 import { ArrowDirection } from './layers/arrow-layer';
 import { type Coordinate, Country } from '../../../powsybl';
 import { type LonLat, type MapAnyLine } from '../../../equipment-types';
