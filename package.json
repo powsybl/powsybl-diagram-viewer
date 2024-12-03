@@ -88,6 +88,7 @@
         "rimraf": "^6.0.1",
         "ts-jest": "^29.1.2",
         "ts-node": "^10.9.2",
+        "type-fest": "^4.30.0",
         "typescript": "5.1.6",
         "vite": "^5.2.7",
         "vite-plugin-dts": "^3.8.1",
