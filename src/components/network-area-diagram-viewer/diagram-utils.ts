@@ -483,7 +483,7 @@ export function getTextNodePosition(textNode: SVGGraphicsElement | null): Point 
 export function getNodeMove(node: NodeMetadata, nodePosition: Point): NODEMOVE {
     const xNew = round(nodePosition.x);
     const yNew = round(nodePosition.y);
-    return { xOrig: node.y, yOrig: node.x, xNew: xNew, yNew: yNew };
+    return { xOrig: node.x, yOrig: node.y, xNew: xNew, yNew: yNew };
 }
 
 // Checks if the element is hoverable

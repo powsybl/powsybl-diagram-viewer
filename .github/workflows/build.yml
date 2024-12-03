@@ -40,6 +40,7 @@ jobs:
                   npm install
                   npm run licenses-check
                   npm run lint
+                  npm run test:coverage
                   npm run build
 
             - name: SonarCloud Scan
