@@ -40,7 +40,12 @@ export {
     type SLDMetadataNode,
 } from './components/single-line-diagram-viewer/single-line-diagram-viewer';
 
-export { GeoData } from './components/network-map-viewer/network/geo-data';
+export {
+    GeoData,
+    type GeoDataEquipment,
+    type GeoDataLine,
+    type GeoDataSubstation,
+} from './components/network-map-viewer/network/geo-data';
 export { LineFlowMode, LineFlowColorMode } from './components/network-map-viewer/network/line-layer';
 export { MapEquipments } from './components/network-map-viewer/network/map-equipments';
 export {
