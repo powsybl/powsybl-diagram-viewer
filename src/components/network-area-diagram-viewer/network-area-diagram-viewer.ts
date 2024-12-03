@@ -249,6 +249,10 @@ export class NetworkAreaDiagramViewer {
             this.svgDraw.on('mouseover', (e: Event) => {
                 this.onHover(e as MouseEvent);
             });
+
+            this.svgDraw.on('mouseout', () => {
+                this.onToggleHoverCallback?.(false, null, '', '');
+            });
         }
         this.svgDraw.on('panStart', function () {
             if (drawnSvg.parentElement != undefined) {
@@ -445,6 +449,7 @@ export class NetworkAreaDiagramViewer {
         }
         // reset data
         this.draggedElement = null;
+        this.ctm = null;
         this.enablePanzoom();
 
         // change cursor style back to normal
