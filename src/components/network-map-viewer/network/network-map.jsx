@@ -27,7 +27,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
-import { EQUIPMENT_TYPES } from '../utils/equipment-types';
+import { EQUIPMENT_TYPES } from '../../../equipment-types';
 
 // MouseEvent.button https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
 const MOUSE_EVENT_BUTTON_LEFT = 0;

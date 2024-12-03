@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { EQUIPMENT_TYPES } from '../utils/equipment-types';
+import { EQUIPMENT_TYPES } from '../../../equipment-types';
 
 const elementIdIndexer = (map, element) => {
     map.set(element.id, element);
