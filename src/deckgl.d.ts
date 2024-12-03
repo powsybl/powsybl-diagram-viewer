@@ -49,76 +49,22 @@ declare module '@deck.gl/react' {
     export * from '@deck.gl/react/typed';
 }
 
-/* For @luma.gl v8, the best would be to use @danmarshall/deckgl-typings work, but it conflicts with "@deck.gl/<module>/typed"...
+/* For @luma.gl v8, we use @danmarshall/deckgl-typings definitions, but because conflicts with "@deck.gl/<module>/typed",
+ * we don't use it like it's mean to be used with indefinitely-typed. After NPM install deckgl-typings, it will execute
+ *  its postinstall (ie. indefinitely-typed), and during our postinstall, we delete the copied files to revert it.
+ *  With that deckgl-typings won't override global @types.
  * Has we will migrate to deck.gl v9 very soon, it's acceptable to just let typescript not check types temporally.
  * TODO: remove this file when migrating to deck.gl v9
  */
 declare module '@luma.gl/core' {
-    // just shut down tsc with 'any'
-    export { Model, Geometry } from '@luma.gl/engine';
-    export function isWebGL2(gl: any): boolean;
-    export function hasFeatures(gl: any, features: any): any;
-    export class Texture2D extends Resource {
-        static isSupported(gl: any, opts: any): boolean;
-        constructor(gl: any, props?: {});
-        toString(): string;
-        initialize(props?: {}): this | void;
-        get handle(): any;
-        delete({ deleteChildren }?: { deleteChildren?: boolean }): this | void;
-        getParameter(pname: any, opts?: {}): any;
-        getParameters(opts?: {}): {};
-        setParameter(pname: any, value: any): this;
-        setParameters(parameters: any): this;
-        stubRemovedMethods(className: any, version: any, methodNames: any): void;
-        resize({ height, width, mipmaps }: { height: any; width: any; mipmaps?: boolean }): this;
-        generateMipmap(params?: {}): this;
-        setImageData(options: any): this;
-        setSubImageData(args: {
-            target?: any;
-            pixels?: any;
-            data?: any;
-            x?: number;
-            y?: number;
-            width?: any;
-            height?: any;
-            level?: number;
-            format?: any;
-            type?: any;
-            dataFormat?: any;
-            compressed?: boolean;
-            offset?: number;
-            border?: any;
-            parameters?: {};
-        }): void;
-        copyFramebuffer(opts?: {}): any;
-        getActiveUnit(): number;
-        bind(textureUnit?: any): any;
-        unbind(textureUnit?: any): any;
-    }
-    export const FEATURES: {
-        WEBGL2: string;
-        VERTEX_ARRAY_OBJECT: string;
-        TIMER_QUERY: string;
-        INSTANCED_RENDERING: string;
-        MULTIPLE_RENDER_TARGETS: string;
-        ELEMENT_INDEX_UINT32: string;
-        BLEND_EQUATION_MINMAX: string;
-        FLOAT_BLEND: string;
-        COLOR_ENCODING_SRGB: string;
-        TEXTURE_DEPTH: string;
-        TEXTURE_FLOAT: string;
-        TEXTURE_HALF_FLOAT: string;
-        TEXTURE_FILTER_LINEAR_FLOAT: string;
-        TEXTURE_FILTER_LINEAR_HALF_FLOAT: string;
-        TEXTURE_FILTER_ANISOTROPIC: string;
-        COLOR_ATTACHMENT_RGBA32F: string;
-        COLOR_ATTACHMENT_FLOAT: string;
-        COLOR_ATTACHMENT_HALF_FLOAT: string;
-        GLSL_FRAG_DATA: string;
-        GLSL_FRAG_DEPTH: string;
-        GLSL_DERIVATIVES: string;
-        GLSL_TEXTURE_LOD: string;
-    };
-    //export type TextureFormat = any;
-    //export type UniformValue = any;
+    export * from '@danmarshall/deckgl-typings/luma.gl__core';
+}
+declare module '@luma.gl/constants' {
+    export * from '@danmarshall/deckgl-typings/luma.gl__constants';
+}
+declare module '@luma.gl/gltools' {
+    export * from '@danmarshall/deckgl-typings/luma.gl__gltools';
+}
+declare module '@luma.gl/webgl' {
+    export * from '@danmarshall/deckgl-typings/luma.gl__webgl';
 }
