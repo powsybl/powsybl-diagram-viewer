@@ -7,7 +7,16 @@
 
 import { ForwardRefExoticComponent, PropsWithoutRef, ReactNode, RefAttributes, RefObject } from 'react';
 import { GeoData } from './geo-data';
-import { Equipment, Line, MapEquipments, Substation, VoltageLevel } from './map-equipments';
+import { MapEquipments } from './map-equipments';
+import type {
+    MapEquipment,
+    MapAnyLine,
+    MapSubstation,
+    MapVoltageLevel,
+    MapHvdcLine,
+    MapLine,
+    MapTieLine,
+} from '../../../equipment-types';
 import { LineFlowColorMode, LineFlowMode, LineLayerProps } from './line-layer';
 import { DrawControlProps } from './draw-control';
 import { Feature } from 'geojson';
@@ -20,7 +29,7 @@ export enum DRAW_EVENT {
     DELETE = 0,
 }
 
-export type MenuClickFunction<T extends Equipment> = (equipment: T, eventX: number, eventY: number) => void;
+export type MenuClickFunction<T extends MapEquipment> = (equipment: T, eventX: number, eventY: number) => void;
 
 type NetworkMapProps = {
     disabled?: boolean;
@@ -57,22 +66,22 @@ type NetworkMapProps = {
     useName?: boolean;
     visible?: boolean;
     shouldDisableToolTip?: boolean;
-    onHvdcLineMenuClick?: MenuClickFunction<Line>;
-    onLineMenuClick?: MenuClickFunction<Line>;
-    onTieLineMenuClick?: MenuClickFunction<Line>;
+    onHvdcLineMenuClick?: MenuClickFunction<MapHvdcLine>;
+    onLineMenuClick?: MenuClickFunction<MapLine>;
+    onTieLineMenuClick?: MenuClickFunction<MapTieLine>;
     onManualRefreshClick?: ButtonProps['onClick'];
     onSubstationClick?: (idVoltageLevel: string) => void;
     onSubstationClickChooseVoltageLevel?: (idSubstation: string, eventX: number, eventY: number) => void;
-    onSubstationMenuClick?: MenuClickFunction<Substation>;
-    onVoltageLevelMenuClick?: MenuClickFunction<VoltageLevel>;
+    onSubstationMenuClick?: MenuClickFunction<MapSubstation>;
+    onVoltageLevelMenuClick?: MenuClickFunction<MapVoltageLevel>;
     onDrawPolygonModeActive?: DrawControlProps['onDrawPolygonModeActive'];
     onPolygonChanged?: (polygoneFeature: Feature) => void;
     onDrawEvent?: (drawEvent: DRAW_EVENT) => void;
 };
 
 export type NetworkMapRef = {
-    getSelectedSubstations: () => Substation[];
-    getSelectedLines: () => Line[];
+    getSelectedSubstations: () => MapSubstation[];
+    getSelectedLines: () => MapAnyLine[];
     cleanDraw: () => void;
     getMapDrawer: () => MapboxDraw | undefined;
 };

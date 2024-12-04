@@ -104,9 +104,7 @@ export class GeoData {
         if (!voltageLevel2) {
             throw new Error(`Voltage level side 2 '${line.voltageLevelId1}' not found`);
         }
-        // @ts-expect-error TODO tmp migration TS
         const substationPosition1 = this.getSubstationPosition(voltageLevel1.substationId);
-        // @ts-expect-error TODO tmp migration TS
         const substationPosition2 = this.getSubstationPosition(voltageLevel2.substationId);
 
         // We never want to draw lines when its start or end is in (0, 0) (it is ugly, it would cross the whole screen all the time).
