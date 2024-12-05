@@ -25,6 +25,6 @@ jobs:
     with:
       versionType: ${{ github.event.inputs.versionType }}
       nodeAuthToken: ${{ github.event.inputs.nodeAuthToken }}
-      githubappId: ${{ vars.GRIDSUITE_ACTIONS_APPID }}
+      githubappId: ${{ vars.POWSYBL_ACTIONS_APPID }}
     secrets:
-      githubappPrivateKey: ${{ secrets.GRIDSUITE_ACTIONS_SECRET }}
+      githubappPrivateKey: ${{ secrets.POWSYBL_ACTIONS_SECRET }}
