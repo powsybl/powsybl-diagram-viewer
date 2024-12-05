@@ -50,8 +50,10 @@ export { LineFlowMode, LineFlowColorMode } from './components/network-map-viewer
 export { MapEquipments } from './components/network-map-viewer/network/map-equipments';
 export {
     default as NetworkMap,
-    DRAW_EVENT,
+    type NetworkMapProps,
     type NetworkMapRef,
+    DRAW_EVENT,
+    type MenuClickFunction,
 } from './components/network-map-viewer/network/network-map';
 export { DRAW_MODES } from './components/network-map-viewer/network/draw-control';
 
