@@ -215,10 +215,10 @@ export class NetworkAreaDiagramViewer {
         this.container.innerHTML = '';
 
         // set dimensions
-        this.setOriginalWidth(dimensions.width);
-        this.setOriginalHeight(dimensions.height);
-        this.setWidth(dimensions.width < minWidth ? minWidth : Math.min(dimensions.width, maxWidth));
-        this.setHeight(dimensions.height < minHeight ? minHeight : Math.min(dimensions.height, maxHeight));
+        this.setOriginalWidth(dimensions.viewbox.width);
+        this.setOriginalHeight(dimensions.viewbox.height);
+        this.setWidth(Math.max(minWidth, Math.min(dimensions.viewbox.width, maxWidth)));
+        this.setHeight(Math.max(minHeight, Math.min(dimensions.viewbox.height, maxHeight)));
 
         // set the SVG
         this.svgDraw = SVG()
@@ -330,7 +330,6 @@ export class NetworkAreaDiagramViewer {
             zoomMin: 0.5 / this.ratio, // maximum zoom OUT ratio (0.5 = at best, the displayed area is twice the SVG's size)
             zoomMax: 20 * this.ratio, // maximum zoom IN ratio (20 = at best, the displayed area is only 1/20th of the SVG's size)
             zoomFactor: 0.2,
-            margins: { top: 0, left: 0, right: 0, bottom: 0 },
         });
     }
 
