@@ -5,17 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { WritableDeep } from 'type-fest';
 import { useEffect, useRef } from 'react';
 import { createTheme, StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
-import { GeoData, NetworkMap, NetworkMapRef } from '../../src';
-import { type MapEquipment } from '../../src/equipment-types';
-import { addNadToDemo, addSldToDemo } from './diagram-viewers/add-diagrams';
-import DemoMapEquipments from './map-viewer/demo-map-equipments';
+import { GeoData, type MapEquipment, MapEquipments, NetworkMap, type NetworkMapRef } from '../../src';
 
-import sposdata from './map-viewer/data/spos.json';
-import lposdata from './map-viewer/data/lpos.json';
-import smapdata from './map-viewer/data/smap.json';
-import lmapdata from './map-viewer/data/lmap.json';
+import { addNadToDemo, addSldToDemo } from './diagram-viewers/add-diagrams';
+import sposdata from './map-viewer/data/spos';
+import lposdata from './map-viewer/data/lpos';
+import smapdata from './map-viewer/data/smap';
+import lmapdata from './map-viewer/data/lmap';
 
 export default function App() {
     const INITIAL_ZOOM = 9;
@@ -55,10 +54,12 @@ export default function App() {
 
     //declare data to be displayed: coordinates and network data
     const geoData = new GeoData(new Map(), new Map());
-    geoData.setSubstationPositions(sposdata);
-    geoData.setLinePositions(lposdata);
+    geoData.setSubstationPositions(sposdata as WritableDeep<typeof sposdata>);
+    geoData.setLinePositions(lposdata as WritableDeep<typeof lposdata>);
 
-    const mapEquipments = new DemoMapEquipments(smapdata, lmapdata);
+    const mapEquipments = new MapEquipments();
+    mapEquipments.updateSubstations(smapdata as WritableDeep<typeof smapdata>, true);
+    mapEquipments.updateLines(lmapdata as WritableDeep<typeof lmapdata>, true);
 
     useEffect(() => {
         const handleContextmenu = (e: MouseEvent) => {
