@@ -88,6 +88,7 @@ const INITIAL_CENTERED = {
     centeredSubstationId: null,
     centered: false,
 };
+const DEFAULT_LOCATE_SUBSTATION_ZOOM_LEVEL = 12;
 
 // get polygon coordinates (features) or an empty object
 function getPolygonFeatures() {
@@ -187,6 +188,9 @@ const NetworkMap = forwardRef((props, ref) => {
                     mapRef.current?.flyTo({
                         center: [geodata.lon, geodata.lat],
                         duration: 2000,
+                        // only zoom if the current zoom is smaller than the new one
+                        zoom: Math.max(mapRef.current?.getZoom(), props.locateSubStationZoomLevel),
+                        essential: true,
                     });
                     setCentered({
                         lastCenteredSubstation: centered.centeredSubstationId,
@@ -643,6 +647,7 @@ NetworkMap.defaultProps = {
     useName: true,
     visible: true,
     shouldDisableToolTip: false,
+    locateSubStationZoomLevel: DEFAULT_LOCATE_SUBSTATION_ZOOM_LEVEL,
 
     onSubstationClick: () => {},
     onSubstationClickChooseVoltageLevel: () => {},
@@ -696,7 +701,7 @@ NetworkMap.propTypes = {
     useName: PropTypes.bool,
     visible: PropTypes.bool,
     shouldDisableToolTip: PropTypes.bool,
-
+    locateSubStationZoomLevel: PropTypes.number,
     onHvdcLineMenuClick: PropTypes.func,
     onLineMenuClick: PropTypes.func,
     onTieLineMenuClick: PropTypes.func,
