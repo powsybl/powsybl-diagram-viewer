@@ -291,6 +291,8 @@ export class NetworkAreaDiagramViewer {
                 }
             };
 
+            // Create a debounced version of the observer callback to limit the frequency of calls when the 'viewBox' attribute changes,
+            // particularly during zooming operations, improving performance and avoiding redundant updates.
             const debouncedObserverCallback = debounce(observerCallback, 50);
             const observer = new MutationObserver(debouncedObserverCallback);
             observer.observe(targetNode, { attributeFilter: ['viewBox'] });
