@@ -13,8 +13,7 @@
     height: 0;
 }
 
-
 .mapbox-gl-draw_ctrl-draw-btn.active,
 .mapbox-gl-draw_ctrl-draw-btn.active:hover {
-  background-color:lightblue !important;
+    background-color: lightblue !important;
 }

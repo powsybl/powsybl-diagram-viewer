@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      versionType:
+        description: version type increment
+        required: true
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+      nodeAuthToken:
+        description: NPM automation access token
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  run-release:
+    uses: powsybl/github-ci/.github/workflows/release-frontend-lib-generic.yml@859a4effdaa9c5e79684378f39778fd8d06df3c5
+    with:
+      versionType: ${{ github.event.inputs.versionType }}
+      nodeAuthToken: ${{ github.event.inputs.nodeAuthToken }}
+      githubappId: ${{ vars.POWSYBL_ACTIONS_APPID }}
+    secrets:
+      githubappPrivateKey: ${{ secrets.POWSYBL_ACTIONS_SECRET }}

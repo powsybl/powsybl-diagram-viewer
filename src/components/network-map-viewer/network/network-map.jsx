@@ -6,16 +6,7 @@
  */
 
 import PropTypes from 'prop-types';
-import {
-    forwardRef,
-    memo,
-    useCallback,
-    useEffect,
-    useImperativeHandle,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Box, decomposeColor } from '@mui/system';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import { Replay } from '@mui/icons-material';
@@ -97,6 +88,7 @@ const INITIAL_CENTERED = {
     centeredSubstationId: null,
     centered: false,
 };
+const DEFAULT_LOCATE_SUBSTATION_ZOOM_LEVEL = 12;
 
 // get polygon coordinates (features) or an empty object
 function getPolygonFeatures() {
@@ -123,30 +115,18 @@ const NetworkMap = forwardRef((props, ref) => {
 
     //NOTE these constants are moved to the component's parameters list
     //const currentNode = useSelector((state) => state.currentTreeNode);
-    const {
-        onPolygonChanged,
-        centerOnSubstation,
-        onDrawEvent,
-        shouldDisableToolTip,
-    } = props;
+    const { onPolygonChanged, centerOnSubstation, onDrawEvent, shouldDisableToolTip } = props;
 
     const { getNameOrId } = useNameOrId(props.useName);
 
-    const readyToDisplay =
-        props.mapEquipments !== null &&
-        props.geoData !== null &&
-        !props.disabled;
+    const readyToDisplay = props.mapEquipments !== null && props.geoData !== null && !props.disabled;
 
     const readyToDisplaySubstations =
-        readyToDisplay &&
-        props.mapEquipments.substations &&
-        props.geoData.substationPositionsById.size > 0;
+        readyToDisplay && props.mapEquipments.substations && props.geoData.substationPositionsById.size > 0;
 
     const readyToDisplayLines =
         readyToDisplay &&
-        (props.mapEquipments?.lines ||
-            props.mapEquipments?.hvdcLines ||
-            props.mapEquipments?.tieLines) &&
+        (props.mapEquipments?.lines || props.mapEquipments?.hvdcLines || props.mapEquipments?.tieLines) &&
         props.mapEquipments.voltageLevels &&
         props.geoData.substationPositionsById.size > 0;
 
@@ -165,17 +145,11 @@ const NetworkMap = forwardRef((props, ref) => {
                 equipmentType: EQUIPMENT_TYPES.HVDC_LINE,
             })) ?? []),
         ];
-    }, [
-        props.mapEquipments?.hvdcLines,
-        props.mapEquipments?.tieLines,
-        props.mapEquipments?.lines,
-    ]);
+    }, [props.mapEquipments?.hvdcLines, props.mapEquipments?.tieLines, props.mapEquipments?.lines]);
 
     const divRef = useRef();
 
-    const mToken = !props.mapBoxToken
-        ? FALLBACK_MAPBOX_TOKEN
-        : props.mapBoxToken;
+    const mToken = !props.mapBoxToken ? FALLBACK_MAPBOX_TOKEN : props.mapBoxToken;
 
     useEffect(() => {
         if (centerOnSubstation === null) {
@@ -202,22 +176,21 @@ const NetworkMap = forwardRef((props, ref) => {
         //This is a hack because it accesses the properties of deck directly but for now it works
         if (
             (!centered.centered ||
-                (centered.centeredSubstationId &&
-                    centered.centeredSubstationId !==
-                        centered.lastCenteredSubstation)) &&
+                (centered.centeredSubstationId && centered.centeredSubstationId !== centered.lastCenteredSubstation)) &&
             props.geoData !== null
         ) {
             if (props.geoData.substationPositionsById.size > 0) {
                 if (centered.centeredSubstationId) {
-                    const geodata = props.geoData.substationPositionsById.get(
-                        centered.centeredSubstationId
-                    );
+                    const geodata = props.geoData.substationPositionsById.get(centered.centeredSubstationId);
                     if (!geodata) {
                         return;
                     } // can't center on substation if no coordinate.
                     mapRef.current?.flyTo({
                         center: [geodata.lon, geodata.lat],
                         duration: 2000,
+                        // only zoom if the current zoom is smaller than the new one
+                        zoom: Math.max(mapRef.current?.getZoom(), props.locateSubStationZoomLevel),
+                        essential: true,
                     });
                     setCentered({
                         lastCenteredSubstation: centered.centeredSubstationId,
@@ -225,9 +198,7 @@ const NetworkMap = forwardRef((props, ref) => {
                         centered: true,
                     });
                 } else {
-                    const coords = Array.from(
-                        props.geoData.substationPositionsById.entries()
-                    ).map((x) => x[1]);
+                    const coords = Array.from(props.geoData.substationPositionsById.entries()).map((x) => x[1]);
                     const maxlon = Math.max.apply(
                         null,
                         coords.map((x) => x.lon)
@@ -268,15 +239,9 @@ const NetworkMap = forwardRef((props, ref) => {
             !info.interactionState || // first event of before an animation (e.g. clicking the +/- buttons of the navigation controls, gives the target
             (info.interactionState && !info.interactionState.inTransition) // Any event not part of a animation (mouse panning or zooming)
         ) {
-            if (
-                info.viewState.zoom >= props.labelsZoomThreshold &&
-                !labelsVisible
-            ) {
+            if (info.viewState.zoom >= props.labelsZoomThreshold && !labelsVisible) {
                 setLabelsVisible(true);
-            } else if (
-                info.viewState.zoom < props.labelsZoomThreshold &&
-                labelsVisible
-            ) {
+            } else if (info.viewState.zoom < props.labelsZoomThreshold && labelsVisible) {
                 setLabelsVisible(false);
             }
             setShowTooltip(info.viewState.zoom >= props.tooltipZoomThreshold);
@@ -309,10 +274,8 @@ const NetworkMap = forwardRef((props, ref) => {
     }
 
     function onClickHandler(info, event, network) {
-        const leftButton =
-            event.originalEvent.button === MOUSE_EVENT_BUTTON_LEFT;
-        const rightButton =
-            event.originalEvent.button === MOUSE_EVENT_BUTTON_RIGHT;
+        const leftButton = event.originalEvent.button === MOUSE_EVENT_BUTTON_LEFT;
+        const rightButton = event.originalEvent.button === MOUSE_EVENT_BUTTON_RIGHT;
         if (
             info.layer &&
             info.layer.id.startsWith(SUBSTATION_LAYER_PREFIX) &&
@@ -387,11 +350,7 @@ const NetworkMap = forwardRef((props, ref) => {
                         ? props.onTieLineMenuClick
                         : props.onHvdcLineMenuClick;
 
-                menuClickFunction(
-                    equipment,
-                    event.originalEvent.x,
-                    event.originalEvent.y
-                );
+                menuClickFunction(equipment, event.originalEvent.x, event.originalEvent.y);
             }
         }
     }
@@ -450,9 +409,7 @@ const NetworkMap = forwardRef((props, ref) => {
                 showLineFlow: props.visible && showLineFlow,
                 lineFlowColorMode: props.lineFlowColorMode,
                 lineFlowAlertThreshold: props.lineFlowAlertThreshold,
-                lineFullPath:
-                    props.geoData.linePositionsById.size > 0 &&
-                    props.lineFullPath,
+                lineFullPath: props.geoData.linePositionsById.size > 0 && props.lineFullPath,
                 lineParallelPath: props.lineParallelPath,
                 labelsVisible: labelsVisible,
                 labelColor: foregroundNeutralColor,
@@ -488,12 +445,7 @@ const NetworkMap = forwardRef((props, ref) => {
     };
 
     const renderOverlay = () => (
-        <LoaderWithOverlay
-            color="inherit"
-            loaderSize={70}
-            isFixed={false}
-            loadingMessageText={'loadingGeoData'}
-        />
+        <LoaderWithOverlay color="inherit" loaderSize={70} isFixed={false} loadingMessageText={'loadingGeoData'} />
     );
 
     useEffect(() => {
@@ -525,10 +477,7 @@ const NetworkMap = forwardRef((props, ref) => {
         }
     };
 
-    const mapStyle = useMemo(
-        () => getMapStyle(props.mapLibrary, props.mapTheme),
-        [props.mapLibrary, props.mapTheme]
-    );
+    const mapStyle = useMemo(() => getMapStyle(props.mapLibrary, props.mapTheme), [props.mapLibrary, props.mapTheme]);
 
     const mapLib =
         props.mapLibrary === MAPBOX
@@ -574,35 +523,18 @@ const NetworkMap = forwardRef((props, ref) => {
         return selectedLines.filter((line) => {
             return props.filteredNominalVoltages.some((nv) => {
                 return (
-                    nv ===
-                        props.mapEquipments.getVoltageLevel(
-                            line.voltageLevelId1
-                        ).nominalV ||
-                    nv ===
-                        props.mapEquipments.getVoltageLevel(
-                            line.voltageLevelId2
-                        ).nominalV
+                    nv === props.mapEquipments.getVoltageLevel(line.voltageLevelId1).nominalV ||
+                    nv === props.mapEquipments.getVoltageLevel(line.voltageLevelId2).nominalV
                 );
             });
         });
-    }, [
-        props.mapEquipments,
-        mapEquipmentsLines,
-        props.geoData,
-        props.filteredNominalVoltages,
-    ]);
+    }, [props.mapEquipments, mapEquipmentsLines, props.geoData, props.filteredNominalVoltages]);
 
     const getSelectedSubstations = useCallback(() => {
-        const substations = getSubstationsInPolygon(
-            getPolygonFeatures(),
-            props.mapEquipments,
-            props.geoData
-        );
+        const substations = getSubstationsInPolygon(getPolygonFeatures(), props.mapEquipments, props.geoData);
         return (
             substations.filter((substation) => {
-                return substation.voltageLevels.some((vl) =>
-                    props.filteredNominalVoltages.includes(vl.nominalV)
-                );
+                return substation.voltageLevels.some((vl) => props.filteredNominalVoltages.includes(vl.nominalV));
             }) ?? []
         );
     }, [props.mapEquipments, props.geoData, props.filteredNominalVoltages]);
@@ -620,12 +552,7 @@ const NetworkMap = forwardRef((props, ref) => {
             },
             getMapDrawer,
         }),
-        [
-            onPolygonChanged,
-            getSelectedSubstations,
-            getSelectedLines,
-            onDrawEvent,
-        ]
+        [onPolygonChanged, getSelectedSubstations, getSelectedLines, onDrawEvent]
     );
 
     const onDelete = useCallback(() => {
@@ -652,12 +579,7 @@ const NetworkMap = forwardRef((props, ref) => {
                 {props.displayOverlayLoader && renderOverlay()}
                 {props.isManualRefreshBackdropDisplayed && (
                     <Box sx={styles.mapManualRefreshBackdrop}>
-                        <Button
-                            onClick={props.onManualRefreshClick}
-                            aria-label="reload"
-                            color="inherit"
-                            size="large"
-                        >
+                        <Button onClick={props.onManualRefreshClick} aria-label="reload" color="inherit" size="large">
                             <Replay />
                             <FormattedMessage id="ManuallyRefreshGeoData" />
                         </Button>
@@ -666,11 +588,7 @@ const NetworkMap = forwardRef((props, ref) => {
                 <DeckGLOverlay
                     ref={deckRef}
                     onClick={(info, event) => {
-                        onClickHandler(
-                            info,
-                            event.srcEvent,
-                            props.mapEquipments
-                        );
+                        onClickHandler(info, event.srcEvent, props.mapEquipments);
                     }}
                     onAfterRender={onAfterRender} // TODO simplify this
                     layers={layers}
@@ -729,6 +647,7 @@ NetworkMap.defaultProps = {
     useName: true,
     visible: true,
     shouldDisableToolTip: false,
+    locateSubStationZoomLevel: DEFAULT_LOCATE_SUBSTATION_ZOOM_LEVEL,
 
     onSubstationClick: () => {},
     onSubstationClickChooseVoltageLevel: () => {},
@@ -782,7 +701,7 @@ NetworkMap.propTypes = {
     useName: PropTypes.bool,
     visible: PropTypes.bool,
     shouldDisableToolTip: PropTypes.bool,
-
+    locateSubStationZoomLevel: PropTypes.number,
     onHvdcLineMenuClick: PropTypes.func,
     onLineMenuClick: PropTypes.func,
     onTieLineMenuClick: PropTypes.func,
@@ -813,12 +732,7 @@ function getSubstationsInPolygon(features, mapEquipments, geoData) {
         });
 }
 
-function getSelectedLinesInPolygon(
-    network,
-    lines,
-    geoData,
-    polygonCoordinates
-) {
+function getSelectedLinesInPolygon(network, lines, geoData, polygonCoordinates) {
     return lines.filter((line) => {
         try {
             const linePos = geoData.getLinePositions(network, line);
@@ -829,9 +743,7 @@ function getSelectedLinesInPolygon(
                 return false;
             }
             const extremities = [linePos[0], linePos[linePos.length - 1]];
-            return extremities.some((pos) =>
-                booleanPointInPolygon(pos, polygonCoordinates)
-            );
+            return extremities.some((pos) => booleanPointInPolygon(pos, polygonCoordinates));
         } catch (error) {
             console.error(error);
             return false;

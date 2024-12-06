@@ -17,9 +17,7 @@ export const useNameOrId = (useName: boolean) => {
         (infos: EquipmentInfos | null) => {
             if (infos != null) {
                 const name = infos.name;
-                return useName && name != null && name.trim() !== ''
-                    ? name
-                    : infos?.id ?? null;
+                return useName && name != null && name.trim() !== '' ? name : infos?.id ?? null;
             }
             return null;
         },
