@@ -4,10 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { Accessor, PathLayer, PathLayerProps } from 'deck.gl';
-import { DefaultProps } from '@deck.gl/core';
+import { PathLayer } from 'deck.gl';
 import GL from '@luma.gl/constants';
-import { UniformValues } from 'maplibre-gl';
+
+const defaultProps = {
+    getLineParallelIndex: { type: 'accessor', value: 0 },
+    getLineAngle: { type: 'accessor', value: 0 },
+    distanceBetweenLines: { type: 'number', value: 1000 },
+    maxParallelOffset: { type: 'number', value: 100 },
+    minParallelOffset: { type: 'number', value: 3 },
+};
 
 /**
  * A layer based on PathLayer allowing to shift path by an offset + angle
@@ -21,30 +27,7 @@ import { UniformValues } from 'maplibre-gl';
  *         maxParallelOffset: max pixel distance
  *         minParallelOffset: min pixel distance
  */
-
-type _ParallelPathLayerProps<DataT = unknown> = {
-    getLineParallelIndex?: Accessor<DataT, number>;
-    getLineAngle?: Accessor<DataT, number>;
-    distanceBetweenLines?: number;
-    maxParallelOffset?: number;
-    minParallelOffset?: number;
-};
-
-export type ParallelPathLayerProps<DataT = unknown> = _ParallelPathLayerProps<DataT> & PathLayerProps<DataT>;
-
-const defaultProps: DefaultProps<ParallelPathLayerProps> = {
-    getLineParallelIndex: { type: 'accessor', value: 0 },
-    getLineAngle: { type: 'accessor', value: 0 },
-    distanceBetweenLines: { type: 'number', value: 1000 },
-};
-
-export default class ParallelPathLayer<DataT = unknown> extends PathLayer<
-    DataT,
-    Required<ParallelPathLayerProps<DataT>>
-> {
-    static layerName = 'ParallelPathLayer';
-    static defaultProps = defaultProps;
-
+export default class ParallelPathLayer extends PathLayer {
     getShaders() {
         const shaders = super.getShaders();
         shaders.inject = Object.assign({}, shaders.inject, {
@@ -118,11 +101,11 @@ gl_Position += project_common_position_to_clipspace(trans) - project_uCenter;
         return shaders;
     }
 
-    initializeState() {
-        super.initializeState();
+    initializeState(params) {
+        super.initializeState(params);
 
         const attributeManager = this.getAttributeManager();
-        attributeManager?.addInstanced({
+        attributeManager.addInstanced({
             // too much instances variables need to compact some...
             instanceExtraAttributes: {
                 size: 4,
@@ -132,8 +115,7 @@ gl_Position += project_common_position_to_clipspace(trans) - project_uCenter;
         });
     }
 
-    // TODO find the full type for record values
-    draw({ uniforms }: { uniforms: Record<string, UniformValues<object>> }) {
+    draw({ uniforms }) {
         super.draw({
             uniforms: {
                 ...uniforms,
@@ -144,3 +126,6 @@ gl_Position += project_common_position_to_clipspace(trans) - project_uCenter;
         });
     }
 }
+
+ParallelPathLayer.layerName = 'ParallelPathLayer';
+ParallelPathLayer.defaultProps = defaultProps;
