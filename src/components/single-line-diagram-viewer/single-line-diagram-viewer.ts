@@ -485,7 +485,7 @@ export class SingleLineDiagramViewer {
                         }
                         const switchId = aSwitch.equipmentId;
                         const open = aSwitch.open;
-                        this.onBreakerCallback?.(switchId, !open, event.currentTarget as SvgInHtml);
+                        this.onBreakerCallback?.(switchId, !open, event.currentTarget as SVGElement);
                     });
                 }
             });
