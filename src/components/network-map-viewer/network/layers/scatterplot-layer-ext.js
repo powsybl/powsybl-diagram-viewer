@@ -4,29 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { Accessor, ScatterplotLayer, ScatterplotLayerProps } from 'deck.gl';
-import { DefaultProps } from '@deck.gl/core';
-
+import { ScatterplotLayer } from 'deck.gl';
 import GL from '@luma.gl/constants';
 
-type _ScatterplotLayerExtProps<DataT = unknown> = {
-    getRadiusMaxPixels: Accessor<DataT, number>;
-};
-export type ScatterplotLayerExtProps<DataT = unknown> = _ScatterplotLayerExtProps<DataT> & ScatterplotLayerProps<DataT>;
-
-const defaultProps: DefaultProps<ScatterplotLayerExtProps> = {
+const defaultProps = {
     getRadiusMaxPixels: { type: 'accessor', value: 1 },
 };
 
 /**
  * An extended scatter plot layer that allows a radius max pixels to be different for each object.
  */
-export default class ScatterplotLayerExt<DataT = unknown> extends ScatterplotLayer<
-    Required<_ScatterplotLayerExtProps<DataT>>
-> {
-    static layerName = 'ScatterplotLayerExt';
-    static defaultProps = defaultProps;
-
+export default class ScatterplotLayerExt extends ScatterplotLayer {
     getShaders() {
         const shaders = super.getShaders();
         return Object.assign({}, shaders, {
@@ -39,11 +27,11 @@ attribute float instanceRadiusMaxPixels;
         });
     }
 
-    initializeState() {
-        super.initializeState();
+    initializeState(params) {
+        super.initializeState(params);
 
         const attributeManager = this.getAttributeManager();
-        attributeManager?.addInstanced({
+        attributeManager.addInstanced({
             instanceRadiusMaxPixels: {
                 size: 1,
                 transition: true,
@@ -54,3 +42,6 @@ attribute float instanceRadiusMaxPixels;
         });
     }
 }
+
+ScatterplotLayerExt.layerName = 'ScatterplotLayerExt';
+ScatterplotLayerExt.defaultProps = defaultProps;

@@ -4,61 +4,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { picking, project32 } from '@deck.gl/core';
+import { Layer, project32, picking } from '@deck.gl/core';
 import GL from '@luma.gl/constants';
-import { FEATURES, Geometry, hasFeatures, isWebGL2, Model, Texture2D } from '@luma.gl/core';
+import { Model, Geometry, Texture2D, FEATURES, hasFeatures, isWebGL2 } from '@luma.gl/core';
+
 import vs from './arrow-layer-vertex.vert?raw';
 import fs from './arrow-layer-fragment.frag?raw';
-import { Accessor, Color, Layer, LayerContext, LayerProps, Position, Texture, UpdateParameters } from 'deck.gl';
-import { Line } from '../../utils/equipment-types';
-import { type UniformValues } from 'maplibre-gl';
 
-const DEFAULT_COLOR = [0, 0, 0, 255] satisfies Color;
+const DEFAULT_COLOR = [0, 0, 0, 255];
 
 // this value has to be consistent with the one in vertex shader
 const MAX_LINE_POINT_COUNT = 2 ** 15;
 
-export enum ArrowDirection {
-    NONE = 'none',
-    FROM_SIDE_1_TO_SIDE_2 = 'fromSide1ToSide2',
-    FROM_SIDE_2_TO_SIDE_1 = 'fromSide2ToSide1',
-}
-
-export type Arrow = {
-    line: Line;
-    distance: number;
+export const ArrowDirection = {
+    NONE: 'none',
+    FROM_SIDE_1_TO_SIDE_2: 'fromSide1ToSide2',
+    FROM_SIDE_2_TO_SIDE_1: 'fromSide2ToSide1',
 };
-
-export type LayerDataSource<DataType> = DataType[];
-
-type _ArrowLayerProps = {
-    data: Arrow[];
-    sizeMinPixels?: number;
-    sizeMaxPixels?: number;
-    getDistance: Accessor<Arrow, number>;
-    getLine: (arrow: Arrow) => Line;
-    getLinePositions: (line: Line) => Position[];
-    getSize?: Accessor<Arrow, number>;
-    getColor?: Accessor<Arrow, Color>;
-    getSpeedFactor?: Accessor<Arrow, number>;
-    getDirection?: Accessor<Arrow, ArrowDirection>;
-    animated?: boolean;
-    getLineParallelIndex?: Accessor<Arrow, number>;
-    getLineAngles?: Accessor<Arrow, number[]>;
-    getDistanceBetweenLines?: Accessor<Arrow, number>;
-    maxParallelOffset?: number;
-    minParallelOffset?: number;
-    opacity?: number;
-} & LayerProps;
-
-type ArrowLayerProps = _ArrowLayerProps & LayerProps;
 
 const defaultProps = {
     sizeMinPixels: { type: 'number', min: 0, value: 0 }, //  min size in pixels
     sizeMaxPixels: { type: 'number', min: 0, value: Number.MAX_SAFE_INTEGER }, // max size in pixels
-    getDistance: { type: 'accessor', value: (arrow: Arrow) => arrow.distance },
-    getLine: { type: 'accessor', value: (arrow: Arrow) => arrow.line },
-    getLinePositions: { type: 'accessor', value: (line: Line) => line.positions },
+
+    getDistance: { type: 'accessor', value: (arrow) => arrow.distance },
+    getLine: { type: 'accessor', value: (arrow) => arrow.line },
+    getLinePositions: { type: 'accessor', value: (line) => line.positions },
     getSize: { type: 'accessor', value: 1 },
     getColor: { type: 'accessor', value: DEFAULT_COLOR },
     getSpeedFactor: { type: 'accessor', value: 1.0 },
@@ -72,13 +42,6 @@ const defaultProps = {
     opacity: { type: 'number', value: 1.0 },
 };
 
-type LineAttributes = {
-    distance: number;
-    positionsTextureOffset: number;
-    distancesTextureOffset: number;
-    pointCount: number;
-};
-
 /**
  * A layer that draws arrows over the lines between voltage levels. The arrows are drawn on a direct line
  * or with a parallel offset. The initial point is also shifted to coincide with the fork line ends.
@@ -89,26 +52,12 @@ type LineAttributes = {
  *         maxParallelOffset: max pixel distance
  *         minParallelOffset: min pixel distance
  */
-export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
-    static layerName = 'ArrowLayer';
-    static defaultProps = defaultProps;
-
-    declare state: {
-        linePositionsTexture: Texture;
-        lineDistancesTexture: Texture;
-        lineAttributes: Map<Line, LineAttributes>;
-        model?: Model;
-        timestamp: number;
-        stop: boolean;
-        maxTextureSize: number;
-        webgl2: boolean;
-    };
-
+export class ArrowLayer extends Layer {
     getShaders() {
         return super.getShaders({ vs, fs, modules: [project32, picking] });
     }
 
-    getArrowLineAttributes(arrow: Arrow): LineAttributes {
+    getArrowLineAttributes(arrow) {
         const line = this.props.getLine(arrow);
         if (!line) {
             throw new Error('Invalid line');
@@ -131,9 +80,9 @@ export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
         this.state = {
             maxTextureSize,
             webgl2: isWebGL2(gl),
-        } as this['state'];
+        };
 
-        this.getAttributeManager()?.addInstanced({
+        this.getAttributeManager().addInstanced({
             instanceSize: {
                 size: 1,
                 transition: true,
@@ -221,19 +170,13 @@ export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
         });
     }
 
-    finalizeState(context: LayerContext) {
-        super.finalizeState(context);
+    finalizeState() {
+        super.finalizeState();
         // we do not use setState to avoid a redraw, it is just used to stop the animation
         this.state.stop = true;
     }
 
-    createTexture2D(
-        gl: WebGLRenderingContext,
-        data: Array<number>,
-        elementSize: number,
-        format: number, // is it TextureFormat?
-        dataFormat: number // is it TextureFormat?
-    ) {
+    createTexture2D(gl, data, elementSize, format, dataFormat) {
         const start = performance.now();
 
         // we calculate the smallest square texture that is a power of 2 but less or equals to MAX_TEXTURE_SIZE
@@ -278,11 +221,11 @@ export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
         return texture2d;
     }
 
-    createTexturesStructure(props: this['props']) {
+    createTexturesStructure(props) {
         const start = performance.now();
 
-        const linePositionsTextureData: number[] = [];
-        const lineDistancesTextureData: number[] = [];
+        const linePositionsTextureData = [];
+        const lineDistancesTextureData = [];
         const lineAttributes = new Map();
         let lineDistance = 0;
 
@@ -298,16 +241,14 @@ export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
             const lineDistancesTextureOffset = lineDistancesTextureData.length;
             let linePointCount = 0;
             if (positions.length > 0) {
-                positions.forEach((position: Position) => {
+                positions.forEach((position) => {
                     // fill line positions texture
                     linePositionsTextureData.push(position[0]);
                     linePositionsTextureData.push(position[1]);
                     linePointCount++;
                 });
-                if (line.cumulativeDistances) {
-                    lineDistancesTextureData.push(...line.cumulativeDistances);
-                    lineDistance = line.cumulativeDistances[line.cumulativeDistances.length - 1];
-                }
+                lineDistancesTextureData.push(...line.cumulativeDistances);
+                lineDistance = line.cumulativeDistances[line.cumulativeDistances.length - 1];
             }
             if (linePointCount > MAX_LINE_POINT_COUNT) {
                 throw new Error(`Too many line point count (${linePointCount}), maximum is ${MAX_LINE_POINT_COUNT}`);
@@ -331,7 +272,7 @@ export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
         };
     }
 
-    updateGeometry({ props, changeFlags }: UpdateParameters<this>) {
+    updateGeometry({ props, changeFlags }) {
         const geometryChanged =
             changeFlags.dataChanged ||
             (changeFlags.updateTriggersChanged &&
@@ -365,12 +306,12 @@ export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
             });
 
             if (!changeFlags.dataChanged) {
-                this.getAttributeManager()?.invalidateAll();
+                this.getAttributeManager().invalidateAll();
             }
         }
     }
 
-    updateModel({ changeFlags }: UpdateParameters<this>) {
+    updateModel({ changeFlags }) {
         if (changeFlags.extensionsChanged) {
             const { gl } = this.context;
 
@@ -383,11 +324,11 @@ export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
                 model: this._getModel(gl),
             });
 
-            this.getAttributeManager()?.invalidateAll();
+            this.getAttributeManager().invalidateAll();
         }
     }
 
-    updateState(updateParams: UpdateParameters<this>) {
+    updateState(updateParams) {
         super.updateState(updateParams);
 
         this.updateGeometry(updateParams);
@@ -406,7 +347,7 @@ export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
         }
     }
 
-    animate(timestamp: number) {
+    animate(timestamp) {
         if (this.state.stop) {
             return;
         }
@@ -420,33 +361,30 @@ export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
         window.requestAnimationFrame((timestamp) => this.animate(timestamp));
     }
 
-    // TODO find the full type for record values
-    draw({ uniforms }: { uniforms: Record<string, UniformValues<object>> }) {
+    draw({ uniforms }) {
         const { sizeMinPixels, sizeMaxPixels } = this.props;
 
         const { linePositionsTexture, lineDistancesTexture, timestamp, webgl2 } = this.state;
 
-        if (this.state.model) {
-            this.state.model
-                .setUniforms({
-                    ...uniforms,
-                    sizeMinPixels,
-                    sizeMaxPixels,
-                    linePositionsTexture,
-                    lineDistancesTexture,
-                    linePositionsTextureSize: [linePositionsTexture.width, linePositionsTexture.height],
-                    lineDistancesTextureSize: [lineDistancesTexture.width, lineDistancesTexture.height],
-                    timestamp,
-                    webgl2,
-                    distanceBetweenLines: this.props.getDistanceBetweenLines,
-                    maxParallelOffset: this.props.maxParallelOffset,
-                    minParallelOffset: this.props.minParallelOffset,
-                })
-                .draw();
-        }
+        this.state.model
+            .setUniforms(uniforms)
+            .setUniforms({
+                sizeMinPixels,
+                sizeMaxPixels,
+                linePositionsTexture,
+                lineDistancesTexture,
+                linePositionsTextureSize: [linePositionsTexture.width, linePositionsTexture.height],
+                lineDistancesTextureSize: [lineDistancesTexture.width, lineDistancesTexture.height],
+                timestamp,
+                webgl2,
+                distanceBetweenLines: this.props.getDistanceBetweenLines,
+                maxParallelOffset: this.props.maxParallelOffset,
+                minParallelOffset: this.props.minParallelOffset,
+            })
+            .draw();
     }
 
-    _getModel(gl: WebGLRenderingContext) {
+    _getModel(gl) {
         const positions = [-1, -1, 0, 0, 1, 0, 0, -0.6, 0, 1, -1, 0, 0, 1, 0, 0, -0.6, 0];
 
         return new Model(
@@ -468,3 +406,6 @@ export class ArrowLayer extends Layer<Required<ArrowLayerProps>> {
         );
     }
 }
+
+ArrowLayer.layerName = 'ArrowLayer';
+ArrowLayer.defaultProps = defaultProps;
