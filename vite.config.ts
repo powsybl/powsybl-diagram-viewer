@@ -29,9 +29,9 @@ export default defineConfig((config) => ({
         lib: {
             // Could also be a dictionary or array of multiple entry points
             entry: path.resolve(__dirname, 'src/index.ts'),
-            name: 'PowSyBl diagram viewer',
+            name: 'PowSyBl network viewer',
             // the proper extensions will be added
-            fileName: 'powsybl-diagram-viewer',
+            fileName: 'powsybl-network-viewer',
         },
         rollupOptions: {
             //https://stackoverflow.com/questions/59134241/using-deck-gl-as-webpack-external
@@ -66,6 +66,8 @@ export default defineConfig((config) => ({
                     '@luma.gl/constants': 'LumaGlConstants',
                     '@luma.gl/core': 'LumaGlCore',
                     '@svgdotjs/svg.js': 'SvgJs',
+                    '@mapbox/mapbox-gl-draw': 'MapboxGlDraw',
+                    '@turf/boolean-point-in-polygon': 'BooleanPointInPolygon',
                 },
             },
         },
