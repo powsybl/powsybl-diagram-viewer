@@ -181,7 +181,7 @@ export class MapEquipments {
         const remainingLines = branchesList.filter(
             (l) => l.voltageLevelId1 !== voltageLevelId && l.voltageLevelId2 !== voltageLevelId
         );
-        branchesList.filter((l) => !remainingLines.includes(l)).map((l) => this.linesById.delete(l.id));
+        branchesList.filter((l) => !remainingLines.includes(l)).forEach((l) => this.linesById.delete(l.id));
 
         return remainingLines;
     }
@@ -214,7 +214,7 @@ export class MapEquipments {
                 this.substations = this.substations.filter((l) => l.id !== equipmentId);
 
                 const substation = this.substationsById.get(equipmentId);
-                substation?.voltageLevels.map((vl) => this.removeEquipment(EQUIPMENT_TYPES.VOLTAGE_LEVEL, vl.id));
+                substation?.voltageLevels.forEach((vl) => this.removeEquipment(EQUIPMENT_TYPES.VOLTAGE_LEVEL, vl.id));
                 //@ts-expect-error TODO: manage nullable substation
                 this.completeSubstationsInfos([substation]);
                 break;
