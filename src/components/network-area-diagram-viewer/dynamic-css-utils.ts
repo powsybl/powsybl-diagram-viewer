@@ -12,8 +12,8 @@ export enum THRESHOLD_STATUS {
 export type CSS_DECLARATION = Record<string, string>;
 export type CSS_RULE = {
     cssSelector: string;
-    belowThresholdCssDeclaration: CSS_DECLARATION;
-    aboveThresholdCssDeclaration: CSS_DECLARATION;
+    belowThresholdCssDeclaration: CSS_DECLARATION | CSS_DECLARATION[];
+    aboveThresholdCssDeclaration: CSS_DECLARATION | CSS_DECLARATION[];
     threshold: number;
     thresholdStatus: THRESHOLD_STATUS;
 };
