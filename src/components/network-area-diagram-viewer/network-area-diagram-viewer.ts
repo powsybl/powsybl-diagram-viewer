@@ -217,8 +217,8 @@ export class NetworkAreaDiagramViewer {
         // set dimensions
         this.setOriginalWidth(dimensions.width);
         this.setOriginalHeight(dimensions.height);
-        this.setWidth(dimensions.width < minWidth ? minWidth : Math.min(dimensions.width, maxWidth));
-        this.setHeight(dimensions.height < minHeight ? minHeight : Math.min(dimensions.height, maxHeight));
+        this.setWidth(Math.max(minWidth, Math.min(dimensions.viewbox.width, maxWidth)));
+        this.setHeight(Math.max(minHeight, Math.min(this.width, maxHeight)));
 
         // set the SVG
         this.svgDraw = SVG()
