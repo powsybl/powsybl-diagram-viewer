@@ -9,14 +9,54 @@ export enum THRESHOLD_STATUS {
     BELOW = 'BELOW',
     ABOVE = 'ABOVE',
 }
+
 export type CSS_DECLARATION = Record<string, string>;
-export type CSS_RULE = {
+export type CSS_DECLARATION_CALLBACK = (value: number) => string;
+export type DYNAMIC_CSS_DECLARATION = Record<string, CSS_DECLARATION_CALLBACK>;
+
+type CSS_RULE_BASE = {
     cssSelector: string;
-    belowThresholdCssDeclaration: CSS_DECLARATION;
-    aboveThresholdCssDeclaration: CSS_DECLARATION;
-    threshold: number;
-    thresholdStatus: THRESHOLD_STATUS;
 };
+// CSS_RULE keys
+const RULE_KEYS = {
+    BELOW_THRESHOLD_CSS_DECLARATION: 'belowThresholdCssDeclaration',
+    ABOVE_THRESHOLD_CSS_DECLARATION: 'aboveThresholdCssDeclaration',
+    THRESHOLD: 'threshold',
+    THRESHOLD_STATUS: 'thresholdStatus',
+    CSS_DECLARATION: 'cssDeclaration',
+    CURRENT_VALUE: 'currentValue',
+} as const;
+
+export type CSS_RULE_THRESHOLD_DRIVEN = CSS_RULE_BASE & {
+    [RULE_KEYS.BELOW_THRESHOLD_CSS_DECLARATION]: CSS_DECLARATION;
+    [RULE_KEYS.ABOVE_THRESHOLD_CSS_DECLARATION]: CSS_DECLARATION;
+    [RULE_KEYS.THRESHOLD]: number;
+    [RULE_KEYS.THRESHOLD_STATUS]: THRESHOLD_STATUS;
+};
+
+export type CSS_RULE_FUNCTION_DRIVEN = CSS_RULE_BASE & {
+    [RULE_KEYS.CSS_DECLARATION]: DYNAMIC_CSS_DECLARATION;
+    [RULE_KEYS.CURRENT_VALUE]: CSS_DECLARATION;
+};
+
+export function isThresholdDrivenRule(
+    rule: CSS_RULE_THRESHOLD_DRIVEN | CSS_RULE_FUNCTION_DRIVEN
+): rule is CSS_RULE_THRESHOLD_DRIVEN {
+    return (
+        RULE_KEYS.BELOW_THRESHOLD_CSS_DECLARATION in rule &&
+        RULE_KEYS.ABOVE_THRESHOLD_CSS_DECLARATION in rule &&
+        RULE_KEYS.THRESHOLD in rule &&
+        RULE_KEYS.THRESHOLD_STATUS in rule
+    );
+}
+
+export function isFunctionDrivenRule(
+    rule: CSS_RULE_THRESHOLD_DRIVEN | CSS_RULE_FUNCTION_DRIVEN
+): rule is CSS_RULE_FUNCTION_DRIVEN {
+    return RULE_KEYS.CSS_DECLARATION in rule && RULE_KEYS.CURRENT_VALUE in rule;
+}
+
+export type CSS_RULE = CSS_RULE_THRESHOLD_DRIVEN | CSS_RULE_FUNCTION_DRIVEN;
 
 export const DEFAULT_DYNAMIC_CSS_RULES: CSS_RULE[] = [
     {
