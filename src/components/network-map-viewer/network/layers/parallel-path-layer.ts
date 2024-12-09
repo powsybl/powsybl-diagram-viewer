@@ -1,33 +1,51 @@
-/**
+/*
  * Copyright (c) 2020, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { PathLayer } from 'deck.gl';
+import { type Accessor, PathLayer, type PathLayerProps } from 'deck.gl';
+import type { DefaultProps } from '@deck.gl/core';
+import { type UniformValues } from 'maplibre-gl';
 import GL from '@luma.gl/constants';
 
-const defaultProps = {
+type _ParallelPathLayerProps<DataT = unknown> = {
+    /** real number representing the parallel translation, normalized to distanceBetweenLines */
+    getLineParallelIndex?: Accessor<DataT, number>;
+    /** line angle in radian */
+    getLineAngle?: Accessor<DataT, number>;
+    /** distance in meters between line when no pixel clamping is applied */
+    distanceBetweenLines?: number;
+    /** max pixel distance */
+    maxParallelOffset?: number;
+    /** min pixel distance */
+    minParallelOffset?: number;
+};
+export type ParallelPathLayerProps<DataT = unknown> = _ParallelPathLayerProps<DataT> & PathLayerProps<DataT>;
+
+const defaultProps: DefaultProps<ParallelPathLayerProps> = {
     getLineParallelIndex: { type: 'accessor', value: 0 },
     getLineAngle: { type: 'accessor', value: 0 },
     distanceBetweenLines: { type: 'number', value: 1000 },
     maxParallelOffset: { type: 'number', value: 100 },
     minParallelOffset: { type: 'number', value: 3 },
 };
-
 /**
- * A layer based on PathLayer allowing to shift path by an offset + angle
+ * A layer based on {@link PathLayer} allowing to shift path by an offset + angle
  * In addition to the shift for all points, the first point is also shifted
  * to coincide to the end of "fork lines" starting from the substations.
- * Needs to be kept in sync with ForkLineLayer and ArrowLayer because
- * ForkLineLayer must connect to this and the arrows must overlap on this.
- * props : getLineParallelIndex: real number representing the parallel translation, normalized to distanceBetweenLines
- *         getLineAngle: line angle in radian
- *         distanceBetweenLines: distance in meters between line when no pixel clamping is applied
- *         maxParallelOffset: max pixel distance
- *         minParallelOffset: min pixel distance
+ * Needs to be kept in sync with {@link ForkLineLayer} and {@link ArrowLayer} because
+ * {@link ForkLineLayer} must connect to this and the arrows must overlap on this.
  */
-export default class ParallelPathLayer extends PathLayer {
+export default class ParallelPathLayer<DataT = unknown> extends PathLayer<
+    DataT,
+    Required<_ParallelPathLayerProps<DataT>>
+> {
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
+    static readonly layerName = 'ParallelPathLayer';
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
+    static readonly defaultProps = defaultProps;
+
     getShaders() {
         const shaders = super.getShaders();
         shaders.inject = Object.assign({}, shaders.inject, {
@@ -101,11 +119,12 @@ gl_Position += project_common_position_to_clipspace(trans) - project_uCenter;
         return shaders;
     }
 
-    initializeState(params) {
-        super.initializeState(params);
+    initializeState(
+        ...params: Parameters<PathLayer<DataT, Required<ParallelPathLayerProps<DataT>>>['initializeState']>
+    ) {
+        super.initializeState(...params);
 
-        const attributeManager = this.getAttributeManager();
-        attributeManager.addInstanced({
+        this.getAttributeManager()?.addInstanced({
             // too much instances variables need to compact some...
             instanceExtraAttributes: {
                 size: 4,
@@ -115,7 +134,8 @@ gl_Position += project_common_position_to_clipspace(trans) - project_uCenter;
         });
     }
 
-    draw({ uniforms }) {
+    // TODO find the full type for record values
+    draw({ uniforms }: { uniforms: Record<string, UniformValues<object>> }) {
         super.draw({
             uniforms: {
                 ...uniforms,
@@ -126,6 +146,3 @@ gl_Position += project_common_position_to_clipspace(trans) - project_uCenter;
         });
     }
 }
-
-ParallelPathLayer.layerName = 'ParallelPathLayer';
-ParallelPathLayer.defaultProps = defaultProps;

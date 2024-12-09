@@ -1,0 +1,16 @@
+export default [
+    {
+        id: 'SUB1',
+        coordinate: {
+            lat: 45.31267,
+            lon: 9.49322,
+        },
+    },
+    {
+        id: 'SUB2',
+        coordinate: {
+            lat: 45.18608,
+            lon: 9.15484,
+        },
+    },
+] as const;
