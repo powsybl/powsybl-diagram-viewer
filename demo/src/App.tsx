@@ -8,6 +8,7 @@
 import { useEffect, useRef } from 'react';
 import { createTheme, StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import { GeoData, NetworkMap, NetworkMapRef } from '../../src';
+import { Equipment } from '../../src/components/network-map-viewer/network/map-equipments';
 import { addNadToDemo, addSldToDemo } from './diagram-viewers/add-diagrams';
 import DemoMapEquipments from './map-viewer/demo-map-equipments';
 
@@ -15,7 +16,6 @@ import sposdata from './map-viewer/data/spos.json';
 import lposdata from './map-viewer/data/lpos.json';
 import smapdata from './map-viewer/data/smap.json';
 import lmapdata from './map-viewer/data/lmap.json';
-import { Equipment } from '../../src/components/network-map-viewer/utils/equipment-types';
 
 export default function App() {
     const INITIAL_ZOOM = 9;

@@ -19,6 +19,7 @@ import {
 } from './dynamic-css-utils';
 import { LayoutParameters } from './layout-parameters';
 import { DiagramMetadata, EdgeMetadata, BusNodeMetadata, NodeMetadata, TextNodeMetadata } from './diagram-metadata';
+import { debounce } from '@mui/material';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
@@ -255,6 +256,10 @@ export class NetworkAreaDiagramViewer {
             this.svgDraw.on('mouseover', (e: Event) => {
                 this.onHover(e as MouseEvent);
             });
+
+            this.svgDraw.on('mouseout', () => {
+                this.onToggleHoverCallback?.(false, null, '', '');
+            });
         }
         this.svgDraw.on('panStart', function () {
             if (drawnSvg.parentElement != undefined) {
@@ -296,7 +301,11 @@ export class NetworkAreaDiagramViewer {
                     }
                 }
             };
-            const observer = new MutationObserver(observerCallback);
+
+            // Create a debounced version of the observer callback to limit the frequency of calls when the 'viewBox' attribute changes,
+            // particularly during zooming operations, improving performance and avoiding redundant updates.
+            const debouncedObserverCallback = debounce(observerCallback, 50);
+            const observer = new MutationObserver(debouncedObserverCallback);
             observer.observe(targetNode, { attributeFilter: ['viewBox'] });
         }
 
@@ -449,6 +458,7 @@ export class NetworkAreaDiagramViewer {
         }
         // reset data
         this.draggedElement = null;
+        this.ctm = null;
         this.enablePanzoom();
 
         // change cursor style back to normal
