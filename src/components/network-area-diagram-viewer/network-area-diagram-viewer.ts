@@ -12,6 +12,7 @@ import { SvgParameters } from './svg-parameters';
 import { LayoutParameters } from './layout-parameters';
 import { DiagramMetadata, EdgeMetadata, BusNodeMetadata, NodeMetadata, TextNodeMetadata } from './diagram-metadata';
 import { CSS_DECLARATION, CSS_RULE, THRESHOLD_STATUS, DEFAULT_DYNAMIC_CSS_RULES } from './dynamic-css-utils';
+import { debounce } from '@mui/material';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
@@ -310,7 +311,11 @@ export class NetworkAreaDiagramViewer {
                     }
                 }
             };
-            const observer = new MutationObserver(observerCallback);
+
+            // Create a debounced version of the observer callback to limit the frequency of calls when the 'viewBox' attribute changes,
+            // particularly during zooming operations, improving performance and avoiding redundant updates.
+            const debouncedObserverCallback = debounce(observerCallback, 50);
+            const observer = new MutationObserver(debouncedObserverCallback);
             observer.observe(targetNode, { attributeFilter: ['viewBox'] });
         }
 
