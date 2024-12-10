@@ -84,7 +84,7 @@ export interface SLDMetadata {
 
 export type OnNextVoltageCallbackType = (nextVId: string) => void;
 
-export type OnBreakerCallbackType = (breakerId: string, open: boolean, switchElement: EventTarget | null) => void;
+export type OnBreakerCallbackType = (breakerId: string, open: boolean, switchElement: SVGElement | null) => void;
 
 export type OnFeederCallbackType = (
     equipmentId: string,
@@ -485,7 +485,7 @@ export class SingleLineDiagramViewer {
                         }
                         const switchId = aSwitch.equipmentId;
                         const open = aSwitch.open;
-                        this.onBreakerCallback?.(switchId, !open, event.currentTarget);
+                        this.onBreakerCallback?.(switchId, !open, event.currentTarget as SVGElement);
                     });
                 }
             });
