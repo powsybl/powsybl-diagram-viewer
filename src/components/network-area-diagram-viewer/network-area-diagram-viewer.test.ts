@@ -27,6 +27,9 @@ describe('Test network-area-diagram-viewer', () => {
             false,
             false,
             null,
+            null,
+            null,
+            false,
             null
         );
 
