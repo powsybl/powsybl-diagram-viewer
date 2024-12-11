@@ -11,7 +11,7 @@ import * as DiagramUtils from './diagram-utils';
 import { SvgParameters } from './svg-parameters';
 import { LayoutParameters } from './layout-parameters';
 import { DiagramMetadata, EdgeMetadata, BusNodeMetadata, NodeMetadata, TextNodeMetadata } from './diagram-metadata';
-import { CSS_DECLARATION, CSS_RULE, THRESHOLD_STATUS, DEFAULT_DYNAMIC_CSS_RULES } from './dynamic-css-utils';
+import { CSS_DECLARATION, CSS_RULE, RANGE_STATUS, DEFAULT_DYNAMIC_CSS_RULES } from './dynamic-css-utils';
 import { debounce } from '@mui/material';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
@@ -1362,19 +1362,21 @@ export class NetworkAreaDiagramViewer {
 
     public initializeDynamicCssRules(maxDisplayedSize: number) {
         this.getDynamicCssRules().forEach((rule) => {
-            rule.thresholdStatus = maxDisplayedSize < rule.threshold ? THRESHOLD_STATUS.BELOW : THRESHOLD_STATUS.ABOVE;
+            rule.status =
+                maxDisplayedSize <= rule.max && maxDisplayedSize >= rule.min ? RANGE_STATUS.IN : RANGE_STATUS.OUT;
         });
     }
 
     public injectDynamicCssRules(htmlElementSvg: HTMLElement) {
         const rules = this.getDynamicCssRules()
             .map((rule) => {
-                const ruleToInject =
-                    rule.thresholdStatus === THRESHOLD_STATUS.BELOW
-                        ? rule.belowThresholdCssDeclaration
-                        : rule.aboveThresholdCssDeclaration;
-                return this.buildNewCssRule(rule.cssSelector, ruleToInject);
+                const ruleToInject = rule.status === RANGE_STATUS.IN ? rule.cssInRange : rule.cssOutOfRange;
+                if (ruleToInject !== undefined) {
+                    return this.buildNewCssRule(rule.cssSelector, ruleToInject);
+                }
+                return undefined;
             })
+            .filter((rule) => rule !== undefined)
             .join('\n');
 
         let styleTag = htmlElementSvg.querySelector('style');
@@ -1391,27 +1393,38 @@ export class NetworkAreaDiagramViewer {
     }
 
     public getCurrentlyMaxDisplayedSize(): number {
-        const viewbox = this.getViewBox();
-        return Math.max(viewbox?.height || 0, viewbox?.width || 0);
+        const viewBox = this.getViewBox();
+        return Math.max(viewBox?.height || 0, viewBox?.width || 0);
+    }
+
+    private shouldSwitchToInRange(rule: CSS_RULE, maxDisplayedSize: number): boolean {
+        return (
+            (rule.status === undefined || rule.status === RANGE_STATUS.OUT) &&
+            maxDisplayedSize <= rule.max &&
+            maxDisplayedSize >= rule.min
+        );
+    }
+
+    private shouldSwitchToOutOfRange(rule: CSS_RULE, maxDisplayedSize: number): boolean {
+        return (
+            (rule.status === undefined || rule.status === RANGE_STATUS.IN) &&
+            (maxDisplayedSize > rule.max || maxDisplayedSize < rule.min)
+        );
     }
 
     public checkAndUpdateLevelOfDetail(svg: SVGSVGElement) {
         const maxDisplayedSize = this.getCurrentlyMaxDisplayedSize();
-        // We will check each dynamic css rule to see if we crossed a zoom threshold. If this is the case, we
-        // update the rule's threshold status and trigger the CSS change in the SVG.
+        // We will check each dynamic CSS rule to see if we changed from in or out of the specified range.
+        // If this is the case, we update the rule's status and trigger the CSS change in the SVG.
         this.getDynamicCssRules().forEach((rule) => {
-            if (rule.thresholdStatus === THRESHOLD_STATUS.ABOVE && maxDisplayedSize < rule.threshold) {
-                console.debug(
-                    'CSS Rule ' + rule.cssSelector + ' below threshold ' + maxDisplayedSize + ' < ' + rule.threshold
-                );
-                rule.thresholdStatus = THRESHOLD_STATUS.BELOW;
-                this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.belowThresholdCssDeclaration);
-            } else if (rule.thresholdStatus === THRESHOLD_STATUS.BELOW && maxDisplayedSize >= rule.threshold) {
-                console.debug(
-                    'CSS Rule ' + rule.cssSelector + ' above threshold ' + maxDisplayedSize + ' >= ' + rule.threshold
-                );
-                rule.thresholdStatus = THRESHOLD_STATUS.ABOVE;
-                this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.aboveThresholdCssDeclaration);
+            if (this.shouldSwitchToInRange(rule, maxDisplayedSize)) {
+                rule.status = RANGE_STATUS.IN;
+                this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.cssInRange);
+            } else if (this.shouldSwitchToOutOfRange(rule, maxDisplayedSize)) {
+                rule.status = RANGE_STATUS.OUT;
+                if (rule.cssOutOfRange !== undefined) {
+                    this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.cssOutOfRange);
+                }
             }
         });
     }
