@@ -34,13 +34,14 @@ import {
     OnMoveTextNodeCallbackType,
     OnSelectNodeCallbackType,
     OnToggleNadHoverCallbackType,
+    BranchLabel,
 } from '../../../src';
 
 export const addNadToDemo = () => {
     fetch(NadSvgExample)
         .then((response) => response.text())
         .then((svgContent) => {
-            new NetworkAreaDiagramViewer(
+            const nadViewer = new NetworkAreaDiagramViewer(
                 document.getElementById('svg-container-nad')!,
                 svgContent,
                 NadSvgExampleMeta,
@@ -61,6 +62,42 @@ export const addNadToDemo = () => {
                 .getElementById('svg-container-nad')
                 ?.getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
+
+            // add range slider to update branch labels
+            const branchLabelsSlider = document.createElement('input');
+            branchLabelsSlider.type = 'range';
+            branchLabelsSlider.min = '1';
+            branchLabelsSlider.max = '20';
+            branchLabelsSlider.value = '1';
+            branchLabelsSlider.step = 'any';
+            branchLabelsSlider.style.width = '97%';
+            branchLabelsSlider.style.display = 'flex';
+            branchLabelsSlider.style.justifyContent = 'space-between';
+            branchLabelsSlider.style.padding = '0 5px';
+            branchLabelsSlider.addEventListener('input', () => {
+                const branchLabels =
+                    '[{"branchId": "NGEN_NHV1", "value1": ' +
+                    (627 - +branchLabelsSlider.value * 20) +
+                    ', "value2": ' +
+                    (-626 + +branchLabelsSlider.value * 20) +
+                    '}, {"branchId": "NHV1_NHV2_1", "value1": ' +
+                    (322 - +branchLabelsSlider.value * 20) +
+                    ', "value2": ' +
+                    (-320 + +branchLabelsSlider.value * 20) +
+                    '}, {"branchId": "NHV1_NHV2_2", "value1": ' +
+                    (322 - +branchLabelsSlider.value * 20) +
+                    ', "value2": ' +
+                    (-320 + +branchLabelsSlider.value * 20) +
+                    '}, {"branchId": "NHV2_NLOAD", "value1": ' +
+                    (-620 + +branchLabelsSlider.value * 20) +
+                    ', "value2": ' +
+                    (621 - +branchLabelsSlider.value * 20) +
+                    '}]';
+                console.log(branchLabels);
+                nadViewer.setJsonBranchLabels(branchLabels);
+            });
+
+            document.getElementById('svg-container-nad')?.appendChild(branchLabelsSlider);
         });
 
     fetch(NadSvgExample)
@@ -92,7 +129,7 @@ export const addNadToDemo = () => {
     fetch(NadSvgMultibusVLNodesExample)
         .then((response) => response.text())
         .then((svgContent) => {
-            new NetworkAreaDiagramViewer(
+            const nadViewer = new NetworkAreaDiagramViewer(
                 document.getElementById('svg-container-nad-multibus-vlnodes')!,
                 svgContent,
                 NadSvgMultibusVLNodesExampleMeta,
@@ -113,6 +150,25 @@ export const addNadToDemo = () => {
                 .getElementById('svg-container-nad-multibus-vlnodes')
                 ?.getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
+
+            // add button to update branch labels
+            const branchLabels = '[{"branchId": "L7-5-0", "value1": 609, "value2": -611}]';
+            const updateFlowsTextArea = document.createElement('textarea');
+            updateFlowsTextArea.rows = 2;
+            updateFlowsTextArea.cols = 65;
+            updateFlowsTextArea.value = branchLabels;
+            const br = document.createElement('br');
+            const updateFlowsButton = document.createElement('button');
+            updateFlowsButton.innerHTML = 'Update Branch Labels';
+            updateFlowsButton.addEventListener('click', () => {
+                const branchLabelsArray: BranchLabel[] = JSON.parse(updateFlowsTextArea.value);
+                nadViewer.setBranchLabels(branchLabelsArray);
+            });
+            const updateFlowsDiv = document.createElement('div');
+            updateFlowsDiv.appendChild(updateFlowsTextArea);
+            updateFlowsDiv.appendChild(br);
+            updateFlowsDiv.appendChild(updateFlowsButton);
+            document.getElementById('svg-container-nad-multibus-vlnodes')?.appendChild(updateFlowsDiv);
         });
 
     fetch(NadSvgMultibusVLNodes14Example)
@@ -208,7 +264,7 @@ export const addNadToDemo = () => {
                 handleTextNodeMove,
                 handleNodeSelect,
                 true,
-                true,
+                false,
                 null,
                 handleToggleNadHover
             );

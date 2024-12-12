@@ -521,3 +521,8 @@ export function getTextNodeMoves(
         { xOrig: textNode.connectionShiftX, yOrig: textNode.connectionShiftY, xNew: connXNew, yNew: connYNew },
     ];
 }
+
+// get arrow element class, based on p value
+export function getArrowClass(p: number): string {
+    return p < 0 ? 'nad-state-in' : 'nad-state-out';
+}

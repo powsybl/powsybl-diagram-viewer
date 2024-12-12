@@ -16,6 +16,7 @@ import { debounce } from '@mui/material';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
+export type BranchLabel = { branchId: string; value1: number | string; value2: number | string };
 
 export type OnMoveNodeCallbackType = (
     equipmentId: string,
@@ -73,6 +74,7 @@ export class NetworkAreaDiagramViewer {
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
     dynamicCssRules: CSS_RULE[];
     onToggleHoverCallback: OnToggleNadHoverCallbackType | null;
+    edgesMap: Map<string, EdgeMetadata> = new Map<string, EdgeMetadata>();
 
     constructor(
         container: HTMLElement,
@@ -1388,5 +1390,56 @@ export class NetworkAreaDiagramViewer {
                 this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.aboveThresholdCssDeclaration);
             }
         });
+    }
+
+    public setJsonBranchLabels(branchLabels: string) {
+        const branchLabelsArray: BranchLabel[] = JSON.parse(branchLabels);
+        this.setBranchLabels(branchLabelsArray);
+    }
+
+    public setBranchLabels(branchLabels: BranchLabel[]) {
+        branchLabels.forEach((branchLabel) => {
+            if (!this.edgesMap.has(branchLabel.branchId)) {
+                const edge: EdgeMetadata | undefined = this.diagramMetadata?.edges.find(
+                    (edge) => edge.equipmentId == branchLabel.branchId
+                );
+                if (edge === undefined) {
+                    console.warn('Skipping updating branch ' + branchLabel.branchId + ' labels: branch not found');
+                    return;
+                }
+                this.edgesMap.set(branchLabel.branchId, edge);
+            }
+            this.setBranchSideLabel(
+                branchLabel.branchId,
+                '1',
+                this.edgesMap.get(branchLabel.branchId)?.svgId ?? '-1',
+                branchLabel.value1
+            );
+            this.setBranchSideLabel(
+                branchLabel.branchId,
+                '2',
+                this.edgesMap.get(branchLabel.branchId)?.svgId ?? '-1',
+                branchLabel.value2
+            );
+        });
+    }
+
+    private setBranchSideLabel(branchId: string, side: string, edgeId: string, value: number | string) {
+        const halfEdge: SVGGraphicsElement | null = this.container.querySelector("[id='" + edgeId + '.' + side + "']");
+        const arrowGElement = halfEdge?.lastElementChild?.firstElementChild;
+        if (arrowGElement !== null && arrowGElement !== undefined) {
+            arrowGElement.classList.remove('nad-state-in', 'nad-state-out');
+            if (typeof value === 'number') {
+                arrowGElement.classList.add(DiagramUtils.getArrowClass(value));
+            }
+            const branchLabelElement = arrowGElement.lastElementChild;
+            if (branchLabelElement !== null && branchLabelElement !== undefined) {
+                branchLabelElement.innerHTML = typeof value === 'number' ? value.toFixed(0) : value;
+            } else {
+                console.warn('Skipping updating branch ' + branchId + ' side ' + side + ' label: edge not found');
+            }
+        } else {
+            console.warn('Skipping updating branch ' + branchId + ' side ' + side + ' label: edge not found');
+        }
     }
 }
