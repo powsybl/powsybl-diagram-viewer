@@ -16,6 +16,7 @@ import { debounce } from '@mui/material';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
+export type FLOW = { branchId: string; side: number; p: number };
 
 export type OnMoveNodeCallbackType = (
     equipmentId: string,
@@ -1389,5 +1390,44 @@ export class NetworkAreaDiagramViewer {
                 this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.aboveThresholdCssDeclaration);
             }
         });
+    }
+
+    public setJsonFlows(flows: string) {
+        const flowsArray: FLOW[] = JSON.parse(flows);
+        this.setFlows(flowsArray);
+    }
+
+    public setFlows(flows: FLOW[]) {
+        flows.forEach((flow) => {
+            this.setFlow(flow.branchId, flow.side, flow.p);
+        });
+    }
+
+    private setFlow(branchId: string, side: number, p: number) {
+        const edge: EdgeMetadata | undefined = this.diagramMetadata?.edges.find((edge) => edge.equipmentId == branchId);
+        if (edge !== undefined) {
+            const halfEdge: SVGGraphicsElement | null = this.container.querySelector(
+                "[id='" + edge.svgId + '.' + side + "']"
+            );
+            const arrowGElement = halfEdge?.lastElementChild?.firstElementChild;
+            if (arrowGElement !== null && arrowGElement !== undefined) {
+                arrowGElement.classList.remove('nad-state-in', 'nad-state-out');
+                if (p < 0) {
+                    arrowGElement.classList.add('nad-state-in');
+                } else {
+                    arrowGElement.classList.add('nad-state-out');
+                }
+                const flowElement = arrowGElement.lastElementChild;
+                if (flowElement !== null && flowElement !== undefined) {
+                    flowElement.innerHTML = p.toFixed(0);
+                } else {
+                    console.warn('Skipping updating branch ' + branchId + ' flow: edge not found');
+                }
+            } else {
+                console.warn('Skipping updating branch ' + branchId + ' flow: edge not found');
+            }
+        } else {
+            console.warn('Skipping updating branch ' + branchId + ' flow: branch not found');
+        }
     }
 }

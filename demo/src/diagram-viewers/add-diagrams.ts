@@ -34,13 +34,14 @@ import {
     OnMoveTextNodeCallbackType,
     OnSelectNodeCallbackType,
     OnToggleNadHoverCallbackType,
+    FLOW,
 } from '../../../src';
 
 export const addNadToDemo = () => {
     fetch(NadSvgExample)
         .then((response) => response.text())
         .then((svgContent) => {
-            new NetworkAreaDiagramViewer(
+            const nadViewer = new NetworkAreaDiagramViewer(
                 document.getElementById('svg-container-nad')!,
                 svgContent,
                 NadSvgExampleMeta,
@@ -61,6 +62,63 @@ export const addNadToDemo = () => {
                 .getElementById('svg-container-nad')
                 ?.getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
+
+            // add range slider to update flows
+            const flowsSlider = document.createElement('input');
+            flowsSlider.type = 'range';
+            flowsSlider.min = '1';
+            flowsSlider.max = '20';
+            flowsSlider.value = '1';
+            flowsSlider.style.width = '99%';
+            flowsSlider.setAttribute('list', 'flowsDatalist');
+            flowsSlider.addEventListener('input', () => {
+                const flows =
+                    '[{"branchId": "NGEN_NHV1", "side": 1, "p": ' +
+                    (627 - +flowsSlider.value * 20) +
+                    '}, {"branchId": "NGEN_NHV1", "side": 2, "p": ' +
+                    (-626 + +flowsSlider.value * 20) +
+                    '}, {"branchId": "NHV1_NHV2_1", "side": 1, "p": ' +
+                    (322 - +flowsSlider.value * 20) +
+                    '}, {"branchId": "NHV1_NHV2_1", "side": 2, "p": ' +
+                    (-320 + +flowsSlider.value * 20) +
+                    '}, {"branchId": "NHV1_NHV2_2", "side": 1, "p": ' +
+                    (322 - +flowsSlider.value * 20) +
+                    '}, {"branchId": "NHV1_NHV2_2", "side": 2, "p": ' +
+                    (-320 + +flowsSlider.value * 20) +
+                    '}, {"branchId": "NHV2_NLOAD", "side": 1, "p": ' +
+                    (-620 + +flowsSlider.value * 20) +
+                    '}, {"branchId": "NHV2_NLOAD", "side": 2, "p": ' +
+                    (621 - +flowsSlider.value * 20) +
+                    '}]';
+                nadViewer.setJsonFlows(flows);
+            });
+
+            const flowsDatalist = document.createElement('datalist');
+            flowsDatalist.id = 'flowsDatalist';
+            for (let index = 1; index <= 20; index++) {
+                const flowsOption = document.createElement('option');
+                flowsOption.value = index.toString();
+                flowsDatalist.appendChild(flowsOption);
+            }
+
+            const flowsDiv = document.createElement('div');
+            for (let index = 1; index <= 20; index++) {
+                const flowsSpan = document.createElement('span');
+                flowsSpan.innerHTML = index.toString();
+                flowsDiv.appendChild(flowsSpan);
+            }
+            flowsDiv.style.width = '98%';
+            flowsDiv.style.display = 'flex';
+            flowsDiv.style.justifyContent = 'space-between';
+            flowsDiv.style.padding = '0 5px';
+            flowsDiv.style.fontSize = '12px';
+
+            const updateFlowsDiv = document.createElement('div');
+            updateFlowsDiv.appendChild(flowsSlider);
+            updateFlowsDiv.appendChild(flowsDatalist);
+            //updateFlowsDiv.appendChild(flowsDiv);
+
+            document.getElementById('svg-container-nad')?.appendChild(updateFlowsDiv);
         });
 
     fetch(NadSvgExample)
@@ -92,7 +150,7 @@ export const addNadToDemo = () => {
     fetch(NadSvgMultibusVLNodesExample)
         .then((response) => response.text())
         .then((svgContent) => {
-            new NetworkAreaDiagramViewer(
+            const nadViewer = new NetworkAreaDiagramViewer(
                 document.getElementById('svg-container-nad-multibus-vlnodes')!,
                 svgContent,
                 NadSvgMultibusVLNodesExampleMeta,
@@ -113,6 +171,25 @@ export const addNadToDemo = () => {
                 .getElementById('svg-container-nad-multibus-vlnodes')
                 ?.getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
+
+            // add button to update flows
+            const flows = '[{"branchId": "L7-5-0", "side": 1, "p": 609}, {"branchId": "L7-5-0", "side": 2, "p": -611}]';
+            const updateFlowsTextArea = document.createElement('textarea');
+            updateFlowsTextArea.rows = 2;
+            updateFlowsTextArea.cols = 65;
+            updateFlowsTextArea.value = flows;
+            const br = document.createElement('br');
+            const updateFlowsButton = document.createElement('button');
+            updateFlowsButton.innerHTML = 'Update Flows';
+            updateFlowsButton.addEventListener('click', () => {
+                const flowsArray: FLOW[] = JSON.parse(updateFlowsTextArea.value);
+                nadViewer.setFlows(flowsArray);
+            });
+            const updateFlowsDiv = document.createElement('div');
+            updateFlowsDiv.appendChild(updateFlowsTextArea);
+            updateFlowsDiv.appendChild(br);
+            updateFlowsDiv.appendChild(updateFlowsButton);
+            document.getElementById('svg-container-nad-multibus-vlnodes')?.appendChild(updateFlowsDiv);
         });
 
     fetch(NadSvgMultibusVLNodes14Example)
@@ -208,7 +285,7 @@ export const addNadToDemo = () => {
                 handleTextNodeMove,
                 handleNodeSelect,
                 true,
-                true,
+                false,
                 null,
                 handleToggleNadHover
             );
