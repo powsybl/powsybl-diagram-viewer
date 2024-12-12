@@ -254,12 +254,17 @@ export class NetworkAreaDiagramViewer {
                 this.onToggleHoverCallback?.(false, null, '', '');
             });
         }
+
+        let isZooming = false;
+
         this.svgDraw.on('panStart', function () {
+            isZooming = true;
             if (drawnSvg.parentElement != undefined) {
                 drawnSvg.parentElement.style.cursor = 'move';
             }
         });
         this.svgDraw.on('panEnd', function () {
+            isZooming = false;
             if (drawnSvg.parentElement != undefined) {
                 drawnSvg.parentElement.style.removeProperty('cursor');
             }
@@ -287,7 +292,7 @@ export class NetworkAreaDiagramViewer {
             // (we have to do this instead of using panzoom's 'zoom' event to have accurate viewBox updates)
             const targetNode: SVGSVGElement = this.svgDraw.node;
             // Callback function to execute when mutations are observed
-            const observerCallback = (mutationList: MutationRecord[]) => {
+            const handleViewBoxChange = (mutationList: MutationRecord[]) => {
                 for (const mutation of mutationList) {
                     if (mutation.attributeName === 'viewBox') {
                         this.checkAndUpdateLevelOfDetail(targetNode);
@@ -295,10 +300,11 @@ export class NetworkAreaDiagramViewer {
                 }
             };
 
-            // Create a debounced version of the observer callback to limit the frequency of calls when the 'viewBox' attribute changes,
-            // particularly during zooming operations, improving performance and avoiding redundant updates.
-            const debouncedObserverCallback = debounce(observerCallback, 50);
-            const observer = new MutationObserver(debouncedObserverCallback);
+            // Determine if the callback should be debounced based on zoom activity.
+            // Debouncing is applied only during zoom operations to improve performance by reducing redundant updates.
+            // For other actions, debouncing is avoided to prevent issues such as visible refresh glitches in the NAD when moving nodes.
+            const observerCallback = isZooming ? debounce(handleViewBoxChange, 50) : handleViewBoxChange;
+            const observer = new MutationObserver(observerCallback);
             observer.observe(targetNode, { attributeFilter: ['viewBox'] });
         }
 
