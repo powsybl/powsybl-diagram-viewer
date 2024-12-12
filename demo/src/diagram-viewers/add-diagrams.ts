@@ -116,7 +116,6 @@ export const addNadToDemo = () => {
             const updateFlowsDiv = document.createElement('div');
             updateFlowsDiv.appendChild(flowsSlider);
             updateFlowsDiv.appendChild(flowsDatalist);
-            //updateFlowsDiv.appendChild(flowsDiv);
 
             document.getElementById('svg-container-nad')?.appendChild(updateFlowsDiv);
         });
