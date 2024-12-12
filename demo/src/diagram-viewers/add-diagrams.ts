@@ -34,7 +34,7 @@ import {
     OnMoveTextNodeCallbackType,
     OnSelectNodeCallbackType,
     OnToggleNadHoverCallbackType,
-    FLOW,
+    BranchLabel,
 } from '../../../src';
 
 export const addNadToDemo = () => {
@@ -63,40 +63,41 @@ export const addNadToDemo = () => {
                 ?.getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
 
-            // add range slider to update flows
-            const flowsSlider = document.createElement('input');
-            flowsSlider.type = 'range';
-            flowsSlider.min = '1';
-            flowsSlider.max = '20';
-            flowsSlider.value = '1';
-            flowsSlider.step = 'any';
-            flowsSlider.style.width = '97%';
-            flowsSlider.style.display = 'flex';
-            flowsSlider.style.justifyContent = 'space-between';
-            flowsSlider.style.padding = '0 5px';
-            flowsSlider.addEventListener('input', () => {
-                const flows =
-                    '[{"branchId": "NGEN_NHV1", "side": 1, "p": ' +
-                    (627 - +flowsSlider.value * 20) +
-                    '}, {"branchId": "NGEN_NHV1", "side": 2, "p": ' +
-                    (-626 + +flowsSlider.value * 20) +
-                    '}, {"branchId": "NHV1_NHV2_1", "side": 1, "p": ' +
-                    (322 - +flowsSlider.value * 20) +
-                    '}, {"branchId": "NHV1_NHV2_1", "side": 2, "p": ' +
-                    (-320 + +flowsSlider.value * 20) +
-                    '}, {"branchId": "NHV1_NHV2_2", "side": 1, "p": ' +
-                    (322 - +flowsSlider.value * 20) +
-                    '}, {"branchId": "NHV1_NHV2_2", "side": 2, "p": ' +
-                    (-320 + +flowsSlider.value * 20) +
-                    '}, {"branchId": "NHV2_NLOAD", "side": 1, "p": ' +
-                    (-620 + +flowsSlider.value * 20) +
-                    '}, {"branchId": "NHV2_NLOAD", "side": 2, "p": ' +
-                    (621 - +flowsSlider.value * 20) +
+            // add range slider to update branch labels
+            const branchLabelsSlider = document.createElement('input');
+            branchLabelsSlider.type = 'range';
+            branchLabelsSlider.min = '1';
+            branchLabelsSlider.max = '20';
+            branchLabelsSlider.value = '1';
+            branchLabelsSlider.step = 'any';
+            branchLabelsSlider.style.width = '97%';
+            branchLabelsSlider.style.display = 'flex';
+            branchLabelsSlider.style.justifyContent = 'space-between';
+            branchLabelsSlider.style.padding = '0 5px';
+            branchLabelsSlider.addEventListener('input', () => {
+                const branchLabels =
+                    '[{"branchId": "NGEN_NHV1", "value1": ' +
+                    (627 - +branchLabelsSlider.value * 20) +
+                    ', "value2": ' +
+                    (-626 + +branchLabelsSlider.value * 20) +
+                    '}, {"branchId": "NHV1_NHV2_1", "value1": ' +
+                    (322 - +branchLabelsSlider.value * 20) +
+                    ', "value2": ' +
+                    (-320 + +branchLabelsSlider.value * 20) +
+                    '}, {"branchId": "NHV1_NHV2_2", "value1": ' +
+                    (322 - +branchLabelsSlider.value * 20) +
+                    ', "value2": ' +
+                    (-320 + +branchLabelsSlider.value * 20) +
+                    '}, {"branchId": "NHV2_NLOAD", "value1": ' +
+                    (-620 + +branchLabelsSlider.value * 20) +
+                    ', "value2": ' +
+                    (621 - +branchLabelsSlider.value * 20) +
                     '}]';
-                nadViewer.setJsonFlows(flows);
+                console.log(branchLabels);
+                nadViewer.setJsonBranchLabels(branchLabels);
             });
 
-            document.getElementById('svg-container-nad')?.appendChild(flowsSlider);
+            document.getElementById('svg-container-nad')?.appendChild(branchLabelsSlider);
         });
 
     fetch(NadSvgExample)
@@ -150,18 +151,18 @@ export const addNadToDemo = () => {
                 ?.getElementsByTagName('svg')[0]
                 .setAttribute('style', 'border:2px; border-style:solid;');
 
-            // add button to update flows
-            const flows = '[{"branchId": "L7-5-0", "side": 1, "p": 609}, {"branchId": "L7-5-0", "side": 2, "p": -611}]';
+            // add button to update branch labels
+            const branchLabels = '[{"branchId": "L7-5-0", "value1": 609, "value2": -611}]';
             const updateFlowsTextArea = document.createElement('textarea');
             updateFlowsTextArea.rows = 2;
             updateFlowsTextArea.cols = 65;
-            updateFlowsTextArea.value = flows;
+            updateFlowsTextArea.value = branchLabels;
             const br = document.createElement('br');
             const updateFlowsButton = document.createElement('button');
-            updateFlowsButton.innerHTML = 'Update Flows';
+            updateFlowsButton.innerHTML = 'Update Branch Labels';
             updateFlowsButton.addEventListener('click', () => {
-                const flowsArray: FLOW[] = JSON.parse(updateFlowsTextArea.value);
-                nadViewer.setFlows(flowsArray);
+                const branchLabelsArray: BranchLabel[] = JSON.parse(updateFlowsTextArea.value);
+                nadViewer.setBranchLabels(branchLabelsArray);
             });
             const updateFlowsDiv = document.createElement('div');
             updateFlowsDiv.appendChild(updateFlowsTextArea);
