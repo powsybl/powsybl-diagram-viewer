@@ -1431,11 +1431,7 @@ export class NetworkAreaDiagramViewer {
         if (arrowGElement !== null && arrowGElement !== undefined) {
             arrowGElement.classList.remove('nad-state-in', 'nad-state-out');
             if (typeof value === 'number') {
-                if (value < 0) {
-                    arrowGElement.classList.add('nad-state-in');
-                } else {
-                    arrowGElement.classList.add('nad-state-out');
-                }
+                arrowGElement.classList.add(DiagramUtils.getArrowClass(value));
             }
             const branchLabelElement = arrowGElement.lastElementChild;
             if (branchLabelElement !== null && branchLabelElement !== undefined) {
