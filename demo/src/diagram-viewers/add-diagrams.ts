@@ -69,8 +69,11 @@ export const addNadToDemo = () => {
             flowsSlider.min = '1';
             flowsSlider.max = '20';
             flowsSlider.value = '1';
-            flowsSlider.style.width = '99%';
-            flowsSlider.setAttribute('list', 'flowsDatalist');
+            flowsSlider.step = 'any';
+            flowsSlider.style.width = '97%';
+            flowsSlider.style.display = 'flex';
+            flowsSlider.style.justifyContent = 'space-between';
+            flowsSlider.style.padding = '0 5px';
             flowsSlider.addEventListener('input', () => {
                 const flows =
                     '[{"branchId": "NGEN_NHV1", "side": 1, "p": ' +
@@ -93,31 +96,7 @@ export const addNadToDemo = () => {
                 nadViewer.setJsonFlows(flows);
             });
 
-            const flowsDatalist = document.createElement('datalist');
-            flowsDatalist.id = 'flowsDatalist';
-            for (let index = 1; index <= 20; index++) {
-                const flowsOption = document.createElement('option');
-                flowsOption.value = index.toString();
-                flowsDatalist.appendChild(flowsOption);
-            }
-
-            const flowsDiv = document.createElement('div');
-            for (let index = 1; index <= 20; index++) {
-                const flowsSpan = document.createElement('span');
-                flowsSpan.innerHTML = index.toString();
-                flowsDiv.appendChild(flowsSpan);
-            }
-            flowsDiv.style.width = '98%';
-            flowsDiv.style.display = 'flex';
-            flowsDiv.style.justifyContent = 'space-between';
-            flowsDiv.style.padding = '0 5px';
-            flowsDiv.style.fontSize = '12px';
-
-            const updateFlowsDiv = document.createElement('div');
-            updateFlowsDiv.appendChild(flowsSlider);
-            updateFlowsDiv.appendChild(flowsDatalist);
-
-            document.getElementById('svg-container-nad')?.appendChild(updateFlowsDiv);
+            document.getElementById('svg-container-nad')?.appendChild(flowsSlider);
         });
 
     fetch(NadSvgExample)
