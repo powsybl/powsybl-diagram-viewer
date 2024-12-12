@@ -73,6 +73,7 @@ export class NetworkAreaDiagramViewer {
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
     dynamicCssRules: CSS_RULE[];
     onToggleHoverCallback: OnToggleNadHoverCallbackType | null;
+    isZooming: boolean;
 
     constructor(
         container: HTMLElement,
@@ -113,6 +114,7 @@ export class NetworkAreaDiagramViewer {
         this.onMoveTextNodeCallback = onMoveTextNodeCallback;
         this.onSelectNodeCallback = onSelectNodeCallback;
         this.onToggleHoverCallback = onToggleHoverCallback;
+        this.isZooming = false;
     }
 
     public setWidth(width: number): void {
@@ -254,6 +256,7 @@ export class NetworkAreaDiagramViewer {
                 this.onToggleHoverCallback?.(false, null, '', '');
             });
         }
+
         this.svgDraw.on('panStart', function () {
             if (drawnSvg.parentElement != undefined) {
                 drawnSvg.parentElement.style.cursor = 'move';
@@ -287,7 +290,7 @@ export class NetworkAreaDiagramViewer {
             // (we have to do this instead of using panzoom's 'zoom' event to have accurate viewBox updates)
             const targetNode: SVGSVGElement = this.svgDraw.node;
             // Callback function to execute when mutations are observed
-            const observerCallback = (mutationList: MutationRecord[]) => {
+            const handleViewBoxChange = (mutationList: MutationRecord[]) => {
                 for (const mutation of mutationList) {
                     if (mutation.attributeName === 'viewBox') {
                         this.checkAndUpdateLevelOfDetail(targetNode);
@@ -295,10 +298,18 @@ export class NetworkAreaDiagramViewer {
                 }
             };
 
-            // Create a debounced version of the observer callback to limit the frequency of calls when the 'viewBox' attribute changes,
-            // particularly during zooming operations, improving performance and avoiding redundant updates.
-            const debouncedObserverCallback = debounce(observerCallback, 50);
-            const observer = new MutationObserver(debouncedObserverCallback);
+            // Determine if the callback should be debounced based on zoom activity.
+            // Debouncing is applied only during zoom operations to improve performance by reducing redundant updates.
+            // For other actions, debouncing is avoided to prevent issues such as visible refresh glitches in the NAD when moving nodes.
+            const debouncedHandleViewBoxChange = debounce(handleViewBoxChange, 50);
+            const observerCallback = (mutationList: MutationRecord[]) => {
+                if (this.isZooming) {
+                    debouncedHandleViewBoxChange(mutationList);
+                } else {
+                    handleViewBoxChange(mutationList);
+                }
+            };
+            const observer = new MutationObserver(observerCallback);
             observer.observe(targetNode, { attributeFilter: ['viewBox'] });
         }
 
@@ -330,11 +341,28 @@ export class NetworkAreaDiagramViewer {
     }
 
     private enablePanzoom() {
-        this.svgDraw?.panZoom({
+        const panZoomInstance = this.svgDraw?.panZoom({
             panning: true,
             zoomMin: 0.5 / this.ratio, // maximum zoom OUT ratio (0.5 = at best, the displayed area is twice the SVG's size)
             zoomMax: 20 * this.ratio, // maximum zoom IN ratio (20 = at best, the displayed area is only 1/20th of the SVG's size)
             zoomFactor: 0.2,
+        });
+
+        // Set zooming state when zooming begins
+        panZoomInstance?.on('zoom', () => {
+            this.isZooming = true;
+        });
+
+        // Handle touch-based zoom ending
+        panZoomInstance?.on('pinchZoomEnd', () => {
+            this.isZooming = false;
+        });
+
+        // Handle mouse-based panning and zoom ending
+        panZoomInstance?.on('panEnd', () => {
+            if (this.isZooming) {
+                this.isZooming = false;
+            }
         });
     }
 
