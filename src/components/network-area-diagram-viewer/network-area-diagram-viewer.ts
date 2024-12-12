@@ -208,6 +208,9 @@ export class NetworkAreaDiagramViewer {
                 this.onDragStart(elemToMove);
                 this.onDragEnd(newPosition, false, false);
             }
+            //Update css rules to diplay labels
+            const firstChild: HTMLElement = <HTMLElement>this.svgDraw?.node.firstChild;
+            this.injectDisplayCssRules(firstChild);
         }
     }
 
@@ -225,6 +228,7 @@ export class NetworkAreaDiagramViewer {
         }
 
         const dimensions: DIMENSIONS | null = this.getDimensionsFromSvg();
+        console.log(' ======== dimensions ', dimensions);
         if (!dimensions) {
             return;
         }
@@ -1385,6 +1389,32 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
+    public injectDisplayCssRules(htmlElementSvg: HTMLElement) {
+        let styleTag = htmlElementSvg.querySelector('style');
+        if (!styleTag) {
+            htmlElementSvg.appendChild(document.createElement('style'));
+            console.debug('[injectDynamicCssRules] Style tag missing from SVG file. It has been created.');
+            styleTag = htmlElementSvg.querySelector('style');
+        }
+        if (styleTag && 'textContent' in styleTag) {
+            const cssSelectors = ['.nad-label-box', '.nad-text-edges', '.nad-edge-infos'];
+
+            // update the styles to display labels if needed
+            cssSelectors.forEach((selector) => {
+                const styleTags = [...document.querySelectorAll('style')].filter((styleTag) =>
+                    styleTag?.textContent?.includes(selector)
+                );
+                styleTags.forEach((styleTag) => {
+                    styleTag.textContent =
+                        styleTag?.textContent !== null
+                            ? styleTag?.textContent.replace(`{display: none;}`, `{display: block;}`)
+                            : '';
+                });
+            });
+        } else {
+            console.error('Failed to create Style tag in SVG file!');
+        }
+    }
     public getCurrentlyMaxDisplayedSize(): number {
         const viewbox = this.getViewBox();
         return Math.max(viewbox?.height || 0, viewbox?.width || 0);
