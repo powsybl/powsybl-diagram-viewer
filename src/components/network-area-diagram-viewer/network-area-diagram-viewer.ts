@@ -73,6 +73,7 @@ export class NetworkAreaDiagramViewer {
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
     dynamicCssRules: CSS_RULE[];
     onToggleHoverCallback: OnToggleNadHoverCallbackType | null;
+    isZooming: boolean;
 
     constructor(
         container: HTMLElement,
@@ -113,6 +114,7 @@ export class NetworkAreaDiagramViewer {
         this.onMoveTextNodeCallback = onMoveTextNodeCallback;
         this.onSelectNodeCallback = onSelectNodeCallback;
         this.onToggleHoverCallback = onToggleHoverCallback;
+        this.isZooming = false;
     }
 
     public setWidth(width: number): void {
@@ -255,16 +257,12 @@ export class NetworkAreaDiagramViewer {
             });
         }
 
-        let isZooming = false;
-
         this.svgDraw.on('panStart', function () {
-            isZooming = true;
             if (drawnSvg.parentElement != undefined) {
                 drawnSvg.parentElement.style.cursor = 'move';
             }
         });
         this.svgDraw.on('panEnd', function () {
-            isZooming = false;
             if (drawnSvg.parentElement != undefined) {
                 drawnSvg.parentElement.style.removeProperty('cursor');
             }
@@ -303,7 +301,14 @@ export class NetworkAreaDiagramViewer {
             // Determine if the callback should be debounced based on zoom activity.
             // Debouncing is applied only during zoom operations to improve performance by reducing redundant updates.
             // For other actions, debouncing is avoided to prevent issues such as visible refresh glitches in the NAD when moving nodes.
-            const observerCallback = isZooming ? debounce(handleViewBoxChange, 50) : handleViewBoxChange;
+            const debouncedHandleViewBoxChange = debounce(handleViewBoxChange, 50);
+            const observerCallback = (mutationList: MutationRecord[]) => {
+                if (this.isZooming) {
+                    debouncedHandleViewBoxChange(mutationList);
+                } else {
+                    handleViewBoxChange(mutationList);
+                }
+            };
             const observer = new MutationObserver(observerCallback);
             observer.observe(targetNode, { attributeFilter: ['viewBox'] });
         }
@@ -336,12 +341,29 @@ export class NetworkAreaDiagramViewer {
     }
 
     private enablePanzoom() {
-        this.svgDraw?.panZoom({
+        const panZoomInstance = this.svgDraw?.panZoom({
             panning: true,
             zoomMin: 0.5 / this.ratio, // maximum zoom OUT ratio (0.5 = at best, the displayed area is twice the SVG's size)
             zoomMax: 20 * this.ratio, // maximum zoom IN ratio (20 = at best, the displayed area is only 1/20th of the SVG's size)
             zoomFactor: 0.2,
             margins: { top: 0, left: 0, right: 0, bottom: 0 },
+        });
+
+        // Set zooming state when zooming begins
+        panZoomInstance?.on('zoom', () => {
+            this.isZooming = true; // Zooming starts
+        });
+
+        // Handle touch-based zoom ending
+        panZoomInstance?.on('pinchZoomEnd', () => {
+            this.isZooming = false; // Zooming ends (pinch gesture)
+        });
+
+        // Handle mouse-based panning and zoom ending
+        panZoomInstance?.on('panEnd', () => {
+            if (this.isZooming) {
+                this.isZooming = false; // Reset zooming state when interaction ends
+            }
         });
     }
 
