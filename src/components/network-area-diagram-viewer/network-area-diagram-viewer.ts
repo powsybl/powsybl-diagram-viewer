@@ -351,18 +351,18 @@ export class NetworkAreaDiagramViewer {
 
         // Set zooming state when zooming begins
         panZoomInstance?.on('zoom', () => {
-            this.isZooming = true; // Zooming starts
+            this.isZooming = true;
         });
 
         // Handle touch-based zoom ending
         panZoomInstance?.on('pinchZoomEnd', () => {
-            this.isZooming = false; // Zooming ends (pinch gesture)
+            this.isZooming = false;
         });
 
         // Handle mouse-based panning and zoom ending
         panZoomInstance?.on('panEnd', () => {
             if (this.isZooming) {
-                this.isZooming = false; // Reset zooming state when interaction ends
+                this.isZooming = false;
             }
         });
     }
