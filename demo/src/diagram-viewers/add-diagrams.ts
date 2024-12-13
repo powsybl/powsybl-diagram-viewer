@@ -34,6 +34,8 @@ import {
     OnMoveTextNodeCallbackType,
     OnSelectNodeCallbackType,
     OnToggleNadHoverCallbackType,
+    OnSaveCallbackType,
+    MouseMode,
 } from '../../../src';
 
 export const addNadToDemo = () => {
@@ -54,13 +56,13 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                handleToggleNadHover
+                handleToggleNadHover,
+                handleSave,
+                true,
+                MouseMode.MOVE
             );
 
-            document
-                .getElementById('svg-container-nad')
-                ?.getElementsByTagName('svg')[0]
-                .setAttribute('style', 'border:2px; border-style:solid;');
+            document.getElementById('svg-container-nad')?.setAttribute('style', 'border:2px; border-style:solid;');
         });
 
     fetch(NadSvgExample)
@@ -74,19 +76,21 @@ export const addNadToDemo = () => {
                 600,
                 1000,
                 1200,
-                handleNodeMove,
-                handleTextNodeMove,
+                null,
+                null,
                 handleNodeSelect,
                 false,
                 false,
                 null,
-                handleToggleNadHover
+                handleToggleNadHover,
+                handleSave,
+                true,
+                null
             );
 
             document
                 .getElementById('svg-container-nad-no-moving')
-                ?.getElementsByTagName('svg')[0]
-                .setAttribute('style', 'border:2px; border-style:solid;');
+                ?.setAttribute('style', 'border:2px; border-style:solid;');
         });
 
     fetch(NadSvgMultibusVLNodesExample)
@@ -106,13 +110,15 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                handleToggleNadHover
+                handleToggleNadHover,
+                handleSave,
+                true,
+                MouseMode.MOVE
             );
 
             document
                 .getElementById('svg-container-nad-multibus-vlnodes')
-                ?.getElementsByTagName('svg')[0]
-                .setAttribute('style', 'border:2px; border-style:solid;');
+                ?.setAttribute('style', 'border:2px; border-style:solid;');
         });
 
     fetch(NadSvgMultibusVLNodes14Example)
@@ -132,13 +138,15 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                handleToggleNadHover
+                handleToggleNadHover,
+                handleSave,
+                true,
+                MouseMode.MOVE
             );
 
             document
                 .getElementById('svg-container-nad-multibus-vlnodes14')
-                ?.getElementsByTagName('svg')[0]
-                .setAttribute('style', 'border:2px; border-style:solid;');
+                ?.setAttribute('style', 'border:2px; border-style:solid;');
         });
 
     fetch(NadSvgPstHvdcExample)
@@ -158,13 +166,15 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                handleToggleNadHover
+                handleToggleNadHover,
+                handleSave,
+                true,
+                MouseMode.MOVE
             );
 
             document
                 .getElementById('svg-container-nad-pst-hvdc')
-                ?.getElementsByTagName('svg')[0]
-                .setAttribute('style', 'border:2px; border-style:solid;');
+                ?.setAttribute('style', 'border:2px; border-style:solid;');
         });
 
     fetch(NadSvgThreeWTDanglingLineUnknownBusExample)
@@ -184,13 +194,15 @@ export const addNadToDemo = () => {
                 true,
                 false,
                 null,
-                handleToggleNadHover
+                handleToggleNadHover,
+                handleSave,
+                true,
+                MouseMode.SELECT
             );
 
             document
                 .getElementById('svg-container-nad-threewt-dl-ub')
-                ?.getElementsByTagName('svg')[0]
-                .setAttribute('style', 'border:2px; border-style:solid;');
+                ?.setAttribute('style', 'border:2px; border-style:solid;');
         });
 
     fetch(NadSvgPartialNetworkExample)
@@ -210,13 +222,15 @@ export const addNadToDemo = () => {
                 true,
                 true,
                 null,
-                handleToggleNadHover
+                handleToggleNadHover,
+                handleSave,
+                false,
+                MouseMode.MOVE
             );
 
             document
                 .getElementById('svg-container-nad-partial-network')
-                ?.getElementsByTagName('svg')[0]
-                .setAttribute('style', 'border:2px; border-style:solid;');
+                ?.setAttribute('style', 'border:2px; border-style:solid;');
         });
 };
 
@@ -413,4 +427,9 @@ const handleToggleNadHover: OnToggleNadHoverCallbackType = (hovered, mousePositi
             mousePosition?.y;
         console.log(msg);
     }
+};
+
+const handleSave: OnSaveCallbackType = (svg, metadata) => {
+    console.log(svg);
+    console.log(metadata);
 };
