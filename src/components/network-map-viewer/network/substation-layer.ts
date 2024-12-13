@@ -55,8 +55,9 @@ type _SubstationLayerProps = {
 export type SubstationLayerProps = _SubstationLayerProps & CompositeLayerProps;
 
 export class SubstationLayer extends CompositeLayer<Required<_SubstationLayerProps>> {
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
     static readonly layerName = 'SubstationLayer';
-
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
     static readonly defaultProps: DefaultProps<SubstationLayerProps> = {
         network: undefined,
         geoData: undefined,
