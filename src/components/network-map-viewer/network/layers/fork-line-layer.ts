@@ -5,10 +5,38 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { LineLayer } from 'deck.gl';
+import { type Accessor, LineLayer, type LineLayerProps } from 'deck.gl';
+import type { DefaultProps } from '@deck.gl/core';
 import GL from '@luma.gl/constants';
+import { type UniformValues } from 'maplibre-gl';
 
-const defaultProps = {
+type _ForkLineLayerProps<DataT> = {
+    /** real number representing the parallel translation, normalized to distanceBetweenLines */
+    getLineParallelIndex: Accessor<DataT, number>;
+    /** line angle in radian */
+    getLineAngle: Accessor<DataT, number>;
+    /** distance in meters between line when no pixel clamping is applied */
+    distanceBetweenLines: Accessor<DataT, number>;
+    /** max pixel distance */
+    maxParallelOffset: Accessor<DataT, number>;
+    /** min pixel distance */
+    minParallelOffset: Accessor<DataT, number>;
+    /** radius for a voltage level in substation */
+    substationRadius: Accessor<DataT, number>;
+    /** max pixel for a voltage level in substation */
+    substationMaxPixel: Accessor<DataT, number>;
+    /** min pixel for a substation */
+    minSubstationRadiusPixel: Accessor<DataT, number>;
+    getDistanceBetweenLines: Accessor<DataT, number>;
+    getMaxParallelOffset: Accessor<DataT, number>;
+    getMinParallelOffset: Accessor<DataT, number>;
+    getSubstationRadius: Accessor<DataT, number>;
+    getSubstationMaxPixel: Accessor<DataT, number>;
+    getMinSubstationRadiusPixel: Accessor<DataT, number>;
+};
+export type ForkLineLayerProps<DataT = unknown> = _ForkLineLayerProps<DataT> & LineLayerProps;
+
+const defaultProps: DefaultProps<ForkLineLayerProps> = {
     getLineParallelIndex: { type: 'accessor', value: 0 },
     getLineAngle: { type: 'accessor', value: 0 },
     distanceBetweenLines: { type: 'number', value: 1000 },
@@ -22,17 +50,14 @@ const defaultProps = {
 /**
  * A layer based on LineLayer that draws a fork line at a substation when there are multiple parallel lines
  * Needs to be kept in sync with ArrowLayer and ParallelPathLayer because connect to the end of the fork lines.
- * props : getLineParallelIndex: real number representing the parallel translation, normalized to distanceBetweenLines
- *         getLineAngle: line angle in radian
- *         distanceBetweenLines: distance in meters between line when no pixel clamping is applied
- *         maxParallelOffset: max pixel distance
- *         minParallelOffset: min pixel distance
- *         instanceOffsetStart: distance from the origin point
- *         substationRadius: radius for a voltage level in substation
- *         substationMaxPixel: max pixel for a voltage level in substation
- *         minSubstationRadiusPixel : min pixel for a substation
+ * props : instanceOffsetStart: distance from the origin point
  */
-export default class ForkLineLayer extends LineLayer {
+export default class ForkLineLayer<DataT = unknown> extends LineLayer<DataT, Required<_ForkLineLayerProps<DataT>>> {
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
+    static readonly layerName = 'ForkLineLayer';
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
+    static readonly defaultProps = defaultProps;
+
     getShaders() {
         const shaders = super.getShaders();
         shaders.inject = {
@@ -71,11 +96,11 @@ uniform float minSubstationRadiusPixel;
         return shaders;
     }
 
-    initializeState(params) {
-        super.initializeState(params);
+    initializeState(...params: Parameters<LineLayer<DataT, Required<_ForkLineLayerProps<DataT>>>['initializeState']>) {
+        super.initializeState(...params);
 
         const attributeManager = this.getAttributeManager();
-        attributeManager.addInstanced({
+        attributeManager?.addInstanced({
             instanceLineParallelIndex: {
                 size: 1,
                 type: GL.FLOAT,
@@ -99,7 +124,8 @@ uniform float minSubstationRadiusPixel;
         });
     }
 
-    draw({ uniforms }) {
+    // TODO find the full type for record values
+    draw({ uniforms }: { uniforms: Record<string, UniformValues<object>> }) {
         super.draw({
             uniforms: {
                 ...uniforms,
@@ -113,6 +139,3 @@ uniform float minSubstationRadiusPixel;
         });
     }
 }
-
-ForkLineLayer.layerName = 'ForkLineLayer';
-ForkLineLayer.defaultProps = defaultProps;
