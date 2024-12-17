@@ -1421,7 +1421,11 @@ export class NetworkAreaDiagramViewer {
         });
         //Workaround chromium (tested on edge and google-chrome 131) doesn't
         //redraw things with percentages on viewbox changes but it should,
-        //force it. Firefox does correctly redraw, but we force for everyone to
+        //force it. This is not strictly related to the enableLevelOfDetail and
+        //dynamic css feature, but it turns out that we use percentages in css
+        //only in this case, so we can do the workaround here until we have
+        //other needs or until we remove the workaround entirely.
+        //Firefox does correctly redraw, but we force for everyone to
         //have the same behavior everywhere and detect problems more easily.
         //we can't use innerHtml+='' on the <style> tags because values set
         //with setProperty(key, value) in updateSvgCssDisplayValue are not
@@ -1430,9 +1434,9 @@ export class NetworkAreaDiagramViewer {
         //its children that are not style elements. This won't work if there
         //are deeply nested style elements that need dynamic css rules but in
         //practice only the root style element hasdynamic rules so it's ok.
-        //remove this when chromium fixes their bug if this workaround causes
-        //problem, we can find a better way to force a redraw that doesnt
-        //change the elements in the dom
+        //TODO remove this when chromium fixes their bug.
+        //TODO if this workaround causes problems, we can find a better way to
+        //force a redraw that doesnt change the elements in the dom
         const innerSvg = svg.querySelector('svg');
         if (innerSvg) {
             for (const child of innerSvg.children) {
