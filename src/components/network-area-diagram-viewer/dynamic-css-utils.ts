@@ -82,4 +82,34 @@ export const DEFAULT_DYNAMIC_CSS_RULES: CSS_RULE[] = [
         threshold: 20000,
         thresholdStatus: THRESHOLD_STATUS.BELOW,
     },
+    // TODO using svg at the begining in selectors to increase specificity
+    // because the svg already contains the same selectors. Is there a better way ?
+    {
+        cssSelector: 'svg .nad-disconnected .nad-edge-path',
+        belowThresholdCssDeclaration: { 'stroke-dasharray': '10, 10' },
+        aboveThresholdCssDeclaration: { 'stroke-dasharray': '0.5%, 0.5%' },
+        threshold: 2500,
+        thresholdStatus: THRESHOLD_STATUS.ABOVE,
+    },
+    {
+        cssSelector: 'svg .nad-branch-edges .nad-edge-path, svg .nad-3wt-edges .nad-edge-path',
+        belowThresholdCssDeclaration: { 'stroke-width': '3' },
+        aboveThresholdCssDeclaration: { 'stroke-width': '0.25%' },
+        threshold: 1000,
+        thresholdStatus: THRESHOLD_STATUS.ABOVE,
+    },
+    {
+        cssSelector: 'svg .nad-branch-edges .nad-winding, svg .nad-3wt-nodes .nad-winding',
+        belowThresholdCssDeclaration: { 'stroke-width': '3' },
+        aboveThresholdCssDeclaration: { 'stroke-width': '0.25%' },
+        threshold: 1000,
+        thresholdStatus: THRESHOLD_STATUS.ABOVE,
+    },
+    {
+        cssSelector: 'svg .nad-vl-nodes circle.nad-unknown-busnode',
+        belowThresholdCssDeclaration: { 'stroke-width': '3' },
+        aboveThresholdCssDeclaration: { 'stroke-width': '0.25%' },
+        threshold: 1000,
+        thresholdStatus: THRESHOLD_STATUS.ABOVE,
+    },
 ];
