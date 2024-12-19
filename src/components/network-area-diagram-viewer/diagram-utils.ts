@@ -521,3 +521,8 @@ export function getTextNodeMoves(
         { xOrig: textNode.connectionShiftX, yOrig: textNode.connectionShiftY, xNew: connXNew, yNew: connYNew },
     ];
 }
+
+export function isVlNodeFictitious(vlNodeId: string, nodes: NodeMetadata[] | undefined): boolean {
+    const node: NodeMetadata | undefined = nodes?.find((node) => node.svgId == vlNodeId);
+    return node?.fictitious ?? false;
+}

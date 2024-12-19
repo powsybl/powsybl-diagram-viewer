@@ -20,6 +20,7 @@ export class SvgParameters {
     static readonly NODE_HOLLOW_WIDTH_DEFAULT = 15.0;
     static readonly UNKNOWN_BUS_NODE_EXTRA_RADIUS_DEFAULT = 10.0;
     static readonly EDGE_NAME_DISPLAYED_DEFAULT = true;
+    static readonly FICTITIOUS_VOLTAGE_LEVEL_CIRCLE_RADIUS_DEFAULT = 15.0;
 
     svgParametersMetadata: SvgParametersMetadata | undefined;
 
@@ -73,5 +74,12 @@ export class SvgParameters {
 
     public getEdgeNameDisplayed(): boolean {
         return this.svgParametersMetadata?.edgeNameDisplayed ?? SvgParameters.EDGE_NAME_DISPLAYED_DEFAULT;
+    }
+
+    public getFictitiousVoltageLevelCircleRadius(): number {
+        return (
+            this.svgParametersMetadata?.fictitiousVoltageLevelCircleRadius ??
+            SvgParameters.FICTITIOUS_VOLTAGE_LEVEL_CIRCLE_RADIUS_DEFAULT
+        );
     }
 }
