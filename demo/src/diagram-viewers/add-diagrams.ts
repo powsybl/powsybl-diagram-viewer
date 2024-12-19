@@ -329,8 +329,7 @@ const handleSwitch: OnBreakerCallbackType = (id, switch_status, element) => {
         ', switch_status: ' +
         (switch_status ? 'close' : 'open') +
         '. elementId: ' +
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO no "id" prop existing
-        (element as any).id;
+        element?.id;
     console.log(msg);
 };
 
