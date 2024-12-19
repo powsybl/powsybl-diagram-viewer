@@ -159,7 +159,8 @@
     "svgId" : "6",
     "equipmentId" : "VL12",
     "x" : 694.18,
-    "y" : 76.12
+    "y" : 76.12,
+    "fictitious" : true
   }, {
     "svgId" : "8",
     "equipmentId" : "VL13",
@@ -174,7 +175,8 @@
     "svgId" : "12",
     "equipmentId" : "VL2",
     "x" : 62.4,
-    "y" : -384.58
+    "y" : -384.58,
+    "fictitious" : true
   }, {
     "svgId" : "14",
     "equipmentId" : "VL3",
