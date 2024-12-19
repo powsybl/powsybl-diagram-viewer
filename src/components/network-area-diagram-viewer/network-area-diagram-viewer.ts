@@ -228,7 +228,6 @@ export class NetworkAreaDiagramViewer {
         }
 
         const dimensions: DIMENSIONS | null = this.getDimensionsFromSvg();
-        console.log(' ======== dimensions ', dimensions);
         if (!dimensions) {
             return;
         }
@@ -1389,12 +1388,7 @@ export class NetworkAreaDiagramViewer {
     }
 
     public injectDisplayCssRules(htmlElementSvg: HTMLElement) {
-        let styleTag = htmlElementSvg.querySelector('style');
-        if (!styleTag) {
-            htmlElementSvg.appendChild(document.createElement('style'));
-            console.debug('[injectDynamicCssRules] Style tag missing from SVG file. It has been created.');
-            styleTag = htmlElementSvg.querySelector('style');
-        }
+        const styleTag = htmlElementSvg.querySelector('style');
         if (styleTag && 'textContent' in styleTag) {
             const cssSelectors = ['.nad-label-box', '.nad-text-edges', '.nad-edge-infos'];
 
