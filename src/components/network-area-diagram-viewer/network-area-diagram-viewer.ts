@@ -37,7 +37,8 @@ export type OnMoveTextNodeCallbackType = (
     connectionShiftX: number,
     connectionShiftY: number,
     connectionShiftXOrig: number,
-    connectionShiftYOrig: number
+    connectionShiftYOrig: number,
+    mousePosition: Point
 ) => void;
 
 export type OnSelectNodeCallbackType = (equipmentId: string, nodeId: string) => void;
@@ -181,7 +182,12 @@ export class NetworkAreaDiagramViewer {
         );
         return node?.svgId || null;
     }
-
+    private getTextNodeIdFromEquipmentId(equipmentId: string) {
+        const node: TextNodeMetadata | undefined = this.diagramMetadata?.textNodes.find(
+            (node) => node.equipmentId == equipmentId
+        );
+        return node?.svgId || null;
+    }
     public moveNodeToCoordinates(equipmentId: string, x: number, y: number) {
         const nodeId = this.getNodeIdFromEquipmentId(equipmentId);
         if (nodeId != null) {
@@ -189,8 +195,22 @@ export class NetworkAreaDiagramViewer {
             if (elemToMove) {
                 const newPosition = new Point(x, y);
                 this.onDragStart(elemToMove);
-                this.onDragEnd(newPosition, false);
+                this.onDragEnd(newPosition, false, false);
             }
+        }
+    }
+    public moveTextNodeToCoordinates(equipmentId: string, x: number, y: number) {
+        const textnodeId = this.getTextNodeIdFromEquipmentId(equipmentId);
+        if (textnodeId != null) {
+            const elemToMove: SVGElement | null = this.container.querySelector('[id="' + textnodeId + '"]');
+            if (elemToMove) {
+                const newPosition = new Point(x, y);
+                this.onDragStart(elemToMove);
+                this.onDragEnd(newPosition, false, false);
+            }
+            //Update css rules to diplay labels
+            const firstChild: HTMLElement = <HTMLElement>this.svgDraw?.node.firstChild;
+            this.injectDisplayCssRules(firstChild);
         }
     }
 
@@ -433,17 +453,17 @@ export class NetworkAreaDiagramViewer {
         // check if I moved or selected an element
         if (this.draggedElement) {
             // moving node
-            this.onDragEnd(this.getMousePosition(event), true);
+            this.onDragEnd(this.getMousePosition(event), true, true);
         } else if (this.selectedElement) {
             // selecting node
             this.onSelectEnd();
         }
     }
 
-    private onDragEnd(newPosition: Point, callMoveNodeCallback: boolean) {
+    private onDragEnd(newPosition: Point, callMoveNodeCallback: boolean, callMoveTextNodeCallback: boolean) {
         if (this.textNodeSelected) {
             this.dragVoltageLevelText(newPosition);
-            this.updateTextNodeMetadataCallCallback(newPosition);
+            this.updateTextNodeMetadataCallback(newPosition, callMoveTextNodeCallback);
         } else {
             this.dragVoltageLevelNode(newPosition);
             this.updateNodeMetadataCallCallback(newPosition, callMoveNodeCallback);
@@ -1232,7 +1252,7 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private updateTextNodeMetadataCallCallback(mousePosition: Point) {
+    private updateTextNodeMetadataCallback(mousePosition: Point, callMoveTextNodeCallback: boolean) {
         if (this.onMoveTextNodeCallback != null) {
             // get from metadata node connected to moved text node
             const node: NodeMetadata | undefined = this.diagramMetadata?.nodes.find(
@@ -1251,19 +1271,22 @@ export class NetworkAreaDiagramViewer {
                 textNode.connectionShiftX = textNodeMoves[1].xNew;
                 textNode.connectionShiftY = textNodeMoves[1].yNew;
                 // call the node move callback, if defined
-                this.onMoveTextNodeCallback(
-                    node.equipmentId,
-                    node.svgId,
-                    textNode.svgId,
-                    textNodeMoves[0].xNew,
-                    textNodeMoves[0].yNew,
-                    textNodeMoves[0].xOrig,
-                    textNodeMoves[0].yOrig,
-                    textNodeMoves[1].xNew,
-                    textNodeMoves[1].yNew,
-                    textNodeMoves[1].xOrig,
-                    textNodeMoves[1].yOrig
-                );
+                if (callMoveTextNodeCallback) {
+                    this.onMoveTextNodeCallback(
+                        node.equipmentId,
+                        node.svgId,
+                        textNode.svgId,
+                        textNodeMoves[0].xNew,
+                        textNodeMoves[0].yNew,
+                        textNodeMoves[0].xOrig,
+                        textNodeMoves[0].yOrig,
+                        textNodeMoves[1].xNew,
+                        textNodeMoves[1].yNew,
+                        textNodeMoves[1].xOrig,
+                        textNodeMoves[1].yOrig,
+                        mousePosition
+                    );
+                }
             }
         }
     }
@@ -1364,6 +1387,27 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
+    public injectDisplayCssRules(htmlElementSvg: HTMLElement) {
+        const styleTag = htmlElementSvg.querySelector('style');
+        if (styleTag && 'textContent' in styleTag) {
+            const cssSelectors = ['.nad-label-box', '.nad-text-edges', '.nad-edge-infos'];
+
+            // update the styles to display labels if needed
+            cssSelectors.forEach((selector) => {
+                const styleTags = [...document.querySelectorAll('style')].filter((styleTag) =>
+                    styleTag?.textContent?.includes(selector)
+                );
+                styleTags.forEach((styleTag) => {
+                    styleTag.textContent =
+                        styleTag?.textContent !== null
+                            ? styleTag?.textContent.replace(`{display: none;}`, `{display: block;}`)
+                            : '';
+                });
+            });
+        } else {
+            console.error('Failed to create Style tag in SVG file!');
+        }
+    }
     public getCurrentlyMaxDisplayedSize(): number {
         const viewbox = this.getViewBox();
         return Math.max(viewbox?.height || 0, viewbox?.width || 0);
