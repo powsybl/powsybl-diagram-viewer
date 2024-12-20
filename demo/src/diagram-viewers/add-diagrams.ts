@@ -81,9 +81,13 @@ export const addNadToDemo = () => {
                     ', "value2": ' +
                     (-626 + +branchLabelsSlider.value * 20) +
                     '}, {"branchId": "NHV1_NHV2_1", "value1": ' +
-                    (322 - +branchLabelsSlider.value * 20) +
+                    (+branchLabelsSlider.value < 10 ? 322 - +branchLabelsSlider.value * 20 : 0) +
                     ', "value2": ' +
-                    (-320 + +branchLabelsSlider.value * 20) +
+                    (+branchLabelsSlider.value < 10 ? -320 + +branchLabelsSlider.value * 20 : 0) +
+                    ', "connected1": ' +
+                    (+branchLabelsSlider.value < 10) +
+                    ', "connected2": ' +
+                    (+branchLabelsSlider.value < 10) +
                     '}, {"branchId": "NHV1_NHV2_2", "value1": ' +
                     (322 - +branchLabelsSlider.value * 20) +
                     ', "value2": ' +

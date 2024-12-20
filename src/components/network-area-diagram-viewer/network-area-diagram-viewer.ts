@@ -16,7 +16,7 @@ import { debounce } from '@mui/material';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
-export type BranchLabel = { branchId: string; value1: number | string; value2: number | string };
+export type BranchLabel = { branchId: string; value1: number | string; value2: number | string; connected1: boolean; connected2: boolean };
 
 export type OnMoveNodeCallbackType = (
     equipmentId: string,
@@ -1422,6 +1422,18 @@ export class NetworkAreaDiagramViewer {
                 this.edgesMap.get(branchLabel.branchId)?.svgId ?? '-1',
                 branchLabel.value2
             );
+            this.setBranchConnection(
+                branchLabel.branchId,
+                '1',
+                this.edgesMap.get(branchLabel.branchId)?.svgId ?? '-1',
+                branchLabel.connected1
+            );
+            this.setBranchConnection(
+                branchLabel.branchId,
+                '2',
+                this.edgesMap.get(branchLabel.branchId)?.svgId ?? '-1',
+                branchLabel.connected2
+            );
         });
     }
 
@@ -1441,6 +1453,19 @@ export class NetworkAreaDiagramViewer {
             }
         } else {
             console.warn('Skipping updating branch ' + branchId + ' side ' + side + ' label: edge not found');
+        }
+    }
+
+    private setBranchConnection(branchId: string, side: string, edgeId: string, connected: boolean) {
+        const halfEdge: SVGGraphicsElement | null = this.container.querySelector("[id='" + edgeId + '.' + side + "']");
+        if (halfEdge !== null && halfEdge != undefined) {
+            if (connected == undefined || connected) {
+                halfEdge.classList.remove('nad-disconnected');
+            } else {
+                halfEdge.classList.add('nad-disconnected');
+            }
+        } else {
+            console.warn('Skipping updating branch ' + branchId + ' side ' + side + ' status: edges not found');
         }
     }
 }
