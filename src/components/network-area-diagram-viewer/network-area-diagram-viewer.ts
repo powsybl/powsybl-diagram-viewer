@@ -16,7 +16,13 @@ import { debounce } from '@mui/material';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
-export type BranchState = { branchId: string; value1: number | string; value2: number | string; connected1: boolean; connected2: boolean };
+export type BranchState = {
+    branchId: string;
+    value1: number | string;
+    value2: number | string;
+    connected1: boolean;
+    connected2: boolean;
+};
 
 export type OnMoveNodeCallbackType = (
     equipmentId: string,
