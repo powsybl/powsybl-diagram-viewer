@@ -349,6 +349,26 @@ test('getArrowClass', () => {
     expect(DiagramUtils.getArrowClass(-12)).toBe('nad-state-in');
 });
 
+test('isVlNodeFictitious', () => {
+    const nodes: NodeMetadata[] = [
+        {
+            svgId: '0',
+            equipmentId: 'vl',
+            x: 189.53,
+            y: 123.47,
+        },
+        {
+            svgId: '2',
+            equipmentId: 'vl2',
+            x: -171.8,
+            y: 131.88,
+            fictitious: true,
+        },
+    ];
+    expect(DiagramUtils.isVlNodeFictitious('0', nodes)).toBe(false);
+    expect(DiagramUtils.isVlNodeFictitious('2', nodes)).toBe(true);
+});
+
 function getSvgNode(): SVGGraphicsElement {
     const nodeSvg =
         '<g class="nad-vl-nodes"><g transform="translate(-452.59,-274.01)" id="0">' +

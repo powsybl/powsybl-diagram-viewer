@@ -31,6 +31,7 @@ export interface SvgParametersMetadata {
     nodeHollowWidth: number;
     unknownBusNodeExtraRadius: number;
     edgeNameDisplayed: boolean;
+    fictitiousVoltageLevelCircleRadius: number;
 }
 
 export interface BusNodeMetadata {
@@ -46,6 +47,7 @@ export interface NodeMetadata {
     equipmentId: string;
     x: number;
     y: number;
+    fictitious?: boolean;
 }
 
 export interface EdgeMetadata {
