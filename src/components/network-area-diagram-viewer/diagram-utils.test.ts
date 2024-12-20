@@ -344,6 +344,11 @@ test('getTextNodeMoves', () => {
     expect(textNodeMove[1].yNew).toBe(-53.76);
 });
 
+test('getArrowClass', () => {
+    expect(DiagramUtils.getArrowClass(12)).toBe('nad-state-out');
+    expect(DiagramUtils.getArrowClass(-12)).toBe('nad-state-in');
+});
+
 test('isVlNodeFictitious', () => {
     const nodes: NodeMetadata[] = [
         {

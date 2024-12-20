@@ -522,6 +522,11 @@ export function getTextNodeMoves(
     ];
 }
 
+// get arrow element class, based on p value
+export function getArrowClass(p: number): string {
+    return p < 0 ? 'nad-state-in' : 'nad-state-out';
+}
+
 export function isVlNodeFictitious(vlNodeId: string, nodes: NodeMetadata[] | undefined): boolean {
     const node: NodeMetadata | undefined = nodes?.find((node) => node.svgId == vlNodeId);
     return node?.fictitious ?? false;

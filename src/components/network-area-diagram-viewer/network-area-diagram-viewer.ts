@@ -16,6 +16,13 @@ import { debounce } from '@mui/material';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
+export type BranchState = {
+    branchId: string;
+    value1: number | string;
+    value2: number | string;
+    connected1: boolean;
+    connected2: boolean;
+};
 
 export type OnMoveNodeCallbackType = (
     equipmentId: string,
@@ -73,6 +80,7 @@ export class NetworkAreaDiagramViewer {
     onSelectNodeCallback: OnSelectNodeCallbackType | null;
     dynamicCssRules: CSS_RULE[];
     onToggleHoverCallback: OnToggleNadHoverCallbackType | null;
+    edgesMap: Map<string, EdgeMetadata> = new Map<string, EdgeMetadata>();
 
     constructor(
         container: HTMLElement,
@@ -1392,5 +1400,81 @@ export class NetworkAreaDiagramViewer {
                 this.updateSvgCssDisplayValue(svg, rule.cssSelector, rule.aboveThresholdCssDeclaration);
             }
         });
+    }
+
+    public setJsonBranchStates(branchStates: string) {
+        const branchStatesArray: BranchState[] = JSON.parse(branchStates);
+        this.setBranchStates(branchStatesArray);
+    }
+
+    public setBranchStates(branchStates: BranchState[]) {
+        branchStates.forEach((branchState) => {
+            if (!this.edgesMap.has(branchState.branchId)) {
+                const edge: EdgeMetadata | undefined = this.diagramMetadata?.edges.find(
+                    (edge) => edge.equipmentId == branchState.branchId
+                );
+                if (edge === undefined) {
+                    console.warn('Skipping updating branch ' + branchState.branchId + ' labels: branch not found');
+                    return;
+                }
+                this.edgesMap.set(branchState.branchId, edge);
+            }
+            this.setBranchSideLabel(
+                branchState.branchId,
+                '1',
+                this.edgesMap.get(branchState.branchId)?.svgId ?? '-1',
+                branchState.value1
+            );
+            this.setBranchSideLabel(
+                branchState.branchId,
+                '2',
+                this.edgesMap.get(branchState.branchId)?.svgId ?? '-1',
+                branchState.value2
+            );
+            this.setBranchSideConnection(
+                branchState.branchId,
+                '1',
+                this.edgesMap.get(branchState.branchId)?.svgId ?? '-1',
+                branchState.connected1
+            );
+            this.setBranchSideConnection(
+                branchState.branchId,
+                '2',
+                this.edgesMap.get(branchState.branchId)?.svgId ?? '-1',
+                branchState.connected2
+            );
+        });
+    }
+
+    private setBranchSideLabel(branchId: string, side: string, edgeId: string, value: number | string) {
+        const halfEdge: SVGGraphicsElement | null = this.container.querySelector("[id='" + edgeId + '.' + side + "']");
+        const arrowGElement = halfEdge?.lastElementChild?.firstElementChild;
+        if (arrowGElement !== null && arrowGElement !== undefined) {
+            arrowGElement.classList.remove('nad-state-in', 'nad-state-out');
+            if (typeof value === 'number') {
+                arrowGElement.classList.add(DiagramUtils.getArrowClass(value));
+            }
+            const branchLabelElement = arrowGElement.lastElementChild;
+            if (branchLabelElement !== null && branchLabelElement !== undefined) {
+                branchLabelElement.innerHTML = typeof value === 'number' ? value.toFixed(0) : value;
+            } else {
+                console.warn('Skipping updating branch ' + branchId + ' side ' + side + ' label: edge not found');
+            }
+        } else {
+            console.warn('Skipping updating branch ' + branchId + ' side ' + side + ' label: edge not found');
+        }
+    }
+
+    private setBranchSideConnection(branchId: string, side: string, edgeId: string, connected: boolean) {
+        const halfEdge: SVGGraphicsElement | null = this.container.querySelector("[id='" + edgeId + '.' + side + "']");
+        if (halfEdge !== null && halfEdge != undefined) {
+            if (connected == undefined || connected) {
+                halfEdge.classList.remove('nad-disconnected');
+            } else {
+                halfEdge.classList.add('nad-disconnected');
+            }
+        } else {
+            console.warn('Skipping updating branch ' + branchId + ' side ' + side + ' status: edges not found');
+        }
     }
 }
