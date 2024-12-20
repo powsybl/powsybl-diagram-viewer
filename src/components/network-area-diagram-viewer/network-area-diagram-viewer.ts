@@ -551,7 +551,9 @@ export class NetworkAreaDiagramViewer {
             const nbNeighbours = busNodes !== undefined && busNodes.length > 1 ? busNodes.length - 1 : 0;
             const voltageLevelCircleRadius = DiagramUtils.getVoltageLevelCircleRadius(
                 nbNeighbours,
-                this.svgParameters.getVoltageLevelCircleRadius()
+                DiagramUtils.isVlNodeFictitious(vlNode.id, this.diagramMetadata?.nodes)
+                    ? this.svgParameters.getFictitiousVoltageLevelCircleRadius()
+                    : this.svgParameters.getVoltageLevelCircleRadius()
             );
             // compute text edge start and end
             const vlNodePosition = DiagramUtils.getPosition(vlNode);
@@ -655,13 +657,15 @@ export class NetworkAreaDiagramViewer {
         return edgeNodes[0]?.id == this.draggedElement?.id ? edgeNodes[1] : edgeNodes[0];
     }
 
-    private getNodeRadius(busNodeId: string): [number, number, number] {
+    private getNodeRadius(busNodeId: string, vlNodeId: string): [number, number, number] {
         const busNode: BusNodeMetadata | undefined = this.diagramMetadata?.busNodes.find(
             (busNode) => busNode.svgId == busNodeId
         );
         return DiagramUtils.getNodeRadius(
             busNode?.nbNeighbours ?? 0,
-            this.svgParameters.getVoltageLevelCircleRadius(),
+            DiagramUtils.isVlNodeFictitious(vlNodeId, this.diagramMetadata?.nodes)
+                ? this.svgParameters.getFictitiousVoltageLevelCircleRadius()
+                : this.svgParameters.getVoltageLevelCircleRadius(),
             busNode?.index ?? 0,
             this.svgParameters.getInterAnnulusSpace()
         );
@@ -714,7 +718,7 @@ export class NetworkAreaDiagramViewer {
                         angleFork2
                     );
                     const unknownBusNode1 = edge.busNode1 != null && edge.busNode1.length == 0;
-                    const nodeRadius1 = this.getNodeRadius(edge.busNode1 != null ? edge.busNode1 : '-1');
+                    const nodeRadius1 = this.getNodeRadius(edge.busNode1 ?? '-1', edge.node1 ?? '-1');
                     const edgeStart1 = DiagramUtils.getPointAtDistance(
                         DiagramUtils.getPosition(edgeNodes[0]),
                         edgeFork1,
@@ -723,7 +727,7 @@ export class NetworkAreaDiagramViewer {
                             : nodeRadius1[1]
                     );
                     const unknownBusNode2 = edge.busNode2 != null && edge.busNode2.length == 0;
-                    const nodeRadius2 = this.getNodeRadius(edge.busNode2 != null ? edge.busNode2 : '-1');
+                    const nodeRadius2 = this.getNodeRadius(edge.busNode2 ?? '-1', edge.node2 ?? '-1');
                     const edgeStart2 = DiagramUtils.getPointAtDistance(
                         DiagramUtils.getPosition(edgeNodes[1]),
                         edgeFork2,
@@ -775,9 +779,9 @@ export class NetworkAreaDiagramViewer {
             return;
         }
         // compute moved edge data: polyline points
-        const nodeRadius1 = this.getNodeRadius(edge.busNode1 != null ? edge.busNode1 : '-1');
+        const nodeRadius1 = this.getNodeRadius(edge.busNode1 ?? '-1', edge.node1 ?? '-1');
         const edgeStart1 = this.getEdgeStart(edge.busNode1, nodeRadius1[1], edgeNodes[0], edgeNodes[1]);
-        const nodeRadius2 = this.getNodeRadius(edge.busNode2 != null ? edge.busNode2 : '-1');
+        const nodeRadius2 = this.getNodeRadius(edge.busNode2 ?? '-1', edge.node2 ?? '-1');
         const edgeStart2 = this.getEdgeStart(edge.busNode2, nodeRadius2[1], edgeNodes[1], edgeNodes[0]);
         const edgeMiddle = DiagramUtils.getMidPosition(edgeStart1, edgeStart2);
         // move edge
@@ -1172,7 +1176,7 @@ export class NetworkAreaDiagramViewer {
                 // compute polyline points
                 const edgeNodes = this.getEdgeNodes(edge);
                 const threeWtMoved = edgeNodes[1]?.id == this.draggedElement?.id;
-                const nodeRadius1 = this.getNodeRadius(edge.busNode1 != null ? edge.busNode1 : '-1');
+                const nodeRadius1 = this.getNodeRadius(edge.busNode1 ?? '-1', edge.node1 ?? '-1');
                 const edgeStart = this.getEdgeStart(edge.busNode1, nodeRadius1[1], edgeNodes[0], edgeNodes[1]);
                 const translation = this.getTranslation(mousePosition);
                 const edgeEnd = threeWtMoved
