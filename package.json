@@ -23,6 +23,7 @@
         "dist"
     ],
     "scripts": {
+        "postinstall": "rimraf -I -g ./node_modules/@types/deck.gl* ./node_modules/@types/luma.gl* ./node_modules/@types/math.gl*",
         "watch": "vite watch",
         "build": "vite build",
         "prepublishOnly": "$npm_execpath run build",
@@ -57,6 +58,7 @@
         "@babel/core": "^7.24.3",
         "@babel/preset-env": "^7.24.3",
         "@babel/preset-typescript": "^7.24.1",
+        "@danmarshall/deckgl-typings": "^4.9.28",
         "@mui/icons-material": "^5.15.14",
         "@mui/material": "^5.15.14",
         "@mui/system": "^5.15.14",
@@ -83,8 +85,10 @@
         "jest-environment-jsdom": "^29.7.0",
         "license-checker": "^25.0.1",
         "prettier": "^2.8.8",
+        "rimraf": "^6.0.1",
         "ts-jest": "^29.1.2",
         "ts-node": "^10.9.2",
+        "type-fest": "^4.30.0",
         "typescript": "5.1.6",
         "vite": "^5.2.7",
         "vite-plugin-dts": "^3.8.1",

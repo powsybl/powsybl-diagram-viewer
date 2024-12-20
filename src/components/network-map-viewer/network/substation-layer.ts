@@ -5,12 +5,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { CompositeLayer, TextLayer } from 'deck.gl';
-import ScatterplotLayerExt from './layers/scatterplot-layer-ext';
-
+import {
+    type Color,
+    CompositeLayer,
+    type CompositeLayerProps,
+    type Layer,
+    TextLayer,
+    type TextLayerProps,
+    type UpdateParameters,
+} from 'deck.gl';
+import type { DefaultProps } from '@deck.gl/core';
+import ScatterplotLayerExt, { ScatterplotLayerExtProps } from './layers/scatterplot-layer-ext';
 import { SUBSTATION_RADIUS, SUBSTATION_RADIUS_MAX_PIXEL, SUBSTATION_RADIUS_MIN_PIXEL } from './constants';
+import { type MapSubstation, type MapVoltageLevel } from '../../../equipment-types';
+import { type MapEquipments } from './map-equipments';
+import { type GeoData } from './geo-data';
 
-const voltageLevelNominalVoltageIndexer = (map, voltageLevel) => {
+function voltageLevelNominalVoltageIndexer(map: Map<number, MapVoltageLevel[]>, voltageLevel: MapVoltageLevel) {
     let list = map.get(voltageLevel.nominalV);
     if (!list) {
         list = [];
@@ -18,21 +29,64 @@ const voltageLevelNominalVoltageIndexer = (map, voltageLevel) => {
     }
     list.push(voltageLevel);
     return map;
+}
+
+type MetaVoltageLevel = {
+    nominalVoltageIndex: number;
+    voltageLevels: MapVoltageLevel[];
 };
 
-export class SubstationLayer extends CompositeLayer {
-    initializeState() {
-        super.initializeState();
+type MetaVoltageLevelsByNominalVoltage = {
+    nominalV: number;
+    metaVoltageLevels: MetaVoltageLevel[];
+};
+
+type _SubstationLayerProps = {
+    data: MapSubstation[];
+    network: MapEquipments;
+    geoData: GeoData;
+    getNominalVoltageColor: (nominalV: number) => Color;
+    filteredNominalVoltages: number[] | null;
+    labelsVisible: boolean;
+    labelColor: Color;
+    labelSize: number;
+    getNameOrId: (infos: MapSubstation) => string | null;
+};
+export type SubstationLayerProps = _SubstationLayerProps & CompositeLayerProps;
+
+export class SubstationLayer extends CompositeLayer<Required<_SubstationLayerProps>> {
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
+    static readonly layerName = 'SubstationLayer';
+    // noinspection JSUnusedGlobalSymbols -- it's dynamically get by deck.gl
+    static readonly defaultProps: DefaultProps<SubstationLayerProps> = {
+        network: undefined,
+        geoData: undefined,
+        getNominalVoltageColor: { type: 'accessor', value: () => [255, 255, 255] },
+        filteredNominalVoltages: null,
+        labelsVisible: false,
+        labelColor: { type: 'color', value: [255, 255, 255] },
+        labelSize: 12,
+    };
+
+    declare state: {
+        compositeData: unknown[];
+        substationsLabels: MapSubstation[];
+        metaVoltageLevelsByNominalVoltage: MetaVoltageLevelsByNominalVoltage[];
+    };
+
+    initializeState(...args: Parameters<CompositeLayer<Required<_SubstationLayerProps>>['initializeState']>) {
+        super.initializeState(...args);
 
         this.state = {
             compositeData: [],
             substationsLabels: [],
+            metaVoltageLevelsByNominalVoltage: [],
         };
     }
 
-    updateState({ props, oldProps, changeFlags }) {
+    updateState({ props, oldProps, changeFlags }: UpdateParameters<this>) {
         if (changeFlags.dataChanged) {
-            let metaVoltageLevelsByNominalVoltage = new Map();
+            const metaVoltageLevelsByNominalVoltage = new Map<number, MetaVoltageLevel[]>();
 
             if (props.network != null && props.geoData != null) {
                 // create meta voltage levels
@@ -98,7 +152,7 @@ export class SubstationLayer extends CompositeLayer {
                 // present in the filteredVoltageLevels property, in order to handle correctly the substations labels visibility
                 substationsLabels = substationsLabels.filter(
                     (substation) =>
-                        substation.voltageLevels.find((v) => props.filteredNominalVoltages.includes(v.nominalV)) !==
+                        substation.voltageLevels.find((v) => props.filteredNominalVoltages?.includes(v.nominalV)) !==
                         undefined
                 );
             }
@@ -108,7 +162,7 @@ export class SubstationLayer extends CompositeLayer {
     }
 
     renderLayers() {
-        const layers = [];
+        const layers: Layer[] = [];
 
         // substations : create one layer per nominal voltage, starting from higher to lower nominal voltage
         this.state.metaVoltageLevelsByNominalVoltage.forEach((e) => {
@@ -119,6 +173,7 @@ export class SubstationLayer extends CompositeLayer {
                     radiusMinPixels: SUBSTATION_RADIUS_MIN_PIXEL,
                     getRadiusMaxPixels: (metaVoltageLevel) =>
                         SUBSTATION_RADIUS_MAX_PIXEL * (metaVoltageLevel.nominalVoltageIndex + 1),
+                    // @ts-expect-error TODO TS2322: Type number[] is not assignable to type Position
                     getPosition: (metaVoltageLevel) =>
                         this.props.geoData.getSubstationPosition(metaVoltageLevel.voltageLevels[0].substationId),
                     getFillColor: this.props.getNominalVoltageColor(e.nominalV),
@@ -128,7 +183,7 @@ export class SubstationLayer extends CompositeLayer {
                     updateTriggers: {
                         getPosition: [this.props.geoData.substationPositionsById, this.props.network.substations],
                     },
-                })
+                } satisfies ScatterplotLayerExtProps<MetaVoltageLevel>)
             );
             layers.push(substationsLayer);
         });
@@ -138,8 +193,9 @@ export class SubstationLayer extends CompositeLayer {
             this.getSubLayerProps({
                 id: 'Label',
                 data: this.state.substationsLabels,
+                // @ts-expect-error TODO TS2322: Type (substation: MapSubstation) => number[] is not assignable to type Accessor<MapSubstation, Position> | undefined
                 getPosition: (substation) => this.props.geoData.getSubstationPosition(substation.id),
-                getText: (substation) => this.props.getNameOrId(substation),
+                getText: (substation) => this.props.getNameOrId(substation) ?? '',
                 getColor: this.props.labelColor,
                 fontFamily: 'Roboto',
                 getSize: this.props.labelSize,
@@ -152,22 +208,10 @@ export class SubstationLayer extends CompositeLayer {
                     getText: [this.props.getNameOrId],
                     getPosition: [this.props.geoData.substationPositionsById, this.props.network.substations],
                 },
-            })
+            } satisfies TextLayerProps<MapSubstation>)
         );
         layers.push(substationLabelsLayer);
 
         return layers;
     }
 }
-
-SubstationLayer.layerName = 'SubstationLayer';
-
-SubstationLayer.defaultProps = {
-    network: null,
-    geoData: null,
-    getNominalVoltageColor: { type: 'accessor', value: [255, 255, 255] },
-    filteredNominalVoltages: null,
-    labelsVisible: false,
-    labelColor: { type: 'color', value: [255, 255, 255] },
-    labelSize: 12,
-};

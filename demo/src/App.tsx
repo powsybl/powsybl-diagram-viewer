@@ -7,11 +7,9 @@
 
 import { useEffect, useRef } from 'react';
 import { createTheme, StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
-import { GeoData, NetworkMap, NetworkMapRef } from '../../src';
-import { Equipment } from '../../src/components/network-map-viewer/network/map-equipments';
-import { addNadToDemo, addSldToDemo } from './diagram-viewers/add-diagrams';
-import DemoMapEquipments from './map-viewer/demo-map-equipments';
+import { GeoData, type MapEquipment, MapEquipments, NetworkMap, type NetworkMapRef } from '../../src';
 
+import { addNadToDemo, addSldToDemo } from './diagram-viewers/add-diagrams';
 import sposdata from './map-viewer/data/spos.json';
 import lposdata from './map-viewer/data/lpos.json';
 import smapdata from './map-viewer/data/smap.json';
@@ -29,7 +27,7 @@ export default function App() {
     }, []);
 
     //called after a click (right mouse click) on an equipment (line or substation)
-    function showEquipmentMenu(equipment: Equipment, x: number, y: number, type: string) {
+    function showEquipmentMenu(equipment: MapEquipment, x: number, y: number, type: string) {
         console.log('# Show equipment menu: ' + JSON.stringify(equipment) + ', type: ' + type);
     }
 
@@ -58,7 +56,9 @@ export default function App() {
     geoData.setSubstationPositions(sposdata);
     geoData.setLinePositions(lposdata);
 
-    const mapEquipments = new DemoMapEquipments(smapdata, lmapdata);
+    const mapEquipments = new MapEquipments();
+    mapEquipments.updateSubstations(smapdata, true);
+    mapEquipments.updateLines(lmapdata, true);
 
     useEffect(() => {
         const handleContextmenu = (e: MouseEvent) => {
