@@ -16,7 +16,7 @@ import { debounce } from '@mui/material';
 
 type DIMENSIONS = { width: number; height: number; viewbox: VIEWBOX };
 type VIEWBOX = { x: number; y: number; width: number; height: number };
-export type BranchLabel = { branchId: string; value1: number | string; value2: number | string; connected1: boolean; connected2: boolean };
+export type BranchState = { branchId: string; value1: number | string; value2: number | string; connected1: boolean; connected2: boolean };
 
 export type OnMoveNodeCallbackType = (
     equipmentId: string,
@@ -1392,46 +1392,46 @@ export class NetworkAreaDiagramViewer {
         });
     }
 
-    public setJsonBranchLabels(branchLabels: string) {
-        const branchLabelsArray: BranchLabel[] = JSON.parse(branchLabels);
-        this.setBranchLabels(branchLabelsArray);
+    public setJsonBranchStates(branchStates: string) {
+        const branchStatesArray: BranchState[] = JSON.parse(branchStates);
+        this.setBranchStates(branchStatesArray);
     }
 
-    public setBranchLabels(branchLabels: BranchLabel[]) {
-        branchLabels.forEach((branchLabel) => {
-            if (!this.edgesMap.has(branchLabel.branchId)) {
+    public setBranchStates(branchStates: BranchState[]) {
+        branchStates.forEach((branchState) => {
+            if (!this.edgesMap.has(branchState.branchId)) {
                 const edge: EdgeMetadata | undefined = this.diagramMetadata?.edges.find(
-                    (edge) => edge.equipmentId == branchLabel.branchId
+                    (edge) => edge.equipmentId == branchState.branchId
                 );
                 if (edge === undefined) {
-                    console.warn('Skipping updating branch ' + branchLabel.branchId + ' labels: branch not found');
+                    console.warn('Skipping updating branch ' + branchState.branchId + ' labels: branch not found');
                     return;
                 }
-                this.edgesMap.set(branchLabel.branchId, edge);
+                this.edgesMap.set(branchState.branchId, edge);
             }
             this.setBranchSideLabel(
-                branchLabel.branchId,
+                branchState.branchId,
                 '1',
-                this.edgesMap.get(branchLabel.branchId)?.svgId ?? '-1',
-                branchLabel.value1
+                this.edgesMap.get(branchState.branchId)?.svgId ?? '-1',
+                branchState.value1
             );
             this.setBranchSideLabel(
-                branchLabel.branchId,
+                branchState.branchId,
                 '2',
-                this.edgesMap.get(branchLabel.branchId)?.svgId ?? '-1',
-                branchLabel.value2
+                this.edgesMap.get(branchState.branchId)?.svgId ?? '-1',
+                branchState.value2
             );
-            this.setBranchConnection(
-                branchLabel.branchId,
+            this.setBranchSideConnection(
+                branchState.branchId,
                 '1',
-                this.edgesMap.get(branchLabel.branchId)?.svgId ?? '-1',
-                branchLabel.connected1
+                this.edgesMap.get(branchState.branchId)?.svgId ?? '-1',
+                branchState.connected1
             );
-            this.setBranchConnection(
-                branchLabel.branchId,
+            this.setBranchSideConnection(
+                branchState.branchId,
                 '2',
-                this.edgesMap.get(branchLabel.branchId)?.svgId ?? '-1',
-                branchLabel.connected2
+                this.edgesMap.get(branchState.branchId)?.svgId ?? '-1',
+                branchState.connected2
             );
         });
     }
@@ -1455,7 +1455,7 @@ export class NetworkAreaDiagramViewer {
         }
     }
 
-    private setBranchConnection(branchId: string, side: string, edgeId: string, connected: boolean) {
+    private setBranchSideConnection(branchId: string, side: string, edgeId: string, connected: boolean) {
         const halfEdge: SVGGraphicsElement | null = this.container.querySelector("[id='" + edgeId + '.' + side + "']");
         if (halfEdge !== null && halfEdge != undefined) {
             if (connected == undefined || connected) {

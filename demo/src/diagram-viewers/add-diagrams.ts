@@ -34,7 +34,7 @@ import {
     OnMoveTextNodeCallbackType,
     OnSelectNodeCallbackType,
     OnToggleNadHoverCallbackType,
-    BranchLabel,
+    BranchState,
 } from '../../../src';
 
 export const addNadToDemo = () => {
@@ -75,7 +75,7 @@ export const addNadToDemo = () => {
             branchLabelsSlider.style.justifyContent = 'space-between';
             branchLabelsSlider.style.padding = '0 5px';
             branchLabelsSlider.addEventListener('input', () => {
-                const branchLabels =
+                const branchStates =
                     '[{"branchId": "NGEN_NHV1", "value1": ' +
                     (627 - +branchLabelsSlider.value * 20) +
                     ', "value2": ' +
@@ -97,8 +97,8 @@ export const addNadToDemo = () => {
                     ', "value2": ' +
                     (621 - +branchLabelsSlider.value * 20) +
                     '}]';
-                console.log(branchLabels);
-                nadViewer.setJsonBranchLabels(branchLabels);
+                console.log(branchStates);
+                nadViewer.setJsonBranchStates(branchStates);
             });
 
             document.getElementById('svg-container-nad')?.appendChild(branchLabelsSlider);
@@ -165,8 +165,8 @@ export const addNadToDemo = () => {
             const updateFlowsButton = document.createElement('button');
             updateFlowsButton.innerHTML = 'Update Branch Labels';
             updateFlowsButton.addEventListener('click', () => {
-                const branchLabelsArray: BranchLabel[] = JSON.parse(updateFlowsTextArea.value);
-                nadViewer.setBranchLabels(branchLabelsArray);
+                const branchStatesArray: BranchState[] = JSON.parse(updateFlowsTextArea.value);
+                nadViewer.setBranchStates(branchStatesArray);
             });
             const updateFlowsDiv = document.createElement('div');
             updateFlowsDiv.appendChild(updateFlowsTextArea);
